@@ -117,6 +117,8 @@ De ingebouwde **Help & handleiding** (de knop **?** rechtsboven, of F1) legt elk
 4. **Stel je gemeente in als standaardbedrijf** (optioneel). Dat doe je met de ster bij Relaties → Bedrijven. Nieuwe afdelingen en managers krijgen het bedrijf dan automatisch.
 5. **Begin.** Met **+ Nieuwe activiteit** op het dashboard leg je je eerste activiteit vast.
 
+> **Als app installeren.** In Edge en Chrome kun je de tool installeren als app, met het installatie-icoon in de adresbalk. In Edge kan het ook via het menu, onder **Apps**. De tool opent dan in een eigen venster en krijgt een eigen icoon in de Dock of de taakbalk. Je gegevens blijven dezelfde als in het tabblad. Dit werkt met de online versie, niet met een gedownload bestand.
+
 > **Liever lokaal?** Download `index.html` en open het bestand in Chrome of Edge. Ook dat werkt volledig. De browser bewaart gegevens per adres. Wissel je tussen de online versie en een lokaal bestand, koppel dan in beide dezelfde map. Dan werk je steeds met hetzelfde `tracker-data.json`.
 
 ---
@@ -150,6 +152,7 @@ Installatie en uitleg vind je in [`contacten-sync/LEES-MIJ.md`](contacten-sync/L
 | | Chrome / Edge | Safari / Firefox |
 |---|:---:|:---:|
 | De tool gebruiken (opslag in de browser) | ✓ | ✓ |
+| Installeren als app, met eigen venster en icoon | ✓ | alleen Safari |
 | Map koppelen, back-ups en bijlagen | ✓ | – |
 | Markdown-bestanden per activiteit | ✓ | – |
 | Contacten synchroniseren met iPhone/Mac | ✓ | – |
