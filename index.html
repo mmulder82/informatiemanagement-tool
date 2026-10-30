@@ -1021,6 +1021,20 @@
     width:100%;border:1px solid var(--accent);border-radius:4px;
     padding:2px 6px;font-size:11.5px;outline:none;background:#fff;
   }
+  .org-director-row .avatar, .org-topnode-persoon .avatar{flex-shrink:0;font-size:8px !important;}
+  .org-director-row > svg.fa, .org-topnode-persoon > svg.fa{width:11px;height:11px;opacity:.6;flex-shrink:0;}
+  .org-persoon-naam{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .org-persoon-leeg{opacity:.7;}
+  .org-topnode-persoon{
+    display:flex;align-items:center;justify-content:center;gap:5px;margin-top:4px;padding:2px 6px;
+    border-radius:5px;font-size:11.5px;font-weight:400;color:var(--muted);cursor:text;max-width:240px;
+  }
+  .org-topnode-persoon .org-persoon-naam{flex:0 1 auto;}
+  .org-topnode-persoon:hover{background:var(--accent-soft);}
+  .org-topnode-persoon input{
+    width:200px;border:1px solid var(--accent);border-radius:4px;
+    padding:2px 6px;font-size:11.5px;outline:none;background:#fff;font-weight:400;
+  }
   .org-afd-item{
     padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;
     transition:background .12s ease;
@@ -1829,8 +1843,15 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.36.0";
+const APP_VERSION = "4.37.0";
 const CHANGELOG = [
+  { version: "4.37.0", datum: "2026-10-30", items: [
+    "Managers van afdelingen en directeuren van sectoren staan nu ook in het centrale contactenregister (Relaties → Contacten). Bestaande namen worden eenmalig overgezet. Staat iemand er al met dezelfde naam in, dan wordt die gekoppeld.",
+    "In het organogram kies je nu ook de burgemeester en de gemeentesecretaris/algemeen directeur. Klik op de regel onder de functie en typ een naam, of kies iemand uit je contacten.",
+    "Typ je de naam van een manager of directeur, dan zie je suggesties uit je contacten. Naam en foto zijn daarna overal gelijk. Bij de manager staan ook e-mail en telefoon; met het potloodje vul je ze aan.",
+    "Uitvoerders van processtappen tellen nu mee bij 'Gebruikt bij' in Contacten, en gaan mee als je twee contacten samenvoegt.",
+    "Tekst als 'vacature' of 'n.v.t.' in een naamveld wordt geen contact.",
+  ]},
   { version: "4.36.0", datum: "2026-10-30", items: [
     "Personen en functies bij Control komen nu ook in het centrale contactenregister (Relaties → Contacten). Dat geldt ook voor collegeleden bij College B&W.",
     "Bestaande control-personen en collegeleden worden eenmalig aan Contacten toegevoegd. Staat iemand er al met dezelfde naam in, dan wordt de kaart aan dat contact gekoppeld.",
@@ -2096,30 +2117,39 @@ function linkedInSearchUrl(naam){
 /* Foto van een functioneel beheerder: eigen foto, anders die van het gekoppelde contact */
 function beheerderFoto(b){ return (b && (b.foto || getContact(b.contactId)?.foto)) || null; }
 
-/* Loopt over elke plek in de app die een `contactId` kan bevatten en roept fn(entry) aan voor
-   elke koppeling (entry.contactId kan null zijn). Eén centrale plek zodat usage-telling en
-   cascade-ontkoppelen (bij het verwijderen van een contact) altijd alle plekken raken. */
+/* Loopt over elke plek in de app die een contact kan bevatten en roept fn(entry, veld) aan voor
+   elke koppeling: entry[veld] is het contactId (kan null zijn). veld is "contactId", behalve bij
+   de manager van een afdeling ("managerContactId") en de directeur van een sector
+   ("directeurContactId", op het sectorblok in state.org). Eén centrale plek zodat usage-telling,
+   cascade-ontkoppelen (bij het verwijderen van een contact) en samenvoegen altijd alle plekken raken. */
 function forEachContactLink(fn){
-  for (const afd of Object.values(state.afdelingen||{}))
+  for (const afd of Object.values(state.afdelingen||{})){
     for (const p of (afd.projects||[]))
-      for (const link of (p.contacten||[])) fn(link);
+      for (const link of (p.contacten||[])) fn(link, "contactId");
+    fn(afd, "managerContactId");
+  }
   for (const cgr of (state.congressen||[]))
     for (const p of (cgr.projects||[]))
-      for (const link of (p.contacten||[])) fn(link);
+      for (const link of (p.contacten||[])) fn(link, "contactId");
   for (const p of (state.standaarden||[]))
-    for (const link of (p.contacten||[])) fn(link);
-  for (const b of (state.beheerders||[])) fn(b);
-  for (const x of (state.externeInhuur||[])) fn(x);
-  for (const pp of (state.collegeleden||[])) fn(pp);
-  for (const pp of (state.controlPersonen||[])) fn(pp);
+    for (const link of (p.contacten||[])) fn(link, "contactId");
+  for (const b of (state.beheerders||[])) fn(b, "contactId");
+  for (const x of (state.externeInhuur||[])) fn(x, "contactId");
+  for (const pp of (state.collegeleden||[])) fn(pp, "contactId");
+  for (const pp of (state.controlPersonen||[])) fn(pp, "contactId");
+  for (const b of (state.org||[])) fn(b, "directeurContactId");
+  for (const t of Object.values(state.topFuncties||{})) if (t) fn(t, "contactId");
+  // uitvoerders van processtappen: in processjablonen én in lopende/afgeronde processen
+  for (const s of (state.checklistSjablonen||[])) for (const t of (s.taken||[])) fn(t, "contactId");
+  for (const r of (state.checklistRuns||[])) for (const t of (r.taken||[])) fn(t, "contactId");
 }
 function contactUsageCount(contactId){
   let n = 0;
-  forEachContactLink(entry => { if (entry.contactId === contactId) n++; });
+  forEachContactLink((entry, veld) => { if (entry[veld] === contactId) n++; });
   return n;
 }
 function ontkoppelContactOveral(contactId){
-  forEachContactLink(entry => { if (entry.contactId === contactId) entry.contactId = null; });
+  forEachContactLink((entry, veld) => { if (entry[veld] === contactId) entry[veld] = null; });
 }
 
 /* Generieke resolver voor `naam`/`email`/`telefoon` op elke entiteit met een `contactId`-koppeling
@@ -2147,7 +2177,7 @@ function mergeContacts(sourceId, targetId){
   if (!target.telefoon && source.telefoon) target.telefoon = source.telefoon;
   if (!target.linkedin && source.linkedin) target.linkedin = source.linkedin;
   if (!target.foto && source.foto) target.foto = source.foto;
-  forEachContactLink(entry => { if (entry.contactId === sourceId) entry.contactId = targetId; });
+  forEachContactLink((entry, veld) => { if (entry[veld] === sourceId) entry[veld] = targetId; });
   state.contacten = getContacts().filter(c => c.id !== sourceId);
 }
 
@@ -2347,6 +2377,97 @@ function findOrCreateContactByName(naam, rol, email, telefoon){
   return c.id;
 }
 
+/* Tekst die in een naamveld staat maar geen persoon is ("vacature", "n.v.t.", "?") wordt geen contact. */
+function isGeenPersoonsnaam(naam){
+  return /^(vacature|vacant|n\.?v\.?t\.?|nvt|onbekend|nog niet bekend|nnb|n\.?n\.?b\.?|tbd|-+|—|–|\?+)$/i.test((naam||"").trim());
+}
+
+/* Kiest bij een ingetypte naam het juiste contact en geeft het id terug (null bij een lege naam of
+   iets als "vacature"). Gedeeld door elke plek waar je een naam typt die een contact moet zijn:
+   - zelfde naam als het huidige contact: dat houden (hoofdletters/spaties worden bijgewerkt);
+   - er bestaat al een contact met deze naam: dat contact;
+   - het huidige contact wordt alleen op deze plek gebruikt en heeft nog geen eigen gegevens
+     (e-mail, telefoon, LinkedIn of een andere foto): dat contact hernoemen, zodat het herstellen
+     van een tikfout geen dubbel contact oplevert;
+   - anders: een nieuw contact. Het vorige contact blijft gewoon in het register staan.
+   `eigenFoto` is de foto die op de plek zelf staat (telt niet als "eigen gegevens" van het contact). */
+function contactIdVoorNaam(naam, huidigId, eigenFoto){
+  naam = (naam||"").trim();
+  if (!naam || isGeenPersoonsnaam(naam)) return null;
+  const huidig = getContact(huidigId);
+  if (huidig && normName(huidig.naam) === normName(naam)){
+    if (huidig.naam !== naam) huidig.naam = naam;
+    return huidig.id;
+  }
+  const bestaand = getContacts().find(c => c !== huidig && normName(c.naam) === normName(naam));
+  if (bestaand) return bestaand.id;
+  if (huidig && contactUsageCount(huidig.id) <= 1 && !huidig.email && !huidig.telefoon && !huidig.linkedin
+      && (!huidig.foto || huidig.foto === eigenFoto)){
+    huidig.naam = naam;
+    return huidig.id;
+  }
+  return findOrCreateContactByName(naam, "");
+}
+
+/* Vult lege velden van een contact aan (rol, bedrijf, foto). Wat al in het contact staat, blijft. */
+function vulContactAan(id, extra){
+  const c = getContact(id);
+  if (!c || !extra) return;
+  if (!c.rol && extra.rol) c.rol = extra.rol;
+  if (!c.bedrijfId && extra.bedrijfId) c.bedrijfId = extra.bedrijfId;
+  if (!c.foto && extra.foto) c.foto = extra.foto;
+}
+
+/* ---------- Persoonsplekken ----------
+   Plekken in de organisatie waar één persoon staat: de manager van een afdeling, de directeur van
+   een sector, en de burgemeester en de gemeentesecretaris/algemeen directeur (state.topFuncties).
+   Elke plek heeft een contactId naar het centrale contactenregister. De naam (en bij een manager de
+   foto) die er al stond blijft als terugval bewaard, zodat oude bestanden en losgekoppelde plekken
+   gewoon blijven werken. Een plek is een klein object met get/set-functies, zodat één stuk logica
+   (koppelen, tonen, bewerken) voor elke soort plek werkt. Lezen verandert de state nooit. */
+function managerPlek(afdNaam){
+  const a = ()=> state.afdelingen[afdNaam] || null;
+  return { rol: "Manager " + afdNaam,
+    getId: ()=> a()?.managerContactId || null, setId: id => { ensureAfd(afdNaam).managerContactId = id || null; },
+    getNaam: ()=> a()?.manager || "", setNaam: n => { ensureAfd(afdNaam).manager = n; },
+    eigenFoto: ()=> a()?.managerPhoto || null, bedrijfId: ()=> a()?.managerBedrijfId || null };
+}
+function sectorDirecteurPlek(block){
+  return { rol: "Directeur " + block.sector,
+    getId: ()=> block.directeurContactId || null, setId: id => { block.directeurContactId = id || null; },
+    getNaam: ()=> (state.sectorDirecteurs && state.sectorDirecteurs[block.sector]) || "",
+    setNaam: n => { (state.sectorDirecteurs || (state.sectorDirecteurs = {}))[block.sector] = n; },
+    eigenFoto: ()=> null, bedrijfId: ()=> standaardBedrijfId() };
+}
+function topFunctieRol(key){ return key === "burgemeester" ? "Burgemeester" : "Gemeentesecretaris / algemeen directeur"; }
+function topFunctiePlek(key){
+  const t = ()=> (state.topFuncties && state.topFuncties[key]) || null;
+  const zorg = ()=>{
+    if (!state.topFuncties) state.topFuncties = {};
+    return state.topFuncties[key] || (state.topFuncties[key] = { naam: "", contactId: null });
+  };
+  return { rol: topFunctieRol(key),
+    getId: ()=> t()?.contactId || null, setId: id => { zorg().contactId = id || null; },
+    getNaam: ()=> t()?.naam || "", setNaam: n => { zorg().naam = n; },
+    eigenFoto: ()=> null, bedrijfId: ()=> standaardBedrijfId() };
+}
+function plekContact(plek){ return getContact(plek.getId()); }
+function plekNaam(plek){ return plekContact(plek)?.naam || plek.getNaam() || ""; }
+function plekFoto(plek){ const c = plekContact(plek); return c ? (c.foto || null) : plek.eigenFoto(); }
+/* Naam getypt op een plek: koppelen aan het juiste contact (zie contactIdVoorNaam) */
+function plekZetNaam(plek, naam){
+  naam = (naam||"").trim();
+  plek.setNaam(naam);
+  plek.setId(contactIdVoorNaam(naam, plek.getId(), plek.eigenFoto()));
+  vulContactAan(plek.getId(), { rol: plek.rol, bedrijfId: plek.bedrijfId(), foto: plek.eigenFoto() });
+}
+/* Bestaand contact gekozen uit de suggesties */
+function plekKiesContact(plek, ct){
+  plek.setId(ct.id);
+  plek.setNaam(ct.naam || "");
+  vulContactAan(ct.id, { rol: plek.rol, bedrijfId: plek.bedrijfId(), foto: plek.eigenFoto() });
+}
+
 /* Eénmalige, veilige migratie: herkent gelijke namen in bestaande activiteit-contactpersonen,
    beheerders en externe inhuur, voegt ze samen tot één contact per persoon in het nieuwe
    register, en koppelt elke plek daaraan (contactId). Bestaande naam/e-mail/telefoon-velden op
@@ -2356,6 +2477,7 @@ function findOrCreateContactByName(naam, rol, email, telefoon){
    ontkoppeling niet bij een volgende herlaadbeurt weer wordt "hersteld". */
 function migreerContactenEenmalig(){
   migreerOrgPersonenEenmalig();
+  migreerLeidinggevendenEenmalig();
   if (state.contactenMigratieVoltooid) return;
   function migreerProjecten(projects){
     for (const p of (projects||[])){
@@ -2376,6 +2498,37 @@ function migreerContactenEenmalig(){
     x.contactId = findOrCreateContactByName(x.naam, x.functie, x.email, x.telefoon);
   }
   state.contactenMigratieVoltooid = true;
+}
+
+/* Eenmalig: bestaande managers van afdelingen, directeuren van sectoren en (als die er al zijn) de
+   burgemeester en gemeentesecretaris koppelen aan het contactenregister (zelfde naam = zelfde
+   contact). Eigen vlag, zodat dit ook draait voor bestanden waarin de eerdere migraties al gedaan
+   zijn, en zodat een contact dat je later bewust verwijdert niet bij opnieuw laden terugkomt. */
+function migreerLeidinggevendenEenmalig(){
+  if (state.leidinggevendenContactMigratieVoltooid) return;
+  const koppel = (naam, rol)=> (!(naam||"").trim() || isGeenPersoonsnaam(naam)) ? null : findOrCreateContactByName(naam, rol);
+  for (const [afdNaam, a] of Object.entries(state.afdelingen||{})){
+    if (!a || getContact(a.managerContactId)) continue;
+    const id = koppel(a.manager, "Manager " + afdNaam);
+    if (!id) continue;
+    a.managerContactId = id;
+    vulContactAan(id, { bedrijfId: a.managerBedrijfId, foto: a.managerPhoto });
+  }
+  for (const b of (state.org||[])){
+    if (!b || getContact(b.directeurContactId)) continue;
+    const id = koppel((state.sectorDirecteurs||{})[b.sector], "Directeur " + b.sector);
+    if (!id) continue;
+    b.directeurContactId = id;
+    vulContactAan(id, { bedrijfId: standaardBedrijfId() });
+  }
+  for (const [key, t] of Object.entries(state.topFuncties||{})){
+    if (!t || getContact(t.contactId)) continue;
+    const id = koppel(t.naam, topFunctieRol(key));
+    if (!id) continue;
+    t.contactId = id;
+    vulContactAan(id, { bedrijfId: standaardBedrijfId() });
+  }
+  state.leidinggevendenContactMigratieVoltooid = true;
 }
 
 /* Klein modal-formulier om één centraal contact te bewerken (of aan te maken). Wordt overal
@@ -4889,8 +5042,8 @@ function openQuickCaptureModal(preset){
 }
 
 /* Mensen die in de organisatie bekend zijn maar (nog) niet in het contactenregister staan:
-   managers van afdelingen (tekstveld), en collegeleden en control-personen zonder (geldige)
-   contactkoppeling. */
+   managers, directeuren, burgemeester/gemeentesecretaris, collegeleden en control-personen
+   zonder (geldige) contactkoppeling. */
 function orgPersonenZonderContact(bekendeNamen){
   const uit = [];
   const gezien = new Set(bekendeNamen);
@@ -4902,7 +5055,18 @@ function orgPersonenZonderContact(bekendeNamen){
   };
   for (const block of ORG) for (const a of block.afdelingen){
     const m = getManager(a.naam);
-    if (m) voeg(m, "Manager " + a.naam, `Manager · ${a.naam}`, state.afdelingen[a.naam]?.managerBedrijfId);
+    if (m && !getContact(state.afdelingen[a.naam]?.managerContactId) && !isGeenPersoonsnaam(m))
+      voeg(m, "Manager " + a.naam, `Manager · ${a.naam}`, state.afdelingen[a.naam]?.managerBedrijfId);
+  }
+  for (const block of ORG){
+    const pl = sectorDirecteurPlek(block);
+    const n = pl.getNaam();
+    if (n && !plekContact(pl) && !isGeenPersoonsnaam(n)) voeg(n, pl.rol, `Directeur · ${block.sector}`, standaardBedrijfId());
+  }
+  for (const key of ["burgemeester", "gemeentesecretaris"]){
+    const pl = topFunctiePlek(key);
+    const n = pl.getNaam();
+    if (n && !plekContact(pl) && !isGeenPersoonsnaam(n)) voeg(n, pl.rol, pl.rol, standaardBedrijfId());
   }
   for (const pp of (state.collegeleden||[])) if (pp.naam && !getContact(pp.contactId)) voeg(pp.naam, pp.functie || "Collegelid", ["College B&W", pp.functie].filter(Boolean).join(" · "), pp.bedrijfId);
   for (const pp of (state.controlPersonen||[])) if (pp.naam && !getContact(pp.contactId)) voeg(pp.naam, pp.functie || "", ["Control", pp.functie].filter(Boolean).join(" · "), pp.bedrijfId);
@@ -5115,9 +5279,12 @@ function findOrgMeta(naam){
   for (const b of ORG) for (const a of b.afdelingen) if (a.naam===naam) return { sector:b.sector, ...a };
   return null;
 }
+/* Naam en foto van de manager komen uit het gekoppelde contact (managerContactId); a.manager en
+   a.managerPhoto zijn de terugval voor oude bestanden en losgekoppelde afdelingen. */
 function getManager(naam){
   const a = state.afdelingen[naam];
-  return (a && a.manager != null) ? a.manager : "";
+  if (!a) return "";
+  return getContact(a.managerContactId)?.naam || (a.manager != null ? a.manager : "");
 }
 function getTeams(naam){
   const a = state.afdelingen[naam];
@@ -5126,7 +5293,9 @@ function getTeams(naam){
 }
 function getPhoto(naam){
   const a = state.afdelingen[naam];
-  return a?.managerPhoto || null;
+  if (!a) return null;
+  const c = getContact(a.managerContactId);
+  return c ? (c.foto || null) : (a.managerPhoto || null);
 }
 /* Telt alleen echte afdelingen: de bestuurlijke top ("Sector overstijgend" — Raad,
    Griffie, College B&W, Control) telt niet mee. */
@@ -5926,7 +6095,7 @@ function runGlobalSearch(q){
     const m = getManager(a.naam);
     if (m && !mgrGezien.has(a.naam) && zoekMatch(terms, m)){
       mgrGezien.add(a.naam);
-      const ct = getContacts().find(c => normName(c.naam) === normName(m));
+      const ct = getContact(state.afdelingen[a.naam]?.managerContactId) || getContacts().find(c => normName(c.naam) === normName(m));
       mensen.push({ titel: m, icon: "managers", bron: `Manager · ${a.naam}`,
         email: ct?.email, telefoon: ct?.telefoon, go: ()=> zoekGaNaarAfdeling(a.naam, "mensen") });
     }
@@ -5968,6 +6137,19 @@ function runGlobalSearch(q){
       mensen.push({ titel: personNaam(pp) || "(naamloos)", icon: "user", bron: ["Control", pp.functie].filter(Boolean).join(" · "),
         email: resolveContactField(pp, "email"), telefoon: resolveContactField(pp, "telefoon"),
         go: ()=>{ activeView = "control-functies"; renderSidebar(); renderMain(); } });
+    }
+  }
+  // Directeuren van sectoren, burgemeester en gemeentesecretaris (organogram)
+  const orgPlekken = [
+    ...ORG.filter(b => b.sector !== "Sector overstijgend").map(b => [sectorDirecteurPlek(b), `Directeur · ${b.sector}`]),
+    [topFunctiePlek("burgemeester"), "Burgemeester"],
+    [topFunctiePlek("gemeentesecretaris"), "Gemeentesecretaris / algemeen directeur"],
+  ];
+  for (const [pl, bron] of orgPlekken){
+    const n = plekNaam(pl);
+    if (n && zoekMatch(terms, n)){
+      const c = plekContact(pl);
+      mensen.push({ titel: n, icon: "managers", bron, email: c?.email, telefoon: c?.telefoon, go: ()=> navTo("organogram") });
     }
   }
   add("mensen", "Mensen", "managers", mensen);
@@ -10767,7 +10949,7 @@ function renderOrganogramView(main){
 
   const hdr = document.createElement("div");
   hdr.className = "afd-header";
-  hdr.innerHTML = `<div><h2>Organogram</h2><div class="sub">${totalAfds} afdelingen · klik op een box voor details · directeur per sector is klikbaar in te vullen</div></div>`;
+  hdr.innerHTML = `<div><h2>Organogram</h2><div class="sub">${totalAfds} afdelingen · klik op een box voor details · klik op een naam (directeur, burgemeester, gemeentesecretaris) om iemand te kiezen</div></div>`;
   main.appendChild(hdr);
 
   const outer = document.createElement("div");
@@ -10802,11 +10984,22 @@ function renderOrganogramView(main){
     return n;
   }
 
+  /* Bestuursfunctie met daaronder de persoon uit het contactenregister (klik om te kiezen) */
+  function topFunctieNode(id, label, mods, key, placeholder){
+    const n = node(id, "", mods);
+    n.style.flexDirection = "column";
+    const lab = document.createElement("span");
+    lab.textContent = label;
+    n.appendChild(lab);
+    n.appendChild(maakOrgPersoonRegel(topFunctiePlek(key), { klasse: "org-topnode-persoon", leeg: "kies persoon", placeholder }));
+    return n;
+  }
+
   /* ---- Level 1: Raad + Burgemeester ---- */
   const l1 = topRow("org-l1", 80);
   l1.appendChild(node("org-n-raad",        "Raad",          "org-topnode--pol",
     ()=>{ activeView="Raad"; renderSidebar(); renderMain(); }));
-  l1.appendChild(node("org-n-burgemeester","Burgemeester",   "org-topnode--pol"));
+  l1.appendChild(topFunctieNode("org-n-burgemeester", "Burgemeester", "org-topnode--pol", "burgemeester", "Naam burgemeester"));
   ci.appendChild(l1);
   sp(36);
 
@@ -10850,7 +11043,7 @@ function renderOrganogramView(main){
 
   /* ---- Level 4: Gemeentesecretaris ---- */
   const l4 = topRow("org-l4");
-  l4.appendChild(node("org-n-gemsec", "Gemeentesecretaris / Algemeen Directeur", "org-topnode--admin"));
+  l4.appendChild(topFunctieNode("org-n-gemsec", "Gemeentesecretaris / Algemeen Directeur", "org-topnode--admin", "gemeentesecretaris", "Naam gemeentesecretaris"));
   ci.appendChild(l4);
   sp(36);
 
@@ -10874,35 +11067,8 @@ function renderOrganogramView(main){
     sh.innerHTML = `<span>${escapeHTML(block.sector)}</span><span style="font-size:10px;font-weight:500;opacity:.7;margin-left:8px;">${block.afdelingen.length}</span>`;
     col.appendChild(sh);
 
-    /* editable director row */
-    const dirRow = document.createElement("div");
-    dirRow.className = "org-director-row";
-    const icon = document.createElement("span");
-    icon.textContent = "👤";
-    const lbl = document.createElement("span");
-    lbl.style.cssText = "flex:1;";
-    lbl.textContent = state.sectorDirecteurs[block.sector] || "— directeur —";
-    dirRow.appendChild(icon);
-    dirRow.appendChild(lbl);
-    dirRow.onclick = () => {
-      const inp = document.createElement("input");
-      inp.value = state.sectorDirecteurs[block.sector] || "";
-      inp.placeholder = "Naam directeur";
-      dirRow.replaceChild(inp, lbl);
-      inp.focus();
-      const save = () => {
-        state.sectorDirecteurs[block.sector] = inp.value.trim();
-        markDirty();
-        lbl.textContent = state.sectorDirecteurs[block.sector] || "— directeur —";
-        dirRow.replaceChild(lbl, inp);
-      };
-      inp.onblur = save;
-      inp.onkeydown = e => {
-        if (e.key==="Enter") inp.blur();
-        if (e.key==="Escape"){ dirRow.replaceChild(lbl, inp); }
-      };
-    };
-    col.appendChild(dirRow);
+    /* directeur van de sector: persoon uit het contactenregister (klik om te kiezen) */
+    col.appendChild(maakOrgPersoonRegel(sectorDirecteurPlek(block), { klasse: "org-director-row", leeg: "— directeur —", placeholder: "Naam directeur" }));
 
     /* department items */
     for (const a of block.afdelingen){
@@ -11047,36 +11213,82 @@ function personFoto(p){
 /* Vult lege velden van het gekoppelde contact aan met wat er op de kaart staat. Wat al in het
    contact staat, blijft altijd ongewijzigd. */
 function vulContactAanVanuitPersoon(p, standaardRol){
-  const c = getContact(p && p.contactId);
-  if (!c) return;
-  if (!c.rol) c.rol = (p.functie||"").trim() || standaardRol || "";
-  if (!c.bedrijfId && p.bedrijfId) c.bedrijfId = p.bedrijfId;
-  if (!c.foto && p.foto) c.foto = p.foto;
+  if (!p) return;
+  vulContactAan(p.contactId, { rol: (p.functie||"").trim() || standaardRol || "", bedrijfId: p.bedrijfId, foto: p.foto });
 }
 
 /* Koppelt een collegelid/control-persoon aan het juiste contact nadat de naam op de kaart is
-   ingevuld of gewijzigd:
-   - naam leeg: koppeling loslaten (het contact zelf blijft in het register staan);
-   - zelfde naam als het huidige contact: alleen hoofdletters/spaties bijwerken en lege velden aanvullen;
-   - er bestaat al een contact met deze naam: daaraan koppelen;
-   - het huidige contact wordt alleen hier gebruikt en heeft nog geen eigen gegevens (e-mail,
-     telefoon, LinkedIn of een andere foto): dat contact hernoemen, zodat het herstellen van een
-     tikfout geen dubbel contact oplevert;
-   - anders: een nieuw contact aanmaken. Het vorige contact blijft gewoon bestaan. */
+   ingevuld of gewijzigd (regels: zie contactIdVoorNaam). Lege naam: koppeling loslaten. */
 function koppelPersoonAanContact(p, standaardRol){
-  const naam = (p.naam||"").trim();
-  const huidig = getContact(p.contactId);
-  if (!naam){ p.contactId = null; return; }
-  if (huidig && normName(huidig.naam) === normName(naam)){
-    if (huidig.naam !== naam) huidig.naam = naam;
-  } else {
-    const bestaand = getContacts().find(c => c !== huidig && normName(c.naam) === normName(naam));
-    if (bestaand) p.contactId = bestaand.id;
-    else if (huidig && contactUsageCount(huidig.id) <= 1 && !huidig.email && !huidig.telefoon
-             && !huidig.linkedin && (!huidig.foto || huidig.foto === p.foto)) huidig.naam = naam;
-    else p.contactId = findOrCreateContactByName(naam, "");
-  }
+  p.contactId = contactIdVoorNaam(p.naam, p.contactId, p.foto);
   vulContactAanVanuitPersoon(p, standaardRol);
+}
+
+/* Regel met e-mail en telefoon van een gekoppeld contact, plus een potlood dat de contacteditor
+   opent. Gebruikt op de kaarten van College B&W en Control en bij de manager van een afdeling.
+   Verborgen als er geen contact gekoppeld is. onSaved wordt na Opslaan in de editor aangeroepen. */
+function toonContactRegel(el, contactId, onSaved){
+  const c = getContact(contactId);
+  el.style.display = c ? "" : "none";
+  el.innerHTML = "";
+  if (!c) return;
+  let h = "";
+  if (c.email) h += `<span class="copy-row"><a href="mailto:${escapeHTML(c.email)}">${escapeHTML(c.email)}</a>${copyBtnHTML(c.email, "E-mailadres")}</span>`;
+  if (c.telefoon) h += `<span class="copy-row"><a href="tel:${escapeHTML(c.telefoon.replace(/[^0-9+]/g,""))}">${escapeHTML(c.telefoon)}</a>${copyBtnHTML(c.telefoon, "Telefoonnummer")}</span>`;
+  const leeg = !c.email && !c.telefoon;
+  h += `<button type="button" class="person-contact-edit" title="Contactgegevens bewerken. Wijzigingen gelden overal waar dit contact gekoppeld is." aria-label="Contactgegevens bewerken">${faIcon("pen")}${leeg ? "<span>E-mail en telefoon toevoegen</span>" : ""}</button>`;
+  el.innerHTML = h;
+  el.querySelector(".person-contact-edit").onclick = ()=> openContactEditor(c.id, ()=>{ onSaved && onSaved(); });
+}
+
+/* Klikbare persoonsregel in het organogram (directeur van een sector, burgemeester,
+   gemeentesecretaris). Toont naam en foto uit het contactenregister; klik om een naam te typen of
+   iemand uit je contacten te kiezen. Enter of wegklikken slaat op, Escape annuleert. */
+function maakOrgPersoonRegel(plek, opts){
+  const row = document.createElement("div");
+  row.className = opts.klasse;
+  const herteken = ()=> requestAnimationFrame(()=> drawOrgLines());
+  function toon(){
+    const naam = plekNaam(plek);
+    const c = plekContact(plek);
+    const foto = plekFoto(plek);
+    row.innerHTML = (foto ? avatarHTML(naam, foto, 18) : faIcon("user"))
+      + `<span class="org-persoon-naam">${naam ? escapeHTML(naam) : `<span class="org-persoon-leeg">${escapeHTML(opts.leeg)}</span>`}</span>`;
+    const meta = c ? [c.email, c.telefoon].filter(Boolean).join(" · ") : "";
+    row.title = (meta ? meta + "\n" : "") + "Klik om een persoon te kiezen of te typen";
+  }
+  row.onclick = (e)=>{
+    e.stopPropagation();
+    if (row.querySelector("input")) return;
+    const inp = document.createElement("input");
+    inp.value = plekNaam(plek);
+    inp.placeholder = opts.placeholder;
+    inp.autocomplete = "off";
+    row.innerHTML = "";
+    row.appendChild(inp);
+    inp.focus(); inp.select();
+    let klaar = false;
+    inp.onclick = (ev)=> ev.stopPropagation();
+    attachContactAutocomplete(inp, (ct)=>{
+      if (klaar) return;
+      klaar = true;
+      plekKiesContact(plek, ct);
+      markDirty(); toon(); herteken();
+    });
+    inp.addEventListener("keydown", (ev)=>{
+      if (ev.defaultPrevented) return;   // suggestie gekozen met Enter: al afgehandeld
+      if (ev.key === "Enter"){ ev.preventDefault(); inp.blur(); }
+      else if (ev.key === "Escape"){ klaar = true; toon(); herteken(); }
+    });
+    inp.addEventListener("blur", ()=>{
+      if (klaar) return;
+      klaar = true;
+      if (inp.value.trim() !== plekNaam(plek)){ plekZetNaam(plek, inp.value); markDirty(); }
+      toon(); herteken();
+    });
+  };
+  toon();
+  return row;
 }
 
 /* Eenmalig: bestaande collegeleden en control-personen met een naam koppelen aan het
@@ -11197,17 +11409,7 @@ function makePersonCard(person, showPortfolio, onDelete, standaardRol){
   const contactRegel = document.createElement("div");
   contactRegel.className = "person-contact";
   function renderContactRegel(){
-    const c = getContact(person.contactId);
-    contactRegel.style.display = c ? "" : "none";
-    contactRegel.innerHTML = "";
-    if (!c) return;
-    let h = "";
-    if (c.email) h += `<span class="copy-row"><a href="mailto:${escapeHTML(c.email)}">${escapeHTML(c.email)}</a>${copyBtnHTML(c.email, "E-mailadres")}</span>`;
-    if (c.telefoon) h += `<span class="copy-row"><a href="tel:${escapeHTML(c.telefoon.replace(/[^0-9+]/g,""))}">${escapeHTML(c.telefoon)}</a>${copyBtnHTML(c.telefoon, "Telefoonnummer")}</span>`;
-    const leeg = !c.email && !c.telefoon;
-    h += `<button type="button" class="person-contact-edit" title="Contactgegevens bewerken. Wijzigingen gelden overal waar dit contact gekoppeld is." aria-label="Contactgegevens bewerken">${faIcon("pen")}${leeg ? "<span>E-mail en telefoon toevoegen</span>" : ""}</button>`;
-    contactRegel.innerHTML = h;
-    contactRegel.querySelector(".person-contact-edit").onclick = ()=> openContactEditor(c.id, ()=>{
+    toonContactRegel(contactRegel, person.contactId, ()=>{
       const cc = getContact(person.contactId);
       if (cc){
         person.naam = cc.naam || person.naam;
@@ -12657,7 +12859,7 @@ const HELP_SECTIES = [
    "afdeling"
   ],
   "nav": "",
-  "tekst": "Onder **Afdelingen** in de linkerbalk staan alle sectoren met hun afdelingen. Met ⇕ klap je alle sectoren tegelijk in of uit. Het getal achter een afdeling is het aantal lopende activiteiten.\n\nOnder de naam van een afdeling staan de sector, de manager en het bedrijf. Een afdeling heeft vier tabbladen:\n\n# Activiteiten\nDe activiteiten van deze afdeling. Zie **Een activiteit bijhouden**.\n\n# Mensen & teams\n- **Manager**: naam invullen of wijzigen, en een foto toevoegen door op de foto te klikken.\n- **Teams**: de teams binnen de afdeling, toe te voegen met **+ Team**.\n- **Functioneel beheerders** en **Externe inhuur** die aan deze afdeling gekoppeld zijn. Met **+ Koppelen** koppel je een bestaande, of maak je er direct een nieuwe aan.\n\n# Processen & wetten\n- De **hoofdprocessen** en de **wet- en regelgeving** van de afdeling. Voeg ze toe met **+ Proces** of **+ Wet**.\n- Komt iets ook bij andere afdelingen voor, dan zie je dat aan een getal (bijvoorbeeld *3×*).\n- Klik op een item om het te hernoemen, naar een andere categorie te verplaatsen of te verwijderen.\n- Bij een **hoofdproces** kun je in dat venster een **werkinstructie (processjabloon)** kiezen. Daarna staat er een ▶ bij het proces: één klik start het proces met werkinstructie. De koppeling geldt voor dit proces in alle afdelingen met dezelfde naam, en blijft bestaan als je het proces hernoemt.\n\n# Software\nDe applicaties die de afdeling gebruikt, met de functioneel beheerders. Zie **Software**.\n\n# Financiën\nHet tabblad **Financiën** toont de begrotingsregels die gekoppeld zijn aan activiteiten van de afdeling, met per jaar het begrote en uitgegeven bedrag. Klik op een regel om hem te openen, of op de activiteit om ernaartoe te gaan."
+  "tekst": "Onder **Afdelingen** in de linkerbalk staan alle sectoren met hun afdelingen. Met ⇕ klap je alle sectoren tegelijk in of uit. Het getal achter een afdeling is het aantal lopende activiteiten.\n\nOnder de naam van een afdeling staan de sector, de manager en het bedrijf. Een afdeling heeft vier tabbladen:\n\n# Activiteiten\nDe activiteiten van deze afdeling. Zie **Een activiteit bijhouden**.\n\n# Mensen & teams\n- **Manager**: typ een naam of kies iemand uit je contacten. De manager staat daarmee ook in **Relaties → Contacten**, en naam en foto zijn overal gelijk. E-mail en telefoon staan onder de naam; met het potloodje vul je ze aan. Een foto voeg je toe door op de foto te klikken.\n- **Teams**: de teams binnen de afdeling, toe te voegen met **+ Team**.\n- **Functioneel beheerders** en **Externe inhuur** die aan deze afdeling gekoppeld zijn. Met **+ Koppelen** koppel je een bestaande, of maak je er direct een nieuwe aan.\n\n# Processen & wetten\n- De **hoofdprocessen** en de **wet- en regelgeving** van de afdeling. Voeg ze toe met **+ Proces** of **+ Wet**.\n- Komt iets ook bij andere afdelingen voor, dan zie je dat aan een getal (bijvoorbeeld *3×*).\n- Klik op een item om het te hernoemen, naar een andere categorie te verplaatsen of te verwijderen.\n- Bij een **hoofdproces** kun je in dat venster een **werkinstructie (processjabloon)** kiezen. Daarna staat er een ▶ bij het proces: één klik start het proces met werkinstructie. De koppeling geldt voor dit proces in alle afdelingen met dezelfde naam, en blijft bestaan als je het proces hernoemt.\n\n# Software\nDe applicaties die de afdeling gebruikt, met de functioneel beheerders. Zie **Software**.\n\n# Financiën\nHet tabblad **Financiën** toont de begrotingsregels die gekoppeld zijn aan activiteiten van de afdeling, met per jaar het begrote en uitgegeven bedrag. Klik op een regel om hem te openen, of op de activiteit om ernaartoe te gaan."
  },
  {
   "id": "organogram",
@@ -12670,7 +12872,7 @@ const HELP_SECTIES = [
    "control-functies"
   ],
   "nav": "organogram",
-  "tekst": "# Organogram\nOnder **Organisatie → Organogram** zie je de bestuurlijke opbouw: Raad en burgemeester, Griffie, College B&W en Control, de gemeentesecretaris/algemeen directeur en daaronder de sectoren met hun afdelingen.\n- Per afdeling zie je de manager, de teams en het aantal activiteiten. Klik op een afdeling om ernaartoe te gaan.\n- De naam van de directeur per sector vul je in door erop te klikken.\n- Klik op College B&W of Control om die schermen te openen.\n\n# College B&W\n- Houd per collegelid de **portefeuille**, een **foto** (klik op de avatar), **acties** en **notities** bij. Een nieuw lid voeg je toe met **+ Nieuw collegelid**.\n- Je kunt hier ook **activiteiten** aanmaken, net als bij een afdeling. Die tellen mee in alle overzichten.\n\n# Control\nHoud personen en functies bij, met acties en notities per persoon. Toevoegen met **+ Nieuw persoon / functie**.\n\n# Koppeling met Contacten\nCollegeleden en control-personen staan ook in **Relaties → Contacten**.\n- Typ je een naam op een kaart, dan zie je suggesties uit je contacten. Kies je er een, dan wordt de kaart daaraan gekoppeld. Een nieuwe naam wordt automatisch een nieuw contact.\n- Naam en foto komen uit het contact. Pas je ze aan op de kaart of in Contacten, dan zie je dat overal.\n- E-mail en telefoon staan onder de functie. Met het potloodje open je het contact om ze in te vullen of te wijzigen.\n- De functie en het bedrijf van de kaart gaan mee naar het contact, tenzij daar al iets anders staat.\n- Verwijder je een kaart, dan blijft het contact bewaard."
+  "tekst": "# Organogram\nOnder **Organisatie → Organogram** zie je de bestuurlijke opbouw: Raad en burgemeester, Griffie, College B&W en Control, de gemeentesecretaris/algemeen directeur en daaronder de sectoren met hun afdelingen.\n- Per afdeling zie je de manager, de teams en het aantal activiteiten. Klik op een afdeling om ernaartoe te gaan.\n- Klik op de regel onder een sector (directeur), onder **Burgemeester** of onder **Gemeentesecretaris / Algemeen Directeur** om een naam te typen of iemand uit je contacten te kiezen. Enter slaat op, Escape annuleert. Deze mensen staan daarmee ook in **Relaties → Contacten**.\n- Klik op College B&W of Control om die schermen te openen.\n\n# College B&W\n- Houd per collegelid de **portefeuille**, een **foto** (klik op de avatar), **acties** en **notities** bij. Een nieuw lid voeg je toe met **+ Nieuw collegelid**.\n- Je kunt hier ook **activiteiten** aanmaken, net als bij een afdeling. Die tellen mee in alle overzichten.\n\n# Control\nHoud personen en functies bij, met acties en notities per persoon. Toevoegen met **+ Nieuw persoon / functie**.\n\n# Koppeling met Contacten\nCollegeleden en control-personen staan ook in **Relaties → Contacten**.\n- Typ je een naam op een kaart, dan zie je suggesties uit je contacten. Kies je er een, dan wordt de kaart daaraan gekoppeld. Een nieuwe naam wordt automatisch een nieuw contact.\n- Naam en foto komen uit het contact. Pas je ze aan op de kaart of in Contacten, dan zie je dat overal.\n- E-mail en telefoon staan onder de functie. Met het potloodje open je het contact om ze in te vullen of te wijzigen.\n- De functie en het bedrijf van de kaart gaan mee naar het contact, tenzij daar al iets anders staat.\n- Verwijder je een kaart, dan blijft het contact bewaard."
  },
  {
   "id": "managers",
@@ -12681,7 +12883,7 @@ const HELP_SECTIES = [
    "managers"
   ],
   "nav": "managers",
-  "tekst": "Onder **Organisatie → Managers overzicht** staan alle afdelingsmanagers, gegroepeerd per sector.\n- Klik op een foto om een foto toe te voegen of te wijzigen. Foto's worden automatisch verkleind.\n- Met de bewerkknop wijzig je de naam van de manager.\n- Is er een standaardbedrijf ingesteld, dan krijgen nieuwe afdelingen dat bedrijf automatisch (zie **Bedrijven**)."
+  "tekst": "Onder **Organisatie → Managers overzicht** staan alle afdelingsmanagers, gegroepeerd per sector.\n- Klik op een foto om een foto toe te voegen of te wijzigen. Foto's worden automatisch verkleind.\n- Klik op een manager om naar de afdeling te gaan. Daar wijzig je de manager op het tabblad *Mensen & teams*.\n- Managers staan ook in **Relaties → Contacten**.\n- Is er een standaardbedrijf ingesteld, dan krijgen nieuwe afdelingen dat bedrijf automatisch (zie **Bedrijven**)."
  },
  {
   "id": "beheerders",
@@ -12714,7 +12916,7 @@ const HELP_SECTIES = [
    "contacten"
   ],
   "nav": "contacten",
-  "tekst": "Onder **Relaties → Contacten** staat het centrale contactenregister. Elke persoon staat er één keer in, met naam, rol, e-mail, telefoon, bedrijf, LinkedIn-profiel en foto. Overal waar iemand gekoppeld is (activiteiten, functioneel beheerders, externe inhuur, processtappen, College B&W en Control), worden die gegevens live overgenomen.\n\n- **Zoeken** op voornaam, achternaam of beide, en op rol, e-mail of telefoon.\n- Per contact zie je op hoeveel plekken het gekoppeld is.\n- **+ Nieuw contact**, **Bewerken** en **Verwijderen** doe je hier centraal. Bij het koppelen elders kun je ook direct een nieuw contact aanmaken.\n- **⇄ Samenvoegen**: staat iemand er dubbel in, bijvoorbeeld een keer alleen met voornaam, dan voeg je de twee samen. Alle koppelingen gaan mee naar het contact dat blijft.\n- Klik op het telefoonnummer om te bellen, bijvoorbeeld via Teams. Met de kopieerknop kopieer je e-mail of telefoon.\n- **LinkedIn**: plak in de contacteditor het profieladres (of alleen de profielnaam). De knop **Openen** opent het profiel; staat er nog niets, dan zoekt **Zoeken** de persoon op naam op LinkedIn.\n- **Foto**: kies een bestand, of neem de profielfoto van LinkedIn over. LinkedIn staat niet toe dat de app de foto zelf ophaalt, dus: open het profiel, klik met rechts op de profielfoto, kies *Afbeelding kopiëren* en plak hem in de contacteditor met ⌘V (of sleep de foto erheen). De foto verschijnt op de contactkaart, overal waar het contact gekoppeld is, en bij functioneel beheerders zonder eigen foto.\n- **Synchroniseren met iPhone/Mac**: via Instellingen kun je contacten met een telefoonnummer automatisch naar een aparte groep in Contacten op je Mac en iPhone laten zetten. Dat werkt via een eenmalig te installeren achtergrondprogramma in de map *contacten-sync*. Bij de installatie krijg je een **koppelcode**: die plak je één keer in de tracker, zodat alleen jouw tracker het programma kan aansturen."
+  "tekst": "Onder **Relaties → Contacten** staat het centrale contactenregister. Elke persoon staat er één keer in, met naam, rol, e-mail, telefoon, bedrijf, LinkedIn-profiel en foto. Overal waar iemand gekoppeld is (activiteiten, functioneel beheerders, externe inhuur, processtappen, managers, directeuren, burgemeester, gemeentesecretaris, College B&W en Control), worden die gegevens live overgenomen. Tekst als *vacature* of *n.v.t.* in een naamveld wordt geen contact.\n\n- **Zoeken** op voornaam, achternaam of beide, en op rol, e-mail of telefoon.\n- Per contact zie je op hoeveel plekken het gekoppeld is.\n- **+ Nieuw contact**, **Bewerken** en **Verwijderen** doe je hier centraal. Bij het koppelen elders kun je ook direct een nieuw contact aanmaken.\n- **⇄ Samenvoegen**: staat iemand er dubbel in, bijvoorbeeld een keer alleen met voornaam, dan voeg je de twee samen. Alle koppelingen gaan mee naar het contact dat blijft.\n- Klik op het telefoonnummer om te bellen, bijvoorbeeld via Teams. Met de kopieerknop kopieer je e-mail of telefoon.\n- **LinkedIn**: plak in de contacteditor het profieladres (of alleen de profielnaam). De knop **Openen** opent het profiel; staat er nog niets, dan zoekt **Zoeken** de persoon op naam op LinkedIn.\n- **Foto**: kies een bestand, of neem de profielfoto van LinkedIn over. LinkedIn staat niet toe dat de app de foto zelf ophaalt, dus: open het profiel, klik met rechts op de profielfoto, kies *Afbeelding kopiëren* en plak hem in de contacteditor met ⌘V (of sleep de foto erheen). De foto verschijnt op de contactkaart, overal waar het contact gekoppeld is, en bij functioneel beheerders zonder eigen foto.\n- **Synchroniseren met iPhone/Mac**: via Instellingen kun je contacten met een telefoonnummer automatisch naar een aparte groep in Contacten op je Mac en iPhone laten zetten. Dat werkt via een eenmalig te installeren achtergrondprogramma in de map *contacten-sync*. Bij de installatie krijg je een **koppelcode**: die plak je één keer in de tracker, zodat alleen jouw tracker het programma kan aansturen."
  },
  {
   "id": "bedrijven",
@@ -15222,7 +15424,8 @@ function renderAfdeling(main, naam){
       </div>
       <div class="manager-info">
         <div class="label">Manager</div>
-        <input id="mgrName" value="${escapeHTML(manager)}" placeholder="Voer naam manager in…">
+        <input id="mgrName" value="${escapeHTML(manager)}" placeholder="Voer naam manager in…" autocomplete="off" title="Typ een naam of kies iemand uit je contacten. De manager staat ook onder Relaties → Contacten.">
+        <div class="person-contact" id="mgrContact"></div>
         <div class="photo-actions">
           <button id="mgrChangePhoto">Foto wijzigen</button>
           ${photo ? `<button id="mgrRemovePhoto" class="danger">Foto verwijderen</button>` : ``}
@@ -15324,22 +15527,53 @@ function renderAfdeling(main, naam){
     const nb = main.querySelector("#afdNaarBegroting"); if (nb) nb.onclick = ()=>{ begrTab = "regels"; navTo("begroting"); }; }
   main.querySelectorAll("[data-goto-tab]").forEach(a => a.onclick = ()=>{ switchAfdTab(a.dataset.gotoTab); setTimeout(()=> document.getElementById("mgrName")?.focus(), 30); });
 
-  // wire manager
+  // wire manager: de naam koppelt aan (of maakt) een contact in het centrale contactenregister
   const mgrInput = document.getElementById("mgrName");
-  mgrInput.addEventListener("input", ()=>{
-    state.afdelingen[naam].manager = mgrInput.value;
-    markDirty();
-    // refresh photo placeholder initials
-    const ph = document.getElementById("mgrPhoto");
-    if (!getPhoto(naam)){
-      ph.innerHTML = `<span>${escapeHTML(initials(mgrInput.value) || "?")}</span><div class="overlay">Foto wijzigen</div>`;
-    }
+  const mgrPlek = managerPlek(naam);
+  const mgrContactEl = document.getElementById("mgrContact");
+  function toonMgrFoto(){
+    const f = getPhoto(naam);
+    document.getElementById("mgrPhoto").innerHTML = (f ? `<img src="${escapeHTML(f)}" alt="">` : `<span>${escapeHTML(initials(mgrInput.value) || "?")}</span>`) + `<div class="overlay">Wijzigen</div>`;
+  }
+  function toonMgrBedrijf(){
+    attachBedrijfPicker({
+      container: document.getElementById("mgrBedrijf"),
+      getBedrijfId: ()=> state.afdelingen[naam].managerBedrijfId || null,
+      setBedrijfId: (id)=>{
+        const oud = state.afdelingen[naam].managerBedrijfId || null;
+        state.afdelingen[naam].managerBedrijfId = id;
+        // Ook bij het gekoppelde contact, tenzij daar al een ander bedrijf staat
+        const c = plekContact(mgrPlek);
+        if (c && (!c.bedrijfId || c.bedrijfId === oud)) c.bedrijfId = id;
+        markDirty();
+      }
+    });
+  }
+  function vernieuwManager(){
+    mgrInput.value = getManager(naam);
+    const kop = main.querySelector('.afd-meta [data-goto-tab="mensen"]');
+    if (kop) kop.textContent = getManager(naam) || "Manager invullen";
+    toonMgrFoto();
+    toonContactRegel(mgrContactEl, mgrPlek.getId(), ()=>{
+      const c = plekContact(mgrPlek);
+      if (c){
+        state.afdelingen[naam].manager = c.naam || "";
+        if (c.bedrijfId && c.bedrijfId !== state.afdelingen[naam].managerBedrijfId){ state.afdelingen[naam].managerBedrijfId = c.bedrijfId; toonMgrBedrijf(); }
+      }
+      markDirty(); vernieuwManager();
+    });
+  }
+  mgrInput.addEventListener("input", ()=>{ if (!getPhoto(naam)) toonMgrFoto(); });
+  mgrInput.addEventListener("change", ()=>{
+    plekZetNaam(mgrPlek, mgrInput.value);
+    markDirty(); vernieuwManager();
   });
-  attachBedrijfPicker({
-    container: document.getElementById("mgrBedrijf"),
-    getBedrijfId: ()=> state.afdelingen[naam].managerBedrijfId || null,
-    setBedrijfId: (id)=>{ state.afdelingen[naam].managerBedrijfId = id; markDirty(); }
+  attachContactAutocomplete(mgrInput, (ct)=>{
+    plekKiesContact(mgrPlek, ct);
+    markDirty(); vernieuwManager();
   });
+  toonMgrBedrijf();
+  vernieuwManager();
   const photoInput = document.getElementById("photoInput");
   const openPhotoPicker = ()=>{
     photoInput.dataset.target = naam;
@@ -15350,6 +15584,8 @@ function renderAfdeling(main, naam){
   const removeBtn = document.getElementById("mgrRemovePhoto");
   if (removeBtn) removeBtn.onclick = ()=>{
     state.afdelingen[naam].managerPhoto = null;
+    const c = getContact(state.afdelingen[naam].managerContactId);
+    if (c) c.foto = null;   // de foto hoort bij de persoon: ook centraal weg
     markDirty(); renderMain();
   };
   // Teams
@@ -16997,7 +17233,10 @@ document.getElementById("photoInput").onchange = async (e)=>{
   e.target.value = "";
   if (!file || !target) return;
   await handlePhotoUpload(file, (dataUrl)=>{
-    ensureAfd(target).managerPhoto = dataUrl;
+    const a = ensureAfd(target);
+    a.managerPhoto = dataUrl;
+    const c = getContact(a.managerContactId);
+    if (c) c.foto = dataUrl;   // de foto hoort bij de persoon: ook centraal bij het contact
     markDirty(); renderMain(); renderSidebar();
   });
 };
@@ -17140,8 +17379,8 @@ document.getElementById("btnExportBasis").onclick = ()=>{
   const afdelingen = {};
   for (const [naam, a] of Object.entries(state.afdelingen||{})){
     afdelingen[naam] = {
-      manager: a.manager ?? null,
-      managerPhoto: a.managerPhoto ?? null,
+      manager: getManager(naam) || (a.manager ?? null),
+      managerPhoto: getPhoto(naam),
       managerBedrijf: afdelingManagerBedrijf(naam)?.naam || null,
       teams: a.teams || [],
       processen: a.processen || [],
@@ -17170,7 +17409,8 @@ document.getElementById("btnExportBasis").onclick = ()=>{
     software: b.software || []
   }));
   const basis = {
-    org: state.org || [],
+    // zonder contactkoppelingen: die verwijzen naar het eigen contactenregister
+    org: (state.org || []).map(({ directeurContactId, ...b }) => b),
     afdelingen,
     beheerders: beheerdersExport,
     collegeleden
@@ -17222,7 +17462,7 @@ document.getElementById("mergeFileInput").onchange = async (e)=>{
       if (!state.afdelingen[naam]) state.afdelingen[naam] = { projects:[] };
       if (!bekend.has(naam)) zonderSector.push(naam);
       const dst = state.afdelingen[naam];
-      let changed = false;
+      let changed = false, mgrNieuw = false;
       for (const field of MERGE_FIELDS){
         const srcVal = src[field];
         const dstVal = dst[field];
@@ -17231,7 +17471,13 @@ document.getElementById("mergeFileInput").onchange = async (e)=>{
         if (!srcEmpty && dstEmpty){
           dst[field] = srcVal;
           changed = true;
+          if (field === "manager") mgrNieuw = true;
         }
+      }
+      // Nieuwe manager uit het bestand: meteen in het contactenregister
+      if (mgrNieuw && !getContact(dst.managerContactId) && !isGeenPersoonsnaam(dst.manager)){
+        dst.managerContactId = findOrCreateContactByName(dst.manager, "Manager " + naam);
+        vulContactAan(dst.managerContactId, { foto: dst.managerPhoto });
       }
       changed ? aangevuld++ : overgeslagen++;
     }

@@ -69,7 +69,7 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
   - hoofdprocessen en wet- en regelgeving;
   - de applicaties die de afdeling gebruikt;
   - de gekoppelde functioneel beheerders en externe inhuur.
-- **Organogram.** Je ziet de bestuurlijke opbouw: raad, griffie, College B&W, Control, de gemeentesecretaris en de sectoren met hun afdelingen. Per collegelid houd je de portefeuille, acties en notities bij. Collegeleden en de personen bij Control staan ook in je contacten.
+- **Organogram.** Je ziet de bestuurlijke opbouw: raad, griffie, College B&W, Control, de gemeentesecretaris en de sectoren met hun afdelingen. Per collegelid houd je de portefeuille, acties en notities bij. De burgemeester, de gemeentesecretaris en de directeuren van de sectoren kies je hier uit je contacten.
 - **Functioneel beheerders.** Je registreert wie welke applicaties beheert, voor welke afdelingen.
 - **Externe inhuur.** Hier staan per inhuur:
   - de contractperiode, het aantal mogelijke verlengingen en de verlengduur;
@@ -82,7 +82,7 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
 
 ### Relaties
 
-- **Contacten** staan in één centraal register: naam, rol, e-mail, telefoon, bedrijf, LinkedIn en foto. Overal waar iemand gekoppeld is, worden wijzigingen direct overgenomen. Ook collegeleden en de personen bij Control komen hier automatisch in. Dubbele contacten voeg je eenvoudig samen.
+- **Contacten** staan in één centraal register: naam, rol, e-mail, telefoon, bedrijf, LinkedIn en foto. Overal waar iemand gekoppeld is, worden wijzigingen direct overgenomen. Ook managers, directeuren, de burgemeester, de gemeentesecretaris, collegeleden en de personen bij Control komen hier automatisch in. Dubbele contacten voeg je eenvoudig samen.
 - **Bedrijven** leg je één keer vast en koppel je aan contacten, managers en collegeleden.
 - Optioneel synchroniseer je contacten met een telefoonnummer naar **Contacten op je iPhone en Mac**. Zie [hieronder](#contacten-synchroniseren-met-iphone-en-mac-optioneel).
 
