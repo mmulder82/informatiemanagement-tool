@@ -1819,9 +1819,9 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.35.0";
+const APP_VERSION = "4.35.1";
 const CHANGELOG = [
-  { version: "4.35.0", datum: "2026-10-30", items: [
+  { version: "4.35.1", datum: "2026-10-30", items: [
     "Eerste publieke versie: de tool zonder gegevens, klaar om zelf in te richten met je eigen sectoren, afdelingen en activiteiten.",
   ]},
 ];
@@ -10045,6 +10045,7 @@ function openContactSyncSettings(){
   const body = backdrop.querySelector("#csyncBody");
   // Niet opnieuw opbouwen terwijl iemand aan het typen is (anders verdwijnt de invoer).
   let bewerkt = false;
+  let snelTimer = null;   // snellere verversing zolang er gesynchroniseerd wordt
   body.addEventListener("input", ()=>{ bewerkt = true; });
   const gebruikerTypt = ()=>{
     const a = document.activeElement;
@@ -10108,7 +10109,7 @@ function openContactSyncSettings(){
     const s = st.body || {};
     const aantal = s.contactCount != null ? s.contactCount : "?";
     const laatst = s.lastSync ? new Date(s.lastSync).toLocaleString("nl-NL") : "nog niet";
-    const foutHtml = s.lastError ? `<p style="color:#b91c1c;font-size:13px">Laatste fout: ${escapeHTML(s.lastError)}</p>` : "";
+    const foutHtml = s.lastError && !s.syncing ? `<p style="color:#b91c1c;font-size:13px">Laatste fout: ${escapeHTML(s.lastError)}</p>` : "";
     body.innerHTML = `
       <p style="color:var(--muted);font-size:13px">
         Contacten met een telefoonnummer worden automatisch bijgehouden in een aparte groep in Contacten
@@ -10131,13 +10132,13 @@ function openContactSyncSettings(){
         <input type="text" id="csyncGroup" value="${escapeHTML(s.groupName||"Informatiemanagement Tracker")}">
       </div>
       <p style="font-size:13px">
-        Status: <b>${s.hasCredentials ? "verbonden" : "nog geen gegevens ingesteld"}</b> ·
+        Status: <b>${s.syncing ? "bezig met synchroniseren…" : (s.hasCredentials ? "verbonden" : "nog geen gegevens ingesteld")}</b> ·
         ${aantal} contact${aantal===1?"":"en"} met telefoonnummer · laatst gesynchroniseerd: ${laatst}
       </p>
       ${foutHtml}
       <div class="modal-actions" style="justify-content:flex-start;padding-top:0">
         <button class="primary" id="csyncSave">Opslaan</button>
-        <button class="secondary" id="csyncNow" ${s.hasCredentials?"":"disabled"}>Nu synchroniseren</button>
+        <button class="secondary" id="csyncNow" ${s.hasCredentials && !s.syncing ? "" : "disabled"}>Nu synchroniseren</button>
         ${s.hasCredentials ? `<button class="danger" id="csyncDisconnect">Loskoppelen</button>` : ``}
       </div>`;
 
@@ -10154,9 +10155,15 @@ function openContactSyncSettings(){
       const r = await contactSyncFetch("/credentials", {
         method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
       });
-      if (!r.ok){ alert("Opslaan mislukt: " + (r.body?.error || r.status || "onbekende fout")); }
+      if (!r.ok){
+        alert(r.status === 0
+          ? "Het achtergrondprogramma gaf niet op tijd antwoord. Kijk zo bij de status of het opslaan toch gelukt is."
+          : "Opslaan mislukt: " + (r.body?.error || r.status));
+      }
       await render();
     };
+    clearTimeout(snelTimer);
+    if (s.syncing) snelTimer = setTimeout(()=>{ if (backdrop.isConnected && !gebruikerTypt()) render(true); }, 2000);
     const nowBtn = body.querySelector("#csyncNow");
     if (nowBtn) nowBtn.onclick = async ()=>{
       nowBtn.disabled = true; nowBtn.textContent = "Bezig…";
