@@ -1358,6 +1358,68 @@
 
   /* ---- Software import preview ---- */
   .imp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+  .imp-stats.ci-stats{grid-template-columns:repeat(4,1fr)}
+
+  /* ---- Organogram exporteren ---- */
+  .oe-wrap{display:flex;gap:18px;flex-wrap:wrap}
+  .oe-opties{flex:1 1 270px;min-width:250px}
+  .oe-voorbeeld{flex:1.5 1 340px;min-width:260px;display:flex;flex-direction:column}
+  .oe-vb{flex:1;min-height:240px;border:1px solid var(--border);border-radius:10px;background:var(--panel-soft);display:flex;align-items:center;justify-content:center;padding:12px;overflow:hidden}
+  .oe-vb svg{display:block;max-width:100%;max-height:420px;width:100%;height:auto;background:#fff;border-radius:4px;box-shadow:var(--shadow-md)}
+  .oe-maat{font-size:11.5px;color:var(--muted);margin-top:6px}
+  .oe-lijst{font-size:12px;color:var(--muted);margin-top:10px}
+  .oe-lijst a{color:var(--accent)}
+  .modal label.oe-check, .modal label.ci-check{display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:400;color:var(--text);margin:0 0 7px;line-height:1.35}
+  .modal label.oe-check input, .modal label.ci-check input{width:auto;margin:2px 0 0;flex-shrink:0}
+  .modal label.oe-check.is-uit{opacity:.45}
+  .modal label.oe-check b{font-weight:600}
+
+  /* ---- Contacten importeren ---- */
+  .ci-intro{font-size:12.5px;color:var(--muted);margin:-6px 0 14px}
+  .ci-drop{border:1.5px dashed var(--border-strong);border-radius:12px;padding:24px 16px;text-align:center;color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;gap:9px;margin-bottom:14px;transition:background .12s,border-color .12s}
+  .ci-drop.drag{background:var(--accent-soft);border-color:var(--accent)}
+  .ci-drop .ghost-btn{border:1px solid var(--border-strong);border-radius:8px;padding:6px 14px;color:var(--text);background:#fff}
+  .ci-drop-hint{font-size:11.5px}
+  .ci-bron{font-size:12px;color:var(--muted);margin:-8px 0 12px}
+  .ci-instel{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .ci-instel > div{flex:1 1 220px;min-width:200px}
+  .ci-scroll{border:1px solid var(--border);border-radius:8px;overflow:auto}
+  .ci-map{width:100%;border-collapse:collapse;font-size:12.5px}
+  .ci-map th{text-align:left;font-size:11px;color:var(--muted);font-weight:500;padding:7px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:1;white-space:nowrap}
+  .ci-map td{padding:5px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .ci-map tr:last-child td{border-bottom:0}
+  .ci-map td.ci-kol{font-weight:500;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ci-map td.ci-vb{color:var(--muted);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ci-map tr.is-on td.ci-kol{color:var(--accent)}
+  .modal .ci-map select{padding:4px 8px;font-size:12.5px;width:100%;min-width:150px}
+  .ci-map.ci-vbt td{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 10px}
+  .ci-leeg{color:var(--muted);font-style:italic}
+  .ci-klein{font-size:12px;color:var(--muted);margin:6px 0}
+  .ci-hint{font-size:12px;color:var(--muted);margin:10px 0 10px;line-height:1.45}
+  .ci-hb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 4px}
+  .modal .ci-hb label.ci-check{margin:0}
+  .modal .ci-hb select{width:auto;max-width:340px;padding:4px 8px;font-size:12.5px}
+  .ci-hb-info{font-size:12px;color:var(--muted);margin:0 0 8px 24px}
+  .ci-vb-kop{font-size:11px;color:var(--muted);font-weight:500;margin:12px 0 4px}
+  .ci-fout{font-size:12px;color:#875800;margin-top:8px;min-height:1px}
+  .ci-filterbalk{margin:4px 0 8px}
+  .ci-res-row{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-bottom:1px solid var(--border);font-size:12.5px}
+  .ci-res-row:last-child{border-bottom:0}
+  .ci-res-row.is-uit .ci-res-naam, .ci-res-row.is-uit .ci-res-det{opacity:.45}
+  .modal .ci-res-row select{width:auto;padding:3px 6px;font-size:12px;flex-shrink:0}
+  .ci-res-naam{font-weight:600}
+  .ci-res-naam .ci-klein{font-weight:400}
+  .ci-res-det{color:var(--muted);font-size:12px;margin-top:1px;overflow-wrap:anywhere}
+  .ci-res-det b{color:var(--text);font-weight:500}
+  .ci-plus{color:#107c10;font-weight:500}
+  .ci-warn{color:#875800;font-size:11.5px;margin-top:3px}
+  .ci-badge{font-size:10.5px;padding:2px 8px;border-radius:999px;font-weight:600;white-space:nowrap;margin-top:1px;flex-shrink:0;min-width:84px;text-align:center}
+  .ci-badge.nieuw{background:rgba(16,124,16,.10);color:#107c10}
+  .ci-badge.aanvullen{background:var(--accent-soft);color:var(--accent)}
+  .ci-badge.gelijk{background:var(--chip);color:var(--muted)}
+  .ci-badge.overslaan{background:rgba(197,15,31,.08);color:var(--danger)}
+  .ci-klaar{display:flex;flex-direction:column;gap:6px;font-size:14px;margin:4px 0 12px}
+  .ci-klaar b{font-weight:650}
   .imp-stat{background:var(--panel-soft);border-radius:8px;padding:10px 12px;text-align:center;font-size:11px;color:var(--muted)}
   .imp-stat b{display:block;font-size:22px;color:var(--text);font-weight:600;line-height:1.1;margin-bottom:2px}
   .imp-section-head{padding:8px 12px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;background:var(--panel-soft);border-bottom:1px solid var(--border)}
@@ -1542,9 +1604,9 @@
 
   /* ---- Begroting ---- */
   #main.is-begroting{max-width:1320px}
-  .toolbar button.begr-btn2{background:var(--panel);color:var(--text);border:1px solid var(--border-strong);box-shadow:none;display:inline-flex;align-items:center;gap:6px}
-  .toolbar button.begr-btn2:hover{background:var(--panel-soft)}
-  .toolbar button.begr-btn2 svg{width:13px;height:13px;fill:currentColor}
+  .toolbar button.begr-btn2, .toolbar button.tb-licht{background:var(--panel);color:var(--text);border:1px solid var(--border-strong);box-shadow:none;display:inline-flex;align-items:center;gap:6px}
+  .toolbar button.begr-btn2:hover, .toolbar button.tb-licht:hover{background:var(--panel-soft)}
+  .toolbar button.begr-btn2 svg, .toolbar button.tb-licht svg{width:13px;height:13px;fill:currentColor}
   .begr-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-8px 0 18px}
   .begr-select{padding:6px 10px;border:1px solid var(--border-strong);border-radius:8px;font-size:13px;font-family:inherit;background:var(--panel);color:var(--text)}
   .begr-jaar{display:inline-flex;align-items:center;gap:4px}
@@ -1843,8 +1905,19 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.37.0";
+const APP_VERSION = "4.39.0";
 const CHANGELOG = [
+  { version: "4.39.0", datum: "2026-10-31", items: [
+    "Contacten importeren: met één vinkje koppel je alle contacten aan hetzelfde bedrijf. Standaard is dat je standaardbedrijf, maar je kunt ook een ander bedrijf kiezen.",
+    "Contacten importeren: staan er meerdere telefoonnummers in het bestand, dan wordt altijd het mobiele nummer gekozen. Dat herkent de app aan de kolomnaam (bijvoorbeeld Mobiel of GSM) of aan het nummer zelf (06 of +31 6).",
+  ]},
+  { version: "4.38.0", datum: "2026-10-31", items: [
+    "Importeren en exporteren heeft bij Instellingen een eigen onderdeel in het menu, ingedeeld in Back-up, Exporteren en Importeren.",
+    "Het organogram kun je nu exporteren: als afbeelding (PNG) voor een presentatie of document, als PDF om af te drukken of als SVG. Je kiest zelf de titel, één sector of alle sectoren, en of de bestuurslaag, namen, foto's en teams erin staan. Met Kopiëren als afbeelding plak je het direct in PowerPoint, Word of Teams.",
+    "Contacten importeren uit een CSV- of Excel-bestand met elke indeling, bijvoorbeeld een export uit Outlook of Google. Je kiest per kolom of en als welk veld hij wordt ingelezen, en kunt meerdere kolommen samenvoegen, zoals voornaam en achternaam.",
+    "Staat iemand al in je contacten (zelfde e-mailadres of naam), of komt iemand twee keer voor in het bestand, dan worden de gegevens aangevuld in plaats van dubbel aangemaakt. Je ziet vooraf per persoon wat er gebeurt, en kunt de import daarna nog ongedaan maken.",
+    "Bij het exporteren van afdelingen kun je nu ook de directeur van de sector meenemen, en bij contacten het LinkedIn-profiel.",
+  ]},
   { version: "4.37.0", datum: "2026-10-30", items: [
     "Managers van afdelingen en directeuren van sectoren staan nu ook in het centrale contactenregister (Relaties → Contacten). Bestaande namen worden eenmalig overgezet. Staat iemand er al met dezelfde naam in, dan wordt die gekoppeld.",
     "In het organogram kies je nu ook de burgemeester en de gemeentesecretaris/algemeen directeur. Klik op de regel onder de functie en typ een naam, of kies iemand uit je contacten.",
@@ -4054,6 +4127,7 @@ const EXPORT_DATASETS = {
       { key:"sector",   label:"Sector",   std:true,  get:a => a.sector },
       { key:"afdeling", label:"Afdeling", std:true,  get:a => a.naam },
       { key:"manager",  label:"Manager",  std:true,  get:a => getManager(a.naam) },
+      { key:"directeur",label:"Directeur (sector)", std:false, get:a => { const b = ORG.find(x => x.sector === a.sector); return b ? plekNaam(sectorDirecteurPlek(b)) : ""; } },
       { key:"teams",    label:"Teams",    std:false, get:a => lijst(getTeams(a.naam)) },
       { key:"nTeams",   label:"Aantal teams", std:false, type:"number", get:a => getTeams(a.naam).length },
       { key:"fb",       label:"Functioneel beheerders", std:false, get:a => lijst(beheerdersFor(a.naam).map(beheerderNaam)) },
@@ -4160,6 +4234,7 @@ const EXPORT_DATASETS = {
       { key:"email",  label:"E-mail",   std:true,  get:c => c.email || "" },
       { key:"tel",    label:"Telefoon", std:true,  get:c => c.telefoon || "" },
       { key:"bedrijf",label:"Bedrijf",  std:false, get:c => getBedrijf(c.bedrijfId)?.naam || "" },
+      { key:"linkedin",label:"LinkedIn", std:false, get:c => c.linkedin || "" },
     ],
   },
 };
@@ -5608,6 +5683,7 @@ const NAV_CATS = [
   ]},
   { key: "instellingen", label: "Instellingen", icon: "settings", def: "instellingen", hidden: true, items: [
     { view: "instellingen", label: "Algemeen", icon: "sliders" },
+    { view: "import-export", label: "Importeren & exporteren", icon: "export" },
     { view: "organisatie-beheer", label: "Sectoren & afdelingen", icon: "organogram" },
     { view: "checklist-beheer", label: "Weekstart & processen instellen", icon: "weekstart" },
     { view: "meldingen", label: "Meldingen", icon: "bell" },
@@ -6404,6 +6480,10 @@ function renderMain(){
   }
   if (activeView === "meldingen"){
     renderMeldingenView(main);
+    return;
+  }
+  if (activeView === "import-export"){
+    renderImportExportView(main);
     return;
   }
   renderAfdeling(main, activeView);
@@ -9546,6 +9626,599 @@ function openLinkSoftwareToFB(softwareName){
   }, ()=>{ renderMain(); renderSidebar(); });
 }
 
+/* ====== Contacten importeren (CSV of Excel) ======
+   Werkt met elke indeling: je kiest zelf welke kolom bij welk veld van een contact hoort.
+   - Meerdere kolommen bij hetzelfde veld: voornaam/tussenvoegsel/achternaam worden samen de naam,
+     meerdere rollen worden met een komma samengevoegd; bij e-mail, telefoon, bedrijf en LinkedIn
+     telt de eerste kolom met een waarde.
+   - Dubbelingen worden aangevuld in plaats van dubbel aangemaakt: rijen voor dezelfde persoon in het
+     bestand gaan samen, en een persoon die al in het register staat (zelfde e-mailadres, anders
+     dezelfde naam) krijgt alleen de ontbrekende gegevens erbij. Overschrijven kan als optie.
+   Stappen: bron kiezen → kolommen koppelen → controleren → importeren (met ongedaan maken).
+   CSV en geplakte tekst lezen we zelf (scheidingsteken en tekenset worden herkend); Excel via SheetJS. */
+const CI_VELDEN = [
+  ["naam", "Naam (volledig)"], ["voornaam", "Voornaam"], ["tussen", "Tussenvoegsel"], ["achter", "Achternaam"],
+  ["rol", "Rol / functie"], ["email", "E-mail"], ["telefoon", "Telefoon"], ["bedrijf", "Bedrijf"], ["linkedin", "LinkedIn"],
+];
+const CI_HERKEN = {
+  naam: ["naam","volledigenaam","weergavenaam","displayname","name","fullname","contactpersoon","medewerker","persoon","naammedewerker","naamcontactpersoon"],
+  voornaam: ["voornaam","voornamen","roepnaam","firstname","givenname"],
+  tussen: ["tussenvoegsel","tussenvoegsels","voorvoegsel","voorvoegsels","middlename","additionalname"],
+  achter: ["achternaam","lastname","surname","familyname","familienaam","geslachtsnaam"],
+  rol: ["functie","rol","jobtitle","functietitel","functienaam","role","position","positie","functieomschrijving","organization1title"],
+  email: ["email","emailadres","mail","mailadres","emailaddress","email1","emailadres1","email1value","primaryemail","werkemail","zakelijkemail","zakelijkeemail","emailzakelijk","emailwerk"],
+  telefoon: ["telefoon","telefoonnummer","tel","telnr","telefoonnr","phone","phonenumber","mobiel","mobielnummer","mobielenummer","mobile","mobilephone","gsm","telefoonwerk","werktelefoon","businessphone","telefoonzakelijk","zakelijketelefoon","mobieletelefoon","phone1value"],
+  bedrijf: ["bedrijf","bedrijfsnaam","organisatie","organisatienaam","company","organization","organisation","werkgever","leverancier","firma","organization1name"],
+  linkedin: ["linkedin","linkedinurl","linkedinprofiel","linkedinprofile","linkedinadres"],
+};
+const CI_LABEL = { naam:"naam", rol:"rol", email:"e-mail", telefoon:"telefoon", bedrijf:"bedrijf", linkedin:"LinkedIn" };
+const CI_DOELVELDEN = ["naam", "rol", "email", "telefoon", "bedrijf", "linkedin"];
+
+function ciSleutel(s){ return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, ""); }
+/* Raadt bij een kolomnaam het veld; "" = niet importeren. */
+function ciRaadVeld(kop){
+  const k = ciSleutel(kop);
+  if (!k) return "";
+  for (const [veld, lijst] of Object.entries(CI_HERKEN)) if (lijst.includes(k)) return veld;
+  if (k.includes("linkedin")) return "linkedin";
+  if (/mail/.test(k) && !/(type|display|weergave|naam|name|label)/.test(k)) return "email";
+  if (/achternaam|lastname|surname/.test(k)) return "achter";
+  if (/voornaam|firstname|givenname/.test(k)) return "voornaam";
+  if (/tussenvoegsel/.test(k)) return "tussen";
+  if (/telefoon|phone|mobiel|mobile|gsm/.test(k) && !/(type|fax|label)/.test(k)) return "telefoon";
+  if (/functie|jobtitle/.test(k)) return "rol";
+  if (/bedrijf|company|organisatie|organization|organisation/.test(k) && !/(afdeling|department|title|functie|eenheid|unit)/.test(k)) return "bedrijf";
+  return "";
+}
+function ciKolomLetter(i){
+  let s = "";
+  for (i++; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s;
+  return s;
+}
+/* Tekst uit een bestand: herkent BOM (UTF-8/UTF-16), anders UTF-8 en als dat niet klopt Windows-1252. */
+function ciDecodeer(buf){
+  const b = new Uint8Array(buf);
+  if (b[0] === 0xFF && b[1] === 0xFE) return new TextDecoder("utf-16le").decode(b.subarray(2));
+  if (b[0] === 0xFE && b[1] === 0xFF) return new TextDecoder("utf-16be").decode(b.subarray(2));
+  if (b[0] === 0xEF && b[1] === 0xBB && b[2] === 0xBF) return new TextDecoder("utf-8").decode(b.subarray(3));
+  try{ return new TextDecoder("utf-8", { fatal: true }).decode(b); }
+  catch(e){ return new TextDecoder("windows-1252").decode(b); }
+}
+/* Scheidingsteken: het teken dat in de eerste regels het vaakst en het meest constant voorkomt. */
+function ciRaadScheiding(tekst){
+  const regels = tekst.split(/\r\n|\n|\r/).filter(l => l.trim()).slice(0, 15);
+  let beste = ",", score = -1;
+  for (const t of ["\t", ";", ",", "|"]){
+    const n = regels.map(l => { let c = 0, q = false; for (const ch of l){ if (ch === '"') q = !q; else if (ch === t && !q) c++; } return c; });
+    if (!n.length || !n[0]) continue;
+    const s = (n.filter(x => x === n[0]).length / n.length) * 1000 + n[0];
+    if (s > score){ score = s; beste = t; }
+  }
+  return beste;
+}
+function ciParseCSV(tekst, sep){
+  const rijen = [];
+  let rij = [], veld = "", inQ = false;
+  for (let i = 0; i < tekst.length; i++){
+    const ch = tekst[i];
+    if (inQ){
+      if (ch === '"'){ if (tekst[i + 1] === '"'){ veld += '"'; i++; } else inQ = false; }
+      else veld += ch;
+    } else if (ch === '"' && !veld.trim()) { inQ = true; veld = ""; }
+    else if (ch === sep){ rij.push(veld); veld = ""; }
+    else if (ch === "\n" || ch === "\r"){
+      if (ch === "\r" && tekst[i + 1] === "\n") i++;
+      rij.push(veld); rijen.push(rij); rij = []; veld = "";
+    }
+    else veld += ch;
+  }
+  if (veld !== "" || rij.length){ rij.push(veld); rijen.push(rij); }
+  return rijen;
+}
+/* Alle cellen als nette tekst, lege rijen en lege kolommen aan het eind weg, alle rijen even breed. */
+function ciNormaliseer(rijen){
+  const r = (rijen || [])
+    .map(rij => (Array.isArray(rij) ? rij : []).map(v => String(v ?? "").replace(/ /g, " ").trim()))
+    .filter(rij => rij.some(v => v));
+  let breed = 0;
+  for (const rij of r){ let n = rij.length; while (n && !rij[n - 1]) n--; if (n > breed) breed = n; }
+  return r.map(rij => { const x = rij.slice(0, breed); while (x.length < breed) x.push(""); return x; });
+}
+function ciParseTekst(tekst){
+  tekst = String(tekst || "").replace(/^﻿/, "");
+  let sep = null;
+  const m = tekst.match(/^sep=(.)\r?\n/i);   // Excel-hint "sep=;" op de eerste regel
+  if (m){ sep = m[1]; tekst = tekst.slice(m[0].length); }
+  return ciNormaliseer(ciParseCSV(tekst, sep || ciRaadScheiding(tekst)));
+}
+async function ciLeesBestand(file){
+  const naam = file.name || "bestand";
+  const ext = (naam.split(".").pop() || "").toLowerCase();
+  if (["xlsx", "xls", "xlsm", "ods"].includes(ext)){
+    if (!window.XLSX){
+      document.getElementById("status").textContent = "Excel-module laden…";
+      try{ await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"); }
+      finally{ document.getElementById("status").textContent = "Klaar"; }
+    }
+    const wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: false });
+    const bladen = wb.SheetNames.map(sn => ({ naam: sn,
+      rijen: ciNormaliseer(XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: false, defval: "", blankrows: false })) }));
+    return { bron: naam, bladen };
+  }
+  return { bron: naam, bladen: [{ naam: "", rijen: ciParseTekst(ciDecodeer(await file.arrayBuffer())) }] };
+}
+/* Op welke rij staan de kolomnamen? De eerste rij die ongeveer zo vol is als de rijen eronder.
+   Staat daar al een e-mailadres of telefoonnummer in, dan heeft het bestand geen kolomnamen (-1). */
+function ciRaadKopRij(rijen){
+  const top = rijen.slice(0, 10);
+  if (!top.length) return -1;
+  const vol = top.map(r => r.filter(Boolean).length);
+  const max = Math.max(...vol);
+  const i = Math.max(0, vol.findIndex(n => n >= Math.max(1, Math.ceil(max * 0.6))));
+  if ((rijen[i] || []).some(v => /\S+@\S+\.\S+/.test(v) || /^[+0(][\d\s()\-.]{7,}$/.test(v))) return -1;
+  return i;
+}
+function ciEmail(waarden){
+  for (const v of (waarden || [])){
+    const m = String(v).match(/[^\s<>"'(),;:]+@[^\s<>"'(),;:]+\.[a-z]{2,}/i);
+    if (m) return m[0];
+  }
+  return "";
+}
+/* Is dit een (Nederlands) mobiel nummer? 06…, +31 6…, 0031 6… of +31 (0)6… */
+function ciIsMobiel(nummer){
+  return /^(?:(?:\+|00)310?|0)6\d{8}$/.test(String(nummer || "").replace(/[^\d+]/g, ""));
+}
+/* Kolomnaam die op een mobiel nummer wijst (Mobiel, Mobile Phone, GSM, …) */
+function ciIsMobielKolom(kop){ return /mobiel|mobile|gsm|cell/.test(ciSleutel(kop)); }
+/* "Jansen, Jan" → "Jan Jansen"; "Berg, Jan van den" → "Jan van den Berg" */
+function ciOmdraaien(naam){
+  const m = String(naam).match(/^([^,]+),\s*([^,]+)$/);
+  return m ? `${m[2].trim()} ${m[1].trim()}` : naam;
+}
+/* Eén rij uit het bestand → { naam, rol, email, telefoon, bedrijf, bedrijfId, linkedin } volgens de koppeling.
+   opt: { omdraaien, mobiel: Set met kolommen waarvan de naam op een mobiel nummer wijst,
+          bedrijf: { id, naam } als alle contacten aan één bedrijf gekoppeld worden }
+   Telefoon: een mobiel nummer gaat voor (kolomnaam of nummer), anders de eerste kolom met een waarde. */
+function ciRecord(rij, koppeling, opt){
+  opt = opt || {};
+  const per = {}, tel = [];
+  koppeling.forEach((veld, i) => {
+    if (!veld) return;
+    const v = String(rij[i] ?? "").replace(/\s+/g, " ").trim();
+    if (!v) return;
+    (per[veld] || (per[veld] = [])).push(v);
+    if (veld === "telefoon") tel.push({ v, mobiel: !!(opt.mobiel && opt.mobiel.has(i)) || ciIsMobiel(v) });
+  });
+  const omdraaien = !!opt.omdraaien;
+  const eerste = v => (per[v] || [])[0] || "";
+  let naam = (per.naam || []).join(" ");
+  if (naam && omdraaien) naam = ciOmdraaien(naam);
+  if (!naam) naam = [...(per.voornaam || []), ...(per.tussen || []), ...(per.achter || [])].join(" ");
+  naam = naam.replace(/\s+/g, " ").trim();
+  if (isGeenPersoonsnaam(naam)) naam = "";
+  const li = eerste("linkedin");
+  return {
+    naam,
+    rol: [...new Set(per.rol || [])].join(", "),
+    email: ciEmail(per.email),
+    telefoon: (tel.find(t => t.mobiel) || tel[0] || { v: "" }).v,
+    telefoonMobiel: !!(tel.find(t => t.mobiel)),
+    bedrijf: opt.bedrijf ? opt.bedrijf.naam : eerste("bedrijf"),
+    bedrijfId: opt.bedrijf ? opt.bedrijf.id : null,
+    linkedin: li ? normalizeLinkedInUrl(li) : "",
+  };
+}
+/* Rijen voor dezelfde persoon samenvoegen: zelfde e-mailadres, of zelfde naam zonder tegenstrijdig e-mailadres. */
+function ciGroepeer(recs){
+  const groepen = [], opEmail = new Map(), opNaam = new Map();
+  let samengevoegd = 0, zonderNaamEnEmail = 0;
+  for (const rec of recs){
+    // zonder naam én e-mailadres kan een rij geen contact worden en ook niemand aanvullen
+    if (!rec.naam && !rec.email){ if (CI_DOELVELDEN.some(v => rec[v])) zonderNaamEnEmail++; continue; }
+    const em = rec.email.toLowerCase(), nk = normName(rec.naam);
+    let g = (em && opEmail.get(em)) || null;
+    if (!g && nk){
+      const kand = opNaam.get(nk);
+      if (kand && (!em || !kand.email || kand.email.toLowerCase() === em)) g = kand;
+    }
+    if (g){
+      samengevoegd++;
+      g.rijen++;
+      for (const v of CI_DOELVELDEN) if (!g[v] && rec[v]) g[v] = rec[v];
+      if (!g.bedrijfId && rec.bedrijfId) g.bedrijfId = rec.bedrijfId;
+      // staat er in een andere rij een mobiel nummer, dan gaat dat voor
+      if (rec.telefoonMobiel && !g.telefoonMobiel){ g.telefoon = rec.telefoon; g.telefoonMobiel = true; }
+    } else {
+      g = { ...rec, rijen: 1 };
+      groepen.push(g);
+    }
+    if (g.email && !opEmail.has(g.email.toLowerCase())) opEmail.set(g.email.toLowerCase(), g);
+    const gk = normName(g.naam);
+    if (gk && !opNaam.has(gk)) opNaam.set(gk, g);
+  }
+  return { groepen, samengevoegd, zonderNaamEnEmail };
+}
+function ciGelijk(veld, a, b){
+  a = String(a || "").trim(); b = String(b || "").trim();
+  if (veld === "email") return a.toLowerCase() === b.toLowerCase();
+  if (veld === "telefoon") return a.replace(/[^\d+]/g, "") === b.replace(/[^\d+]/g, "");
+  if (veld === "linkedin") return normalizeLinkedInUrl(a).replace(/\/+$/, "").toLowerCase() === normalizeLinkedInUrl(b).replace(/\/+$/, "").toLowerCase();
+  return normName(a) === normName(b);
+}
+/* Bepaalt per groep wat er gebeurt: nieuw contact, aanvullen van een bestaand contact (welke velden),
+   niets nieuws, of overslaan (geen naam en niet gevonden). Wijzigt zelf niets. */
+function ciBeoordeel(groepen, overschrijven){
+  const opEmail = new Map(), opNaam = new Map();
+  for (const c of getContacts()){
+    if (c.email && !opEmail.has(c.email.trim().toLowerCase())) opEmail.set(c.email.trim().toLowerCase(), c);
+    const k = normName(c.naam);
+    if (k && !opNaam.has(k)) opNaam.set(k, c);
+  }
+  for (const g of groepen){
+    const doel = (g.email && opEmail.get(g.email.toLowerCase())) || (g.naam && opNaam.get(normName(g.naam))) || null;
+    g.doel = doel; g.wijzigingen = []; g.waarschuwing = "";
+    if (!doel){ g.status = g.naam ? "nieuw" : "overslaan"; continue; }
+    for (const v of CI_DOELVELDEN){
+      const nieuw = g[v];
+      if (!nieuw) continue;
+      const oud = v === "bedrijf" ? bedrijfNaam(doel) : (doel[v] || "");
+      if (v === "bedrijf" && g.bedrijfId && doel.bedrijfId === g.bedrijfId) continue;
+      const w = { veld: v, oud, nieuw, ...(v === "bedrijf" && g.bedrijfId ? { bedrijfId: g.bedrijfId } : {}) };
+      if (!oud) g.wijzigingen.push({ ...w, oud: "" });
+      else if (overschrijven && !ciGelijk(v, oud, nieuw)) g.wijzigingen.push(w);
+    }
+    if (!overschrijven && g.email && doel.email && !ciGelijk("email", g.email, doel.email))
+      g.waarschuwing = `In je contacten staat een ander e-mailadres: ${doel.email}.`;
+    g.status = g.wijzigingen.length ? "aanvullen" : "gelijk";
+  }
+}
+
+let ciOnthoud = { alleBedrijf: false, bedrijfId: null };   // keuze "alle contacten aan één bedrijf", zolang de app open is
+function openContactenImport(){
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `<div class="modal" style="max-width:800px"></div>`;
+  document.body.appendChild(backdrop);
+  const modal = backdrop.querySelector(".modal");
+  const $ = sel => modal.querySelector(sel);
+  const close = ()=> backdrop.remove();
+  backdrop.onclick = e => { if (e.target === backdrop) close(); };
+  const bedrijvenGesorteerd = ()=> getBedrijven().slice().sort((a, b) =>
+    (b.id === state.standaardBedrijfId) - (a.id === state.standaardBedrijfId) || (a.naam || "").localeCompare(b.naam || "", "nl"));
+  const st = { data: null, blad: 0, kopRij: 0, koppeling: [], omdraaien: null, omdraaiAuto: false,
+               alleBedrijf: ciOnthoud.alleBedrijf,
+               bedrijfId: getBedrijf(ciOnthoud.bedrijfId) ? ciOnthoud.bedrijfId : (standaardBedrijfId() || bedrijvenGesorteerd()[0]?.id || null),
+               overschrijven: false, groep: null, keuze: {}, filter: "alle" };
+
+  const dataRijen = ()=>{ const r = st.data.bladen[st.blad].rijen; return st.kopRij >= 0 ? r.slice(st.kopRij + 1) : r; };
+  const omdraaienAan = ()=> st.omdraaien === null ? st.omdraaiAuto : st.omdraaien;
+  const recOpt = ()=>{
+    const rijen = st.data.bladen[st.blad].rijen;
+    const kop = st.kopRij >= 0 ? rijen[st.kopRij] : [];
+    const mobiel = new Set();
+    kop.forEach((k, i) => { if (ciIsMobielKolom(k)) mobiel.add(i); });
+    const b = st.alleBedrijf ? getBedrijf(st.bedrijfId) : null;
+    return { omdraaien: omdraaienAan(), mobiel, bedrijf: b ? { id: b.id, naam: b.naam || "" } : null };
+  };
+  function zetAutoKoppeling(){
+    const rijen = st.data.bladen[st.blad].rijen;
+    const kop = st.kopRij >= 0 ? rijen[st.kopRij] : [];
+    st.koppeling = Array.from({ length: rijen[0]?.length || 0 }, (_, i) => ciRaadVeld(kop[i]));
+    st.omdraaien = null;
+  }
+  function kiesBlad(i){
+    st.blad = i;
+    st.kopRij = ciRaadKopRij(st.data.bladen[i].rijen);
+    zetAutoKoppeling();
+  }
+
+  /* ---- stap 1: bron ---- */
+  function stapBron(){
+    modal.innerHTML = `
+      <h3>Contacten importeren</h3>
+      <div class="ci-intro">Lees contacten in uit een CSV- of Excel-bestand met elke indeling, bijvoorbeeld een export uit Outlook of Google of een eigen lijst. In de volgende stap kies je welke kolommen je importeert en bij welk veld ze horen. Staat iemand al in je contacten, dan worden de ontbrekende gegevens aangevuld.</div>
+      <div class="ci-drop" id="ciDrop">
+        <div id="ciDropTekst">Sleep een bestand hierheen</div>
+        <button type="button" class="ghost-btn" id="ciKies">Bestand kiezen…</button>
+        <div class="ci-drop-hint">CSV, TXT, Excel (XLSX of XLS) of ODS</div>
+        <input type="file" id="ciFile" accept=".csv,.txt,.tsv,.xlsx,.xls,.xlsm,.ods,text/csv" style="display:none">
+      </div>
+      <div class="row"><label>Of plak rijen uit Excel, Word of een webpagina</label>
+        <textarea id="ciPlak" rows="4" placeholder="Kopieer de rijen inclusief de kolomnamen en plak ze hier."></textarea></div>
+      <div class="modal-actions">
+        <button class="secondary" id="ciAnnuleer">Annuleren</button>
+        <button class="primary" id="ciVerder" disabled>Verder</button>
+      </div>`;
+    $("#ciAnnuleer").onclick = close;
+    const input = $("#ciFile"), drop = $("#ciDrop"), plak = $("#ciPlak");
+    $("#ciKies").onclick = ()=> input.click();
+    input.onchange = ()=>{ const f = input.files[0]; input.value = ""; if (f) laad(f); };
+    drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("drag"); });
+    drop.addEventListener("dragleave", ()=> drop.classList.remove("drag"));
+    drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("drag"); const f = e.dataTransfer?.files?.[0]; if (f) laad(f); });
+    plak.addEventListener("input", ()=>{ $("#ciVerder").disabled = !plak.value.trim(); });
+    $("#ciVerder").onclick = ()=> start({ bron: "Geplakte tekst", bladen: [{ naam: "", rijen: ciParseTekst(plak.value) }] });
+    async function laad(f){
+      $("#ciDropTekst").textContent = `Bezig met lezen van ${f.name}…`;
+      try{ start(await ciLeesBestand(f)); }
+      catch(err){ alert("Het bestand kon niet worden gelezen: " + err.message); stapBron(); }
+    }
+  }
+  function start(data){
+    data.bladen = data.bladen.filter(b => b.rijen.length);
+    if (!data.bladen.length){ alert("Er staan geen gegevens in dit bestand."); stapBron(); return; }
+    st.data = data;
+    // het tabblad waarvan de kolomnamen het best herkend worden (bij gelijkspel: het grootste)
+    let beste = 0, besteScore = -1;
+    data.bladen.forEach((b, i) => {
+      const kr = ciRaadKopRij(b.rijen);
+      const herkend = kr >= 0 ? new Set(b.rijen[kr].map(ciRaadVeld).filter(Boolean)).size : 0;
+      const score = herkend * 100000 + Math.min(b.rijen.length, 99999);
+      if (score > besteScore){ besteScore = score; beste = i; }
+    });
+    kiesBlad(beste);
+    stapKoppelen();
+  }
+
+  /* ---- stap 2: kolommen koppelen ---- */
+  function stapKoppelen(){
+    const rijen = st.data.bladen[st.blad].rijen;
+    const kop = st.kopRij >= 0 ? rijen[st.kopRij] : [];
+    const data = dataRijen();
+    const breed = rijen[0]?.length || 0;
+    const kolommen = [];
+    for (let i = 0; i < breed; i++){
+      const vb = [];
+      for (const r of data){ if (r[i]){ vb.push(r[i]); if (vb.length >= 3) break; } }
+      if (vb.length) kolommen.push({ i, naam: kop[i] || `Kolom ${ciKolomLetter(i)}`, vb: vb.join(" · ") });
+      else st.koppeling[i] = "";
+    }
+    const leeg = breed - kolommen.length;
+    modal.innerHTML = `
+      <h3>Contacten importeren · kolommen koppelen</h3>
+      <div class="ci-bron">${escapeHTML(st.data.bron)} · ${data.length} rij${data.length === 1 ? "" : "en"}</div>
+      <div class="ci-instel">
+        ${st.data.bladen.length > 1 ? `<div><label>Tabblad</label><select id="ciBlad">${st.data.bladen.map((b, i) =>
+          `<option value="${i}" ${i === st.blad ? "selected" : ""}>${escapeHTML(b.naam)} (${b.rijen.length} rijen)</option>`).join("")}</select></div>` : ""}
+        <div><label>Kolomnamen</label><select id="ciKop">
+          ${rijen.slice(0, 10).map((r, i) => `<option value="${i}" ${i === st.kopRij ? "selected" : ""}>Staan op rij ${i + 1}: ${escapeHTML(r.filter(Boolean).slice(0, 3).join(", ").slice(0, 60))}</option>`).join("")}
+          <option value="-1" ${st.kopRij === -1 ? "selected" : ""}>Geen kolomnamen, elke rij is een contact</option>
+        </select></div>
+      </div>
+      <div class="ci-scroll" style="max-height:min(40vh,340px)">
+        <table class="ci-map"><thead><tr><th>Kolom in het bestand</th><th>Voorbeeld</th><th style="width:210px">Importeren als</th></tr></thead>
+        <tbody>${kolommen.map(k => `<tr class="${st.koppeling[k.i] ? "is-on" : ""}">
+          <td class="ci-kol" title="${escapeHTML(k.naam)}">${escapeHTML(k.naam)}</td>
+          <td class="ci-vb" title="${escapeHTML(k.vb)}">${escapeHTML(k.vb)}</td>
+          <td><select data-kol="${k.i}"><option value="">Niet importeren</option>${CI_VELDEN.map(([v, l]) =>
+            `<option value="${v}" ${st.koppeling[k.i] === v ? "selected" : ""}>${l}</option>`).join("")}</select></td>
+        </tr>`).join("")}</tbody></table>
+      </div>
+      ${leeg ? `<div class="ci-klein">${leeg} lege kolom${leeg === 1 ? "" : "men"} niet getoond.</div>` : ""}
+      <div class="ci-hint">Je kunt meerdere kolommen aan hetzelfde veld koppelen. Voornaam, tussenvoegsel en achternaam worden samen de naam. Meerdere kolommen bij <i>Rol / functie</i>, zoals functie en afdeling, worden met een komma samengevoegd. Bij meerdere telefoonkolommen gaat het mobiele nummer voor. Bij e-mail, bedrijf en LinkedIn telt de eerste kolom met een waarde.</div>
+      <label class="ci-check" id="ciOmdraaiRij" style="display:none"><input type="checkbox" id="ciOmdraai"><span>Namen als <i>Jansen, Jan</i> omdraaien naar <i>Jan Jansen</i></span></label>
+      ${getBedrijven().length ? `<div class="ci-hb">
+        <label class="ci-check"><input type="checkbox" id="ciHb" ${st.alleBedrijf ? "checked" : ""}><span>Alle contacten koppelen aan</span></label>
+        <select id="ciHbKies" aria-label="Bedrijf voor alle contacten">${bedrijvenGesorteerd().map(b =>
+          `<option value="${escapeHTML(b.id)}" ${b.id === st.bedrijfId ? "selected" : ""}>${escapeHTML(b.naam || "(naamloos)")}${b.id === state.standaardBedrijfId ? " (standaardbedrijf)" : ""}</option>`).join("")}</select>
+      </div>
+      <div class="ci-hb-info" id="ciHbInfo"></div>` : ""}
+      <div class="ci-vb-kop">Zo worden de eerste contacten ingelezen</div>
+      <div class="ci-scroll" id="ciVoorbeeld"></div>
+      <div class="ci-fout" id="ciFout"></div>
+      <div class="modal-actions">
+        <button class="secondary" id="ciTerug" style="margin-right:auto">Terug</button>
+        <button class="secondary" id="ciAnnuleer">Annuleren</button>
+        <button class="primary" id="ciVerder">Verder</button>
+      </div>`;
+    $("#ciAnnuleer").onclick = close;
+    $("#ciTerug").onclick = stapBron;
+    $("#ciBlad") && ($("#ciBlad").onchange = e => { kiesBlad(+e.target.value); stapKoppelen(); });
+    $("#ciKop").onchange = e => { st.kopRij = +e.target.value; zetAutoKoppeling(); stapKoppelen(); };
+    modal.querySelectorAll("select[data-kol]").forEach(sel => sel.onchange = ()=>{
+      st.koppeling[+sel.dataset.kol] = sel.value;
+      sel.closest("tr").classList.toggle("is-on", !!sel.value);
+      toonVoorbeeld();
+    });
+    $("#ciOmdraai").onchange = e => { st.omdraaien = e.target.checked; toonVoorbeeld(); };
+    if ($("#ciHb")){
+      $("#ciHb").onchange = e => { st.alleBedrijf = ciOnthoud.alleBedrijf = e.target.checked; toonVoorbeeld(); };
+      $("#ciHbKies").onchange = e => {
+        st.bedrijfId = ciOnthoud.bedrijfId = e.target.value;
+        st.alleBedrijf = ciOnthoud.alleBedrijf = true;   // een bedrijf kiezen betekent: ja, koppelen
+        $("#ciHb").checked = true;
+        toonVoorbeeld();
+      };
+    }
+    $("#ciVerder").onclick = stapControle;
+
+    function toonVoorbeeld(){
+      const heeft = new Set(st.koppeling.filter(Boolean));
+      const naamOk = heeft.has("naam") || heeft.has("voornaam") || heeft.has("achter");
+      // namen in de vorm "Achternaam, Voornaam"? Dan het omdraaien aanbieden (en voorstellen als het de meeste zijn)
+      const namen = data.map(r => st.koppeling.map((v, i) => v === "naam" ? r[i] : "").filter(Boolean).join(" ")).filter(Boolean);
+      const metKomma = namen.filter(n => /^[^,]+,[^,]+$/.test(n)).length;
+      st.omdraaiAuto = metKomma > 0 && metKomma >= namen.length / 2;
+      $("#ciOmdraaiRij").style.display = metKomma ? "" : "none";
+      $("#ciOmdraai").checked = omdraaienAan();
+      const velden = [["naam", "Naam"], ["rol", "Rol / functie"], ["email", "E-mail"], ["telefoon", "Telefoon"], ["bedrijf", "Bedrijf"], ["linkedin", "LinkedIn"]]
+        .filter(([v]) => v === "naam" || heeft.has(v) || (v === "bedrijf" && st.alleBedrijf));
+      if ($("#ciHbInfo")){
+        const b = getBedrijf(st.bedrijfId);
+        $("#ciHbInfo").textContent = !st.alleBedrijf || !b ? ""
+          : (heeft.has("bedrijf") ? "De kolom die bij Bedrijf hoort, wordt dan niet gebruikt. " : "")
+            + `Nieuwe contacten en contacten zonder bedrijf krijgen ${b.naam || "dit bedrijf"}. Heeft iemand al een ander bedrijf, dan blijft dat staan, tenzij je in de volgende stap kiest voor overschrijven.`;
+      }
+      const recs = data.slice(0, 5).map(r => ciRecord(r, st.koppeling, recOpt()));
+      $("#ciVoorbeeld").innerHTML = `<table class="ci-map ci-vbt"><thead><tr>${velden.map(([, l]) => `<th>${l}</th>`).join("")}</tr></thead><tbody>${
+        recs.map(x => `<tr>${velden.map(([v]) => `<td title="${escapeHTML(x[v])}">${x[v] ? escapeHTML(x[v]) : (v === "naam" ? `<span class="ci-leeg">geen naam</span>` : "")}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+      const ok = naamOk || heeft.has("email");
+      $("#ciVerder").disabled = !ok;
+      $("#ciFout").textContent = !ok ? "Koppel minstens één kolom aan de naam, of aan e-mail om bestaande contacten aan te vullen."
+        : !naamOk ? "Zonder naam worden alleen contacten aangevuld die je al hebt, herkend aan het e-mailadres." : "";
+    }
+    toonVoorbeeld();
+  }
+
+  /* ---- stap 3: controleren ---- */
+  function stapControle(){
+    st.groep = ciGroepeer(dataRijen().map(r => ciRecord(r, st.koppeling, recOpt())));
+    st.keuze = {};
+    st.filter = "alle";
+    tekenControle();
+  }
+  const standaardActie = g => g.status === "nieuw" ? "toevoegen" : g.status === "overslaan" ? "overslaan" : "aanvullen";
+  const actie = (g, i) => st.keuze[i] || standaardActie(g);
+  const doetIets = (g, i) => { const a = actie(g, i); return a === "toevoegen" || (a === "nieuw" && !!g.naam) || (a === "aanvullen" && g.wijzigingen.length > 0); };
+  function tekenControle(){
+    const gs = st.groep.groepen;
+    ciBeoordeel(gs, st.overschrijven);
+    const tel = { nieuw: 0, aanvullen: 0, gelijk: 0, overslaan: 0 };
+    gs.forEach(g => tel[g.status]++);
+    if (st.filter !== "alle" && !tel[st.filter]) st.filter = "alle";
+    const segs = [["alle", "Alle", gs.length], ["nieuw", "Nieuw", tel.nieuw], ["aanvullen", "Aanvullen", tel.aanvullen], ["gelijk", "Staan er al in", tel.gelijk], ["overslaan", "Zonder naam", tel.overslaan]]
+      .filter(([k, , n]) => k === "alle" || n);
+    modal.innerHTML = `
+      <h3>Contacten importeren · controleren</h3>
+      <div class="ci-bron">${escapeHTML(st.data.bron)}</div>
+      <div class="imp-stats ci-stats">
+        <div class="imp-stat"><b>${tel.nieuw}</b><span>nieuw</span></div>
+        <div class="imp-stat"><b>${tel.aanvullen}</b><span>aanvullen</span></div>
+        <div class="imp-stat"><b>${tel.gelijk}</b><span>staan er al in</span></div>
+        <div class="imp-stat"><b>${tel.overslaan}</b><span>zonder naam</span></div>
+      </div>
+      <div class="ci-klein" id="ciSamen"></div>
+      <label class="ci-check"><input type="checkbox" id="ciOver" ${st.overschrijven ? "checked" : ""}><span>Bestaande gegevens overschrijven als het bestand iets anders bevat. Zonder dit vinkje worden alleen lege velden aangevuld.</span></label>
+      <div class="ci-filterbalk"><div class="seg" role="tablist">${segs.map(([k, l, n]) =>
+        `<button type="button" role="tab" data-f="${k}" class="${st.filter === k ? "on" : ""}" aria-selected="${st.filter === k}">${l}<span class="n">${n}</span></button>`).join("")}</div></div>
+      <div class="ci-scroll" id="ciLijst" style="max-height:min(42vh,380px)"></div>
+      <div class="modal-actions">
+        <button class="secondary" id="ciTerug" style="margin-right:auto">Terug</button>
+        <button class="secondary" id="ciAnnuleer">Annuleren</button>
+        <button class="primary" id="ciImport">Importeren</button>
+      </div>`;
+    $("#ciAnnuleer").onclick = close;
+    $("#ciTerug").onclick = stapKoppelen;
+    $("#ciOver").onchange = e => { st.overschrijven = e.target.checked; tekenControle(); };
+    modal.querySelectorAll("[data-f]").forEach(b => b.onclick = ()=>{ st.filter = b.dataset.f; tekenControle(); });
+    const lijst = $("#ciLijst");
+    const volgorde = { nieuw: 0, aanvullen: 1, gelijk: 2, overslaan: 3 };
+    const zicht = gs.map((g, i) => [g, i]).filter(([g]) => st.filter === "alle" || g.status === st.filter)
+      .sort((a, b) => volgorde[a[0].status] - volgorde[b[0].status] || a[1] - b[1]);
+    lijst.innerHTML = zicht.length ? zicht.map(([g, i]) => rijHTML(g, i)).join("") : `<div class="cat-empty" style="padding:12px">Er staan geen contacten in het bestand.</div>`;
+    lijst.querySelectorAll("select[data-g]").forEach(sel => sel.onchange = ()=>{
+      st.keuze[sel.dataset.g] = sel.value;
+      sel.closest(".ci-res-row").classList.toggle("is-uit", sel.value === "overslaan");
+      werkBij();
+    });
+    $("#ciImport").onclick = importeer;
+    werkBij();
+  }
+  function rijHTML(g, i){
+    const a = actie(g, i);
+    const badge = { nieuw: "Nieuw", aanvullen: "Aanvullen", gelijk: "Staat er al in", overslaan: "Geen naam" }[g.status];
+    let det;
+    if (g.status === "nieuw") det = [g.rol, g.email, g.telefoon, g.bedrijf, g.linkedin ? "LinkedIn" : ""].filter(Boolean).map(escapeHTML).join(" · ");
+    else if (g.status === "overslaan") det = `Geen naam, en niet gevonden in je contacten${g.email ? ` (${escapeHTML(g.email)})` : ""}.`;
+    else {
+      const bij = `Bij <b>${escapeHTML(g.doel.naam || "(naamloos)")}</b>`;
+      det = g.wijzigingen.length
+        ? bij + ": " + g.wijzigingen.map(w => w.oud
+            ? `${CI_LABEL[w.veld]} <s>${escapeHTML(w.oud)}</s> → ${escapeHTML(w.nieuw)}`
+            : `<span class="ci-plus">+ ${CI_LABEL[w.veld]}</span> ${escapeHTML(w.nieuw)}`).join(", ")
+        : bij + ": niets nieuws.";
+    }
+    const opties = g.status === "overslaan" ? []
+      : g.doel ? [["aanvullen", g.wijzigingen.length ? "Aanvullen" : "Laten zoals het is"], ...(g.naam ? [["nieuw", "Als nieuw contact"]] : []), ["overslaan", "Overslaan"]]
+      : [["toevoegen", "Toevoegen"], ["overslaan", "Overslaan"]];
+    return `<div class="ci-res-row${a === "overslaan" ? " is-uit" : ""}">
+      <span class="ci-badge ${g.status}">${badge}</span>
+      <div style="flex:1;min-width:0">
+        <div class="ci-res-naam">${escapeHTML(g.naam || g.email)}${g.rijen > 1 ? ` <span class="ci-klein">· ${g.rijen} rijen samengevoegd</span>` : ""}</div>
+        <div class="ci-res-det">${det}</div>
+        ${g.waarschuwing ? `<div class="ci-warn">${escapeHTML(g.waarschuwing)}</div>` : ""}
+      </div>
+      ${opties.length ? `<select data-g="${i}" aria-label="Wat doen met ${escapeHTML(g.naam || g.email || "")}">${opties.map(([v, l]) => `<option value="${v}" ${v === a ? "selected" : ""}>${l}</option>`).join("")}</select>` : ""}
+    </div>`;
+  }
+  function werkBij(){
+    const gs = st.groep.groepen;
+    const n = gs.filter((g, i) => doetIets(g, i)).length;
+    const bestaand = new Set(getBedrijven().map(b => (b.naam || "").trim().toLowerCase()));
+    const nieuweBedr = new Set();
+    gs.forEach((g, i) => {
+      const a = actie(g, i);
+      const naam = (a === "toevoegen" || a === "nieuw") ? g.bedrijf : (a === "aanvullen" ? (g.wijzigingen.find(w => w.veld === "bedrijf")?.nieuw || "") : "");
+      if (naam && !bestaand.has(naam.trim().toLowerCase())) nieuweBedr.add(naam.trim().toLowerCase());
+    });
+    const zinnen = [];
+    if (st.groep.samengevoegd) zinnen.push(`${st.groep.samengevoegd} rij${st.groep.samengevoegd === 1 ? " kwam" : "en kwamen"} dubbel voor in het bestand en ${st.groep.samengevoegd === 1 ? "is" : "zijn"} samengevoegd.`);
+    const zn = st.groep.zonderNaamEnEmail;
+    if (zn) zinnen.push(`${zn} rij${zn === 1 ? "" : "en"} zonder naam en e-mailadres ${zn === 1 ? "wordt" : "worden"} overgeslagen.`);
+    if (nieuweBedr.size) zinnen.push(`Er ${nieuweBedr.size === 1 ? "komt 1 nieuw bedrijf" : `komen ${nieuweBedr.size} nieuwe bedrijven`} bij.`);
+    $("#ciSamen").textContent = zinnen.join(" ");
+    const knop = $("#ciImport");
+    knop.disabled = !n;
+    knop.textContent = n ? `Importeren (${n})` : "Er verandert niets";
+  }
+  function importeer(){
+    const gs = st.groep.groepen;
+    const vorige = { contacten: JSON.stringify(state.contacten || []), bedrijven: JSON.stringify(state.bedrijven || []) };
+    const bedrijvenVoor = getBedrijven().length;
+    let toegevoegd = 0, aangevuld = 0;
+    gs.forEach((g, i) => {
+      if (!doetIets(g, i)) return;
+      const a = actie(g, i);
+      if (a === "toevoegen" || a === "nieuw"){
+        const c = newContact();
+        c.naam = g.naam; c.rol = g.rol; c.email = g.email; c.telefoon = g.telefoon; c.linkedin = g.linkedin || "";
+        if (g.bedrijfId && getBedrijf(g.bedrijfId)) c.bedrijfId = g.bedrijfId;
+        else if (g.bedrijf) c.bedrijfId = findOrCreateBedrijfByName(g.bedrijf)?.id || null;
+        getContacts().push(c);
+        toegevoegd++;
+      } else {
+        for (const w of g.wijzigingen){
+          if (w.veld === "bedrijf") g.doel.bedrijfId = (w.bedrijfId && getBedrijf(w.bedrijfId)) ? w.bedrijfId : (findOrCreateBedrijfByName(w.nieuw)?.id || g.doel.bedrijfId || null);
+          else g.doel[w.veld] = w.nieuw;
+        }
+        aangevuld++;
+      }
+    });
+    const nieuweBedr = getBedrijven().length - bedrijvenVoor;
+    markDirty(); renderMain(); renderSidebar();
+    stapKlaar({ toegevoegd, aangevuld, nieuweBedr, vorige });
+  }
+
+  /* ---- klaar (met ongedaan maken) ---- */
+  function stapKlaar(r){
+    modal.innerHTML = `
+      <h3>Contacten geïmporteerd</h3>
+      <div class="ci-klaar">
+        <div><b>${r.toegevoegd}</b> ${r.toegevoegd === 1 ? "contact" : "contacten"} toegevoegd</div>
+        <div><b>${r.aangevuld}</b> ${r.aangevuld === 1 ? "bestaand contact" : "bestaande contacten"} aangevuld</div>
+        ${r.nieuweBedr ? `<div><b>${r.nieuweBedr}</b> ${r.nieuweBedr === 1 ? "nieuw bedrijf" : "nieuwe bedrijven"} aangemaakt</div>` : ""}
+      </div>
+      <div class="ci-klein">Klopt er iets niet? Met <b>Ongedaan maken</b> zet je de contacten en bedrijven terug zoals ze vóór de import waren.</div>
+      <div class="modal-actions">
+        <button class="secondary" id="ciOngedaan" style="margin-right:auto">Ongedaan maken</button>
+        <button class="secondary" id="ciSluit">Sluiten</button>
+        <button class="primary" id="ciNaar">Naar Contacten</button>
+      </div>`;
+    $("#ciSluit").onclick = close;
+    $("#ciNaar").onclick = ()=>{ close(); contactenSearch = ""; navTo("contacten"); };
+    $("#ciOngedaan").onclick = ()=>{
+      if (!confirm("De import ongedaan maken? Contacten en bedrijven gaan terug naar hoe ze vóór de import waren.")) return;
+      state.contacten = JSON.parse(r.vorige.contacten);
+      state.bedrijven = JSON.parse(r.vorige.bedrijven);
+      markDirty(); renderMain(); renderSidebar();
+      close();
+    };
+  }
+
+  stapBron();
+}
+
 /* Centraal Contacten-overzicht: alle personen in het centrale contactenregister, ongeacht
    waar ze gekoppeld zijn (activiteiten, beheerders, externe inhuur). Eén plek om iemand aan
    te maken, te bewerken of te verwijderen — wijzigingen zijn overal direct zichtbaar. */
@@ -9569,6 +10242,7 @@ function renderContactenView(main){
         <div class="sub">${all.length} contact${all.length===1?"":"en"} · centraal beheerd — één plek voor naam, rol, e-mail en telefoon, overal gebruikt.</div>
       </div>
       <div class="toolbar">
+        <button class="tb-licht" id="importContacten" title="Contacten inlezen uit een CSV- of Excel-bestand, met elke indeling">${faIcon("import")}Importeren…</button>
         <button id="addContact">+ Nieuw contact</button>
       </div>
     </div>
@@ -9577,7 +10251,7 @@ function renderContactenView(main){
     </div>`;
 
   if (!all.length){
-    html += `<div class="empty"><h3>Nog geen contacten</h3><p>Klik op <b>+ Nieuw contact</b> om iemand toe te voegen. Contacten die je koppelt bij een activiteit, functioneel beheerder of externe inhuur, en collegeleden en control-personen, verschijnen ook automatisch hier.</p></div>`;
+    html += `<div class="empty"><h3>Nog geen contacten</h3><p>Klik op <b>+ Nieuw contact</b> om iemand toe te voegen, of lees een lijst in met <b>Importeren…</b> (CSV of Excel). Contacten die je koppelt bij een activiteit, functioneel beheerder of externe inhuur, en collegeleden en control-personen, verschijnen ook automatisch hier.</p></div>`;
   } else if (!sorted.length){
     html += `<div style="padding:0 24px;color:var(--muted);font-size:13px">Geen contacten gevonden voor "${escapeHTML(contactenSearch)}".</div>`;
   } else {
@@ -9613,6 +10287,7 @@ function renderContactenView(main){
     contactenSearch = val;
     renderContactenView(main);
   });
+  main.querySelector("#importContacten").onclick = ()=> openContactenImport();
   main.querySelector("#addContact").onclick = ()=>{
     const nc = newContact();
     getContacts().push(nc);
@@ -10949,8 +11624,10 @@ function renderOrganogramView(main){
 
   const hdr = document.createElement("div");
   hdr.className = "afd-header";
-  hdr.innerHTML = `<div><h2>Organogram</h2><div class="sub">${totalAfds} afdelingen · klik op een box voor details · klik op een naam (directeur, burgemeester, gemeentesecretaris) om iemand te kiezen</div></div>`;
+  hdr.innerHTML = `<div><h2>Organogram</h2><div class="sub">${totalAfds} afdelingen · klik op een box voor details · klik op een naam (directeur, burgemeester, gemeentesecretaris) om iemand te kiezen</div></div>
+    <div class="toolbar"><button class="tb-licht" id="ogExport" title="Het organogram als afbeelding of PDF, voor een presentatie of document">${faIcon("export")}Exporteren…</button></div>`;
   main.appendChild(hdr);
+  hdr.querySelector("#ogExport").onclick = ()=> openOrganogramExport();
 
   const outer = document.createElement("div");
   outer.style.cssText = "padding:0 24px 32px;overflow-x:auto;";
@@ -11190,6 +11867,456 @@ function drawOrgLines(){
   direct(college, gemsec);
   // Gemeentesecretaris → Sectoren
   fan(gemsec, secHdrs);
+}
+
+/* ====== Organogram exporteren ======
+   Tekent het organogram opnieuw als losse SVG (geen schermafdruk), zodat het op elk formaat scherp
+   is. Van die SVG maken we een PNG (via een canvas), een PDF (afdrukvenster) of een SVG-bestand.
+   De opbouw volgt het scherm: de bestuurslaag bovenaan en daaronder de sectoren met hun afdelingen
+   ("Sector overstijgend" niet; die staat al in de bestuurslaag). Teksten worden gemeten met een
+   canvas en zelf afgebroken, omdat SVG geen automatische regelafbreking kent.
+   o: { titel, sector, bestuur, namen, fotos, teams } */
+const OE_FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const OE_KLEUR = { tekst:"#1b1f27", muted:"#6b7280", rand:"#d5d9e0", lijn:"#aab1bd", zacht:"#f4f5f8", chip:"#eef0f4" };
+let oeMeetCtx = null;
+function oeMeet(tekst, px, gewicht){
+  if (!oeMeetCtx) oeMeetCtx = document.createElement("canvas").getContext("2d");
+  oeMeetCtx.font = `${gewicht || 400} ${px}px ${OE_FONT}`;
+  return oeMeetCtx.measureText(String(tekst || "")).width;
+}
+/* Breekt tekst op woorden af in regels van hooguit `breed` px. Met maxRegels eindigt de laatste regel op "…". */
+function oeRegels(tekst, px, gewicht, breed, maxRegels){
+  const past = s => oeMeet(s, px, gewicht) <= breed;
+  const regels = [];
+  let huidig = "";
+  for (let w of String(tekst || "").trim().split(/\s+/).filter(Boolean)){
+    while (w.length > 1 && !past(w)){            // te lang woord: knippen op tekens
+      let i = w.length - 1;
+      while (i > 1 && !past(w.slice(0, i))) i--;
+      if (huidig){ regels.push(huidig); huidig = ""; }
+      regels.push(w.slice(0, i));
+      w = w.slice(i);
+    }
+    const kandidaat = huidig ? huidig + " " + w : w;
+    if (!huidig || past(kandidaat)) huidig = kandidaat;
+    else { regels.push(huidig); huidig = w; }
+  }
+  if (huidig) regels.push(huidig);
+  if (maxRegels && regels.length > maxRegels){
+    const kort = regels.slice(0, maxRegels);
+    let laatste = kort[maxRegels - 1];
+    while (laatste.length > 1 && !past(laatste + "…")) laatste = laatste.slice(0, -1);
+    kort[maxRegels - 1] = laatste.trimEnd() + "…";
+    return kort;
+  }
+  return regels;
+}
+/* Namen achter elkaar met " · ", afgebroken tussen de namen (niet midden in een naam). */
+function oeLijstRegels(items, px, breed){
+  const regels = [];
+  let huidig = "";
+  for (const it of items){
+    const kandidaat = huidig ? huidig + " · " + it : it;
+    if (!huidig || oeMeet(kandidaat, px) <= breed) huidig = kandidaat;
+    else { regels.push(huidig); huidig = it; }
+  }
+  if (huidig) regels.push(huidig);
+  return regels;
+}
+
+function buildOrganogramSVG(o){
+  const K = OE_KLEUR, PAD = 36, GAP_Y = 34;
+  const r1 = v => Math.round(v * 10) / 10;
+  const idp = "oe" + Math.random().toString(36).slice(2, 8);
+  let nClip = 0;
+  const defs = [], lijnen = [], vormen = [];
+  const txt = (x, y, s, px, gewicht, kleur, anker, extra) =>
+    `<text x="${r1(x)}" y="${r1(y)}" font-size="${px}"${gewicht && gewicht !== 400 ? ` font-weight="${gewicht}"` : ""} fill="${kleur}"${anker ? ` text-anchor="${anker}"` : ""}${extra || ""}>${escapeHTML(s)}</text>`;
+  const avatar = (cx, cy, d, naam, foto) => {
+    if (foto && /^data:image\//.test(foto)){
+      const id = `${idp}c${nClip++}`;
+      defs.push(`<clipPath id="${id}"><circle cx="${r1(cx)}" cy="${r1(cy)}" r="${r1(d / 2)}"/></clipPath>`);
+      return `<image x="${r1(cx - d / 2)}" y="${r1(cy - d / 2)}" width="${d}" height="${d}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id})" xlink:href="${escapeHTML(foto)}"/>`;
+    }
+    return `<circle cx="${r1(cx)}" cy="${r1(cy)}" r="${r1(d / 2 - 0.5)}" fill="${K.chip}" stroke="${K.rand}"/>`
+      + txt(cx, cy + d * 0.14, initials(naam) || "?", Math.max(7, Math.round(d * 0.38)), 600, K.muted, "middle");
+  };
+  const lijn = d => lijnen.push(`<path d="${d}"/>`);
+
+  /* ---- bestuurslaag: knooppunten ---- */
+  function topKnoop(label, stijl, persoon, leden){
+    const padX = 20, padY = 10;
+    let w = oeMeet(label, 13, 600), h = 17;
+    let p = null, lb = null;
+    if (persoon && o.namen && persoon.naam){
+      const naamTxt = oeRegels(persoon.naam, 11.5, 400, 240, 1)[0];
+      p = { naam: persoon.naam, foto: persoon.foto, naamTxt, pw: (o.fotos ? 22 : 0) + oeMeet(naamTxt, 11.5) };
+      w = Math.max(w, p.pw); h += 20;
+    }
+    if (leden && leden.length && o.namen){
+      const maxB = 330;
+      const perRij = o.fotos ? Math.max(1, Math.floor((maxB + 6) / 32)) : 0;
+      const avRijen = o.fotos ? Math.ceil(leden.length / perRij) : 0;
+      const regels = oeLijstRegels(leden.map(l => l.naam).filter(Boolean), 11, maxB);
+      const bw = Math.max(o.fotos ? Math.min(leden.length, perRij) * 32 - 6 : 0, ...regels.map(rg => oeMeet(rg, 11)));
+      lb = { leden, regels, perRij, avRijen };
+      w = Math.max(w, bw); h += 6 + avRijen * 32 + regels.length * 15;
+    }
+    return { label, stijl, p, lb, padY, w: Math.max(110, w + 2 * padX), h: h + 2 * padY, h0: h + 2 * padY };
+  }
+  function tekenTop(n){
+    vormen.push(`<rect x="${r1(n.x)}" y="${r1(n.y)}" width="${r1(n.w)}" height="${r1(n.h)}" rx="8" fill="${n.stijl === "pol" ? K.chip : K.zacht}" stroke="${K.lijn}" stroke-width="1.2"/>`);
+    const cx = n.x + n.w / 2;
+    let y = n.y + n.padY + (n.h - n.h0) / 2;      // inhoud verticaal centreren als het blok is uitgerekt
+    vormen.push(txt(cx, y + 13, n.label, 13, 600, K.tekst, "middle"));
+    y += 17;
+    if (n.p){
+      const sx = cx - n.p.pw / 2;
+      if (o.fotos) vormen.push(avatar(sx + 9, y + 10, 18, n.p.naam, n.p.foto));
+      vormen.push(txt(sx + (o.fotos ? 22 : 0), y + 14, n.p.naamTxt, 11.5, 400, K.muted));
+      y += 20;
+    }
+    if (n.lb){
+      y += 6;
+      for (let r = 0; r < n.lb.avRijen; r++){
+        const rij = n.lb.leden.slice(r * n.lb.perRij, (r + 1) * n.lb.perRij);
+        const sx = cx - (rij.length * 32 - 6) / 2;
+        rij.forEach((l, j) => vormen.push(avatar(sx + j * 32 + 13, y + 13, 26, l.naam, l.foto)));
+        y += 32;
+      }
+      n.lb.regels.forEach((rg, i) => vormen.push(txt(cx, y + 11 + i * 15, rg, 11, 400, K.muted, "middle")));
+    }
+  }
+
+  /* ---- sectorkolommen ---- */
+  const kolW = o.sector ? 300 : 210, kolGap = 14, kolPad = 14, binnen = kolW - 2 * kolPad;
+  function sectorKolom(block){
+    const kopRegels = oeRegels(block.sector.toUpperCase(), 11, 600, binnen - 30, 2);
+    const kopH = 10 + kopRegels.length * 14 + 8;
+    let h = kopH, dir = null;
+    if (o.namen){
+      const plek = sectorDirecteurPlek(block);
+      const naam = plekNaam(plek);
+      if (naam){
+        dir = { naam, foto: plekFoto(plek), txt: oeRegels(naam, 12, 500, binnen - (o.fotos ? 32 : 0), 1)[0] };
+        h += 38;
+      }
+    }
+    const items = block.afdelingen.map(a => {
+      const naamR = oeRegels(a.naam, 12.5, 500, binnen, 3);
+      let ih = 9 + naamR.length * 16, mgr = null, teams = [];
+      if (o.namen){
+        const m = getManager(a.naam);
+        if (m){
+          const regels = oeRegels(m, 11.5, 400, binnen - (o.fotos ? 24 : 0), 2);
+          mgr = { naam: m, foto: getPhoto(a.naam), regels };
+          ih += 3 + Math.max(o.fotos ? 20 : 0, regels.length * 15);
+        }
+      }
+      if (o.teams){
+        teams = getTeams(a.naam).filter(Boolean).map(t => oeRegels(String(t), 10.5, 400, binnen - 10, 2));
+        if (teams.length) ih += 4 + teams.reduce((n, t) => n + t.length, 0) * 14;
+      }
+      return { a, naamR, mgr, teams, ih: ih + 9 };
+    });
+    h += items.reduce((n, it) => n + it.ih, 0);
+    return { block, kopRegels, kopH, dir, items, w: kolW, h: Math.max(h, kopH + 30) };
+  }
+  function tekenKolom(k){
+    const { x, y, w, h } = k;
+    vormen.push(`<rect x="${r1(x)}" y="${r1(y)}" width="${w}" height="${r1(h)}" rx="12" fill="#ffffff"/>`);
+    vormen.push(`<path d="M${r1(x)},${r1(y + k.kopH)} L${r1(x)},${r1(y + 12)} A12,12 0 0 1 ${r1(x + 12)},${r1(y)} L${r1(x + w - 12)},${r1(y)} A12,12 0 0 1 ${r1(x + w)},${r1(y + 12)} L${r1(x + w)},${r1(y + k.kopH)} Z" fill="${K.zacht}"/>`);
+    k.kopRegels.forEach((rg, i) => vormen.push(txt(x + kolPad, y + 21 + i * 14, rg, 11, 600, K.muted, "", ` letter-spacing="0.3"`)));
+    vormen.push(txt(x + w - kolPad, y + 21, String(k.block.afdelingen.length), 10.5, 500, K.muted, "end"));
+    let cy = y + k.kopH;
+    const scheiding = yy => vormen.push(`<path d="M${r1(x)},${r1(yy)} L${r1(x + w)},${r1(yy)}" stroke="${K.rand}" stroke-width="1"/>`);
+    scheiding(cy);
+    if (k.dir){
+      const tx = x + kolPad + (o.fotos ? 32 : 0);
+      if (o.fotos) vormen.push(avatar(x + kolPad + 12, cy + 19, 24, k.dir.naam, k.dir.foto));
+      vormen.push(txt(tx, cy + 15, "Directeur", 10, 500, K.muted));
+      vormen.push(txt(tx, cy + 29, k.dir.txt, 12, 500, K.tekst));
+      cy += 38;
+      scheiding(cy);
+    }
+    k.items.forEach((it, idx) => {
+      let yy = cy + 9;
+      it.naamR.forEach((rg, i) => vormen.push(txt(x + kolPad, yy + 12 + i * 16, rg, 12.5, 500, K.tekst)));
+      yy += it.naamR.length * 16;
+      if (it.mgr){
+        yy += 3;
+        const tx = x + kolPad + (o.fotos ? 24 : 0);
+        if (o.fotos) vormen.push(avatar(x + kolPad + 9, yy + 9, 18, it.mgr.naam, it.mgr.foto));
+        const off = o.fotos && it.mgr.regels.length === 1 ? 2 : 0;
+        it.mgr.regels.forEach((rg, i) => vormen.push(txt(tx, yy + 11 + off + i * 15, rg, 11.5, 400, K.muted)));
+        yy += Math.max(o.fotos ? 20 : 0, it.mgr.regels.length * 15);
+      }
+      if (it.teams.length){
+        yy += 4;
+        for (const t of it.teams){
+          vormen.push(`<circle cx="${r1(x + kolPad + 3)}" cy="${r1(yy + 7)}" r="1.6" fill="${K.muted}"/>`);
+          t.forEach((rg, i) => vormen.push(txt(x + kolPad + 10, yy + 11 + i * 14, rg, 10.5, 400, K.muted)));
+          yy += t.length * 14;
+        }
+      }
+      cy += it.ih;
+      if (idx < k.items.length - 1) scheiding(cy);
+    });
+    vormen.push(`<rect x="${r1(x + 0.5)}" y="${r1(y + 0.5)}" width="${w - 1}" height="${r1(h - 1)}" rx="12" fill="none" stroke="${K.rand}"/>`);
+  }
+
+  /* ---- maten bepalen ---- */
+  const titel = (o.titel || "").trim();
+  const sub = [o.sector || "", "stand van " + formatDatumNL(todayISO())].filter(Boolean).join(" · ");
+  const sectoren = o.sector ? ORG.filter(b => b.sector === o.sector) : ORG.filter(b => b.sector !== "Sector overstijgend");
+  const kolommen = sectoren.map(sectorKolom);
+  const sectorenW = kolommen.length ? kolommen.length * kolW + (kolommen.length - 1) * kolGap : 0;
+
+  let top = null;
+  if (o.bestuur){
+    const persoonVan = key => { const pl = topFunctiePlek(key); return { naam: plekNaam(pl), foto: plekFoto(pl) }; };
+    top = {
+      raad:    topKnoop("Raad", "pol"),
+      burg:    topKnoop("Burgemeester", "pol", persoonVan("burgemeester")),
+      griffie: topKnoop("Griffie", "pol"),
+      college: topKnoop("College B&W", "pol", null, (state.collegeleden || []).map(p => ({ naam: personNaam(p), foto: personFoto(p) })).filter(l => l.naam)),
+      control: topKnoop("Control", "pol"),
+      gemsec:  topKnoop("Gemeentesecretaris / Algemeen Directeur", "admin", persoonVan("gemeentesecretaris")),
+    };
+    // blokken op dezelfde rij even hoog, zoals op het scherm
+    const gelijk = (a, b) => { a.h = b.h = Math.max(a.h, b.h); };
+    gelijk(top.raad, top.burg); gelijk(top.college, top.control);
+  }
+  let contentW = Math.max(sectorenW, oeMeet(titel, 22, 650), oeMeet(sub, 12));
+  if (top){
+    contentW = Math.max(contentW, top.raad.w + 80 + top.burg.w, top.griffie.w, 2 * (top.college.w / 2 + 48 + top.control.w), top.gemsec.w);
+  }
+  const W = Math.ceil(contentW + 2 * PAD), cx = W / 2;
+
+  /* ---- plaatsen en tekenen ---- */
+  const kopTeksten = [];
+  let y = PAD;
+  if (titel){ kopTeksten.push(txt(PAD, y + 22, titel, 22, 650, K.tekst)); y += 30; }
+  kopTeksten.push(txt(PAD, y + 12, sub, 12, 400, K.muted));
+  y += 12 + 26;
+
+  if (top){
+    const t = top;
+    t.raad.x = cx - (t.raad.w + 80 + t.burg.w) / 2; t.raad.y = y;
+    t.burg.x = t.raad.x + t.raad.w + 80;           t.burg.y = y;
+    y += t.raad.h + GAP_Y;
+    t.griffie.x = cx - t.griffie.w / 2; t.griffie.y = y;
+    y += t.griffie.h + GAP_Y;
+    t.college.x = cx - t.college.w / 2; t.college.y = y;
+    t.control.x = t.college.x + t.college.w + 48; t.control.y = y;
+    y += t.college.h + GAP_Y;
+    t.gemsec.x = cx - t.gemsec.w / 2; t.gemsec.y = y;
+    y += t.gemsec.h + GAP_Y + 4;
+
+    // Raad + Burgemeester → Griffie
+    const ra = t.raad, bu = t.burg, gr = t.griffie;
+    const midY = ra.y + ra.h + (gr.y - ra.y - ra.h) / 2;
+    const rcx = ra.x + ra.w / 2, bcx = bu.x + bu.w / 2;
+    lijn(`M${r1(rcx)},${r1(ra.y + ra.h)} L${r1(rcx)},${r1(midY)} L${r1(bcx)},${r1(midY)} L${r1(bcx)},${r1(bu.y + bu.h)}`);
+    lijn(`M${r1(cx)},${r1(midY)} L${r1(cx)},${r1(gr.y)}`);
+    // Griffie → College B&W → Gemeentesecretaris; Control als nevenverbinding
+    lijn(`M${r1(cx)},${r1(gr.y + gr.h)} L${r1(cx)},${r1(t.college.y)}`);
+    lijn(`M${r1(t.college.x + t.college.w)},${r1(t.college.y + t.college.h / 2)} L${r1(t.control.x)},${r1(t.control.y + t.control.h / 2)}`);
+    lijn(`M${r1(cx)},${r1(t.college.y + t.college.h)} L${r1(cx)},${r1(t.gemsec.y)}`);
+    Object.values(t).forEach(tekenTop);
+  }
+
+  let x = cx - sectorenW / 2;
+  for (const k of kolommen){ k.x = x; k.y = y; x += kolW + kolGap; }
+  if (top && kolommen.length){
+    // Gemeentesecretaris → sectoren
+    const gs = top.gemsec, gy = gs.y + gs.h, midY = gy + (y - gy) / 2;
+    const centra = kolommen.map(k => k.x + kolW / 2);
+    lijn(`M${r1(cx)},${r1(gy)} L${r1(cx)},${r1(midY)}`);
+    if (centra.length > 1 || Math.abs(centra[0] - cx) > 0.5) lijn(`M${r1(Math.min(cx, ...centra))},${r1(midY)} L${r1(Math.max(cx, ...centra))},${r1(midY)}`);
+    centra.forEach(c => lijn(`M${r1(c)},${r1(midY)} L${r1(c)},${r1(y)}`));
+  }
+  kolommen.forEach(tekenKolom);
+  const H = Math.ceil(y + (kolommen.length ? Math.max(...kolommen.map(k => k.h)) : 0) + PAD);
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${OE_FONT}">`
+    + `<title>${escapeHTML(titel || "Organogram")}</title>`
+    + (defs.length ? `<defs>${defs.join("")}</defs>` : "")
+    + `<rect width="${W}" height="${H}" fill="#ffffff"/>`
+    + kopTeksten.join("")
+    + `<g fill="none" stroke="${K.lijn}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${lijnen.join("")}</g>`
+    + vormen.join("")
+    + `</svg>`;
+  return { svg, breed: W, hoog: H };
+}
+
+function oeBestandsnaam(o, ext){
+  const deel = o.sector ? "_" + sanitizeFileName(o.sector).replace(/\s+/g, "-") : "";
+  return `organogram${deel}_${todayISO()}.${ext}`;
+}
+function oePngSchaal(res){ return Math.min(2, 8000 / res.breed, 8000 / res.hoog); }
+/* SVG → PNG via een canvas (2× zo scherp, voor presentaties). */
+async function oeNaarPNG(res){
+  const schaal = oePngSchaal(res);
+  const url = URL.createObjectURL(new Blob([res.svg], { type: "image/svg+xml;charset=utf-8" }));
+  try{
+    const img = new Image();
+    await new Promise((ok, fout)=>{
+      img.onload = ok;
+      img.onerror = ()=> fout(new Error("de afbeelding kon niet worden opgebouwd"));
+      img.src = url;
+    });
+    if (img.decode){ try{ await img.decode(); }catch(e){} }
+    const c = document.createElement("canvas");
+    c.width = Math.round(res.breed * schaal);
+    c.height = Math.round(res.hoog * schaal);
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise((ok, fout)=> c.toBlob(b => b ? ok(b) : fout(new Error("de afbeelding kon niet worden gemaakt")), "image/png"));
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+/* PDF zonder extra bibliotheek: afdrukweergave waarin het organogram op één pagina past. */
+function oePDF(res, o){
+  const liggend = res.breed >= res.hoog;
+  const maat = { A4: [297, 210], A3: [420, 297] }[o.papier] || [297, 210];
+  const [pw, ph] = liggend ? maat : [maat[1], maat[0]];
+  const marge = 10;
+  const titel = (o.titel || "").trim() || "Organogram";
+  const html = `<!DOCTYPE html><html lang="nl"><head><meta charset="utf-8">
+<title>${escapeHTML(titel)}${o.sector ? " – " + escapeHTML(o.sector) : ""} (${escapeHTML(formatDatumNL(todayISO()))})</title>
+<style>
+@page{size:${o.papier} ${liggend ? "landscape" : "portrait"};margin:${marge}mm}
+html,body{margin:0;background:#fff}
+body{font-family:${OE_FONT};padding:20px;color:#1b1f27}
+.hint{background:#eef4fb;border:1px solid #cfe0f5;border-radius:8px;padding:8px 12px;margin-bottom:16px;color:#0f4c8a;font-size:13px}
+svg{display:block;width:100%;height:auto}
+@media print{body{padding:0}.hint{display:none}svg{width:${pw - 2 * marge}mm;height:${ph - 2 * marge - 2}mm}}
+</style></head><body>
+<div class="hint">Het afdrukvenster opent automatisch. Kies bij <b>Bestemming</b> “Opslaan als PDF”. Het organogram past op één ${o.papier}-pagina (${liggend ? "liggend" : "staand"}).</div>
+${res.svg}
+<script>window.addEventListener("load",function(){setTimeout(function(){window.print();},300);});<\/script>
+</body></html>`;
+  const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+  const w = window.open(url, "_blank");
+  if (!w) downloadBlob(new Blob([html], { type: "text/html" }), oeBestandsnaam(o, "html"));
+  setTimeout(()=> URL.revokeObjectURL(url), 60000);
+}
+
+let oeKeuzes = null;   // onthoudt de gekozen opties zolang de app open is
+function openOrganogramExport(){
+  const k = oeKeuzes || (oeKeuzes = { titel: "Organogram", sector: "", bestuur: true, namen: true, fotos: false, teams: false, formaat: "png", papier: "A4" });
+  const sectoren = ORG.filter(b => b.sector !== "Sector overstijgend").map(b => b.sector);
+  if (k.sector && !sectoren.includes(k.sector)) k.sector = "";
+  const chk = (id, aan, tekst) => `<label class="oe-check"><input type="checkbox" id="${id}" ${aan ? "checked" : ""}><span>${tekst}</span></label>`;
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal" style="max-width:880px">
+      <h3>Organogram exporteren</h3>
+      <div class="oe-wrap">
+        <div class="oe-opties">
+          <div class="row"><label>Titel</label><input id="oeTitel" value="${escapeHTML(k.titel)}" placeholder="Organogram"></div>
+          <div class="row"><label>Sector</label>
+            <select id="oeSector"><option value="">Alle sectoren</option>${sectoren.map(s => `<option value="${escapeHTML(s)}" ${s === k.sector ? "selected" : ""}>${escapeHTML(s)}</option>`).join("")}</select>
+          </div>
+          <div class="row"><label>Wat staat erin?</label>
+            ${chk("oeBestuur", k.bestuur, "Bestuurslaag: raad, burgemeester, griffie, college, control en gemeentesecretaris")}
+            ${chk("oeNamen", k.namen, "Namen van managers, directeuren en bestuurders")}
+            ${chk("oeFotos", k.fotos, "Foto's bij de namen")}
+            ${chk("oeTeams", k.teams, "Teams per afdeling")}
+          </div>
+          <div class="row"><label>Formaat</label>
+            ${[["png", "Afbeelding (PNG)", "voor PowerPoint, Word of een mail"], ["pdf", "PDF", "afdrukken of opslaan als PDF"], ["svg", "SVG", "blijft scherp bij vergroten, te bewerken"]].map(([v, l, d]) =>
+              `<label class="oe-check"><input type="radio" name="oeFmt" value="${v}" ${k.formaat === v ? "checked" : ""}><span><b>${l}</b> · ${d}</span></label>`).join("")}
+          </div>
+          <div class="row" id="oePapierRij"><label>Papierformaat</label>
+            <select id="oePapier">${["A4", "A3"].map(p => `<option value="${p}" ${k.papier === p ? "selected" : ""}>${p}</option>`).join("")}</select>
+          </div>
+        </div>
+        <div class="oe-voorbeeld">
+          <label>Voorbeeld</label>
+          <div class="oe-vb" id="oeVb"></div>
+          <div class="oe-maat" id="oeMaat"></div>
+        </div>
+      </div>
+      <div class="oe-lijst">Liever een lijst? <a href="#" id="oeLijst">Exporteer de afdelingen met managers en teams naar Excel, CSV of PDF</a>.</div>
+      <div class="modal-actions">
+        <button class="secondary" id="oeCancel">Annuleren</button>
+        <button class="secondary" id="oeKopie" title="Kopieer het organogram als afbeelding en plak het in PowerPoint, Word, Teams of een mail">Kopiëren als afbeelding</button>
+        <button class="primary" id="oeGo">Downloaden</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  const $ = sel => backdrop.querySelector(sel);
+  const close = ()=> backdrop.remove();
+  backdrop.onclick = e => { if (e.target === backdrop) close(); };
+  $("#oeCancel").onclick = close;
+
+  let res = null;
+  function ververs(){
+    k.titel = $("#oeTitel").value;
+    k.sector = $("#oeSector").value;
+    k.bestuur = $("#oeBestuur").checked;
+    k.namen = $("#oeNamen").checked;
+    k.fotos = $("#oeFotos").checked;
+    k.teams = $("#oeTeams").checked;
+    k.formaat = backdrop.querySelector('input[name="oeFmt"]:checked')?.value || "png";
+    k.papier = $("#oePapier").value;
+    $("#oeFotos").disabled = !k.namen;
+    $("#oeFotos").closest("label").classList.toggle("is-uit", !k.namen);
+    $("#oePapierRij").style.display = k.formaat === "pdf" ? "" : "none";
+    $("#oeGo").textContent = k.formaat === "pdf" ? "PDF maken" : k.formaat === "svg" ? "SVG downloaden" : "PNG downloaden";
+    res = buildOrganogramSVG({ ...k, fotos: k.namen && k.fotos });
+    const vb = $("#oeVb");
+    vb.innerHTML = res.svg;
+    const el = vb.querySelector("svg");
+    if (el){ el.removeAttribute("width"); el.removeAttribute("height"); }
+    const s = oePngSchaal(res);
+    $("#oeMaat").textContent = k.formaat === "png" ? `Afbeelding van ${Math.round(res.breed * s)} × ${Math.round(res.hoog * s)} pixels`
+      : k.formaat === "pdf" ? `Past op één ${k.papier}-pagina, ${res.breed >= res.hoog ? "liggend" : "staand"}`
+      : `Vectorafbeelding van ${res.breed} × ${res.hoog}`;
+  }
+  backdrop.querySelectorAll("input, select").forEach(el => el.addEventListener(el.type === "text" ? "input" : "change", ververs));
+
+  $("#oeGo").onclick = async ()=>{
+    ververs();
+    const o = { ...k }, knop = $("#oeGo");
+    try{
+      if (k.formaat === "svg"){
+        downloadBlob(new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + res.svg], { type: "image/svg+xml" }), oeBestandsnaam(o, "svg"));
+      } else if (k.formaat === "pdf"){
+        oePDF(res, o);
+      } else {
+        knop.disabled = true; knop.textContent = "Bezig…";
+        downloadBlob(await oeNaarPNG(res), oeBestandsnaam(o, "png"));
+      }
+      close();
+    }catch(err){
+      knop.disabled = false; ververs();
+      alert("Exporteren is niet gelukt: " + (err.message || err) + ".\n\nProbeer het als PDF of SVG.");
+    }
+  };
+  $("#oeKopie").onclick = async ()=>{
+    ververs();
+    const knop = $("#oeKopie");
+    if (!navigator.clipboard || !navigator.clipboard.write || !window.ClipboardItem){
+      alert("Deze browser kan geen afbeeldingen naar het klembord kopiëren. Download het organogram als PNG en voeg dat in.");
+      return;
+    }
+    try{
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": oeNaarPNG(res) })]);
+      knop.textContent = "Gekopieerd";
+      setTimeout(()=>{ if (knop.isConnected) knop.textContent = "Kopiëren als afbeelding"; }, 2200);
+    }catch(err){
+      alert("Kopiëren is niet gelukt: " + (err.message || err) + "\n\nDownload het organogram als PNG en voeg dat in.");
+    }
+  };
+  $("#oeLijst").onclick = (e)=>{ e.preventDefault(); close(); openGegevensExport("afdelingen"); };
+  ververs();
 }
 
 /* ====== College B&W & Control ====== */
@@ -12872,7 +13999,7 @@ const HELP_SECTIES = [
    "control-functies"
   ],
   "nav": "organogram",
-  "tekst": "# Organogram\nOnder **Organisatie → Organogram** zie je de bestuurlijke opbouw: Raad en burgemeester, Griffie, College B&W en Control, de gemeentesecretaris/algemeen directeur en daaronder de sectoren met hun afdelingen.\n- Per afdeling zie je de manager, de teams en het aantal activiteiten. Klik op een afdeling om ernaartoe te gaan.\n- Klik op de regel onder een sector (directeur), onder **Burgemeester** of onder **Gemeentesecretaris / Algemeen Directeur** om een naam te typen of iemand uit je contacten te kiezen. Enter slaat op, Escape annuleert. Deze mensen staan daarmee ook in **Relaties → Contacten**.\n- Klik op College B&W of Control om die schermen te openen.\n\n# College B&W\n- Houd per collegelid de **portefeuille**, een **foto** (klik op de avatar), **acties** en **notities** bij. Een nieuw lid voeg je toe met **+ Nieuw collegelid**.\n- Je kunt hier ook **activiteiten** aanmaken, net als bij een afdeling. Die tellen mee in alle overzichten.\n\n# Control\nHoud personen en functies bij, met acties en notities per persoon. Toevoegen met **+ Nieuw persoon / functie**.\n\n# Koppeling met Contacten\nCollegeleden en control-personen staan ook in **Relaties → Contacten**.\n- Typ je een naam op een kaart, dan zie je suggesties uit je contacten. Kies je er een, dan wordt de kaart daaraan gekoppeld. Een nieuwe naam wordt automatisch een nieuw contact.\n- Naam en foto komen uit het contact. Pas je ze aan op de kaart of in Contacten, dan zie je dat overal.\n- E-mail en telefoon staan onder de functie. Met het potloodje open je het contact om ze in te vullen of te wijzigen.\n- De functie en het bedrijf van de kaart gaan mee naar het contact, tenzij daar al iets anders staat.\n- Verwijder je een kaart, dan blijft het contact bewaard."
+  "tekst": "# Organogram\nOnder **Organisatie → Organogram** zie je de bestuurlijke opbouw: Raad en burgemeester, Griffie, College B&W en Control, de gemeentesecretaris/algemeen directeur en daaronder de sectoren met hun afdelingen.\n- Per afdeling zie je de manager, de teams en het aantal activiteiten. Klik op een afdeling om ernaartoe te gaan.\n- Klik op de regel onder een sector (directeur), onder **Burgemeester** of onder **Gemeentesecretaris / Algemeen Directeur** om een naam te typen of iemand uit je contacten te kiezen. Enter slaat op, Escape annuleert. Deze mensen staan daarmee ook in **Relaties → Contacten**.\n- Klik op College B&W of Control om die schermen te openen.\n- **Exporteren…** rechtsboven maakt van het organogram een afbeelding (PNG of SVG) of een PDF, voor de hele organisatie of één sector. Zie **Exporteren en importeren**.\n\n# College B&W\n- Houd per collegelid de **portefeuille**, een **foto** (klik op de avatar), **acties** en **notities** bij. Een nieuw lid voeg je toe met **+ Nieuw collegelid**.\n- Je kunt hier ook **activiteiten** aanmaken, net als bij een afdeling. Die tellen mee in alle overzichten.\n\n# Control\nHoud personen en functies bij, met acties en notities per persoon. Toevoegen met **+ Nieuw persoon / functie**.\n\n# Koppeling met Contacten\nCollegeleden en control-personen staan ook in **Relaties → Contacten**.\n- Typ je een naam op een kaart, dan zie je suggesties uit je contacten. Kies je er een, dan wordt de kaart daaraan gekoppeld. Een nieuwe naam wordt automatisch een nieuw contact.\n- Naam en foto komen uit het contact. Pas je ze aan op de kaart of in Contacten, dan zie je dat overal.\n- E-mail en telefoon staan onder de functie. Met het potloodje open je het contact om ze in te vullen of te wijzigen.\n- De functie en het bedrijf van de kaart gaan mee naar het contact, tenzij daar al iets anders staat.\n- Verwijder je een kaart, dan blijft het contact bewaard."
  },
  {
   "id": "managers",
@@ -12916,7 +14043,7 @@ const HELP_SECTIES = [
    "contacten"
   ],
   "nav": "contacten",
-  "tekst": "Onder **Relaties → Contacten** staat het centrale contactenregister. Elke persoon staat er één keer in, met naam, rol, e-mail, telefoon, bedrijf, LinkedIn-profiel en foto. Overal waar iemand gekoppeld is (activiteiten, functioneel beheerders, externe inhuur, processtappen, managers, directeuren, burgemeester, gemeentesecretaris, College B&W en Control), worden die gegevens live overgenomen. Tekst als *vacature* of *n.v.t.* in een naamveld wordt geen contact.\n\n- **Zoeken** op voornaam, achternaam of beide, en op rol, e-mail of telefoon.\n- Per contact zie je op hoeveel plekken het gekoppeld is.\n- **+ Nieuw contact**, **Bewerken** en **Verwijderen** doe je hier centraal. Bij het koppelen elders kun je ook direct een nieuw contact aanmaken.\n- **⇄ Samenvoegen**: staat iemand er dubbel in, bijvoorbeeld een keer alleen met voornaam, dan voeg je de twee samen. Alle koppelingen gaan mee naar het contact dat blijft.\n- Klik op het telefoonnummer om te bellen, bijvoorbeeld via Teams. Met de kopieerknop kopieer je e-mail of telefoon.\n- **LinkedIn**: plak in de contacteditor het profieladres (of alleen de profielnaam). De knop **Openen** opent het profiel; staat er nog niets, dan zoekt **Zoeken** de persoon op naam op LinkedIn.\n- **Foto**: kies een bestand, of neem de profielfoto van LinkedIn over. LinkedIn staat niet toe dat de app de foto zelf ophaalt, dus: open het profiel, klik met rechts op de profielfoto, kies *Afbeelding kopiëren* en plak hem in de contacteditor met ⌘V (of sleep de foto erheen). De foto verschijnt op de contactkaart, overal waar het contact gekoppeld is, en bij functioneel beheerders zonder eigen foto.\n- **Synchroniseren met iPhone/Mac**: via Instellingen kun je contacten met een telefoonnummer automatisch naar een aparte groep in Contacten op je Mac en iPhone laten zetten. Dat werkt via een eenmalig te installeren achtergrondprogramma in de map *contacten-sync*. Bij de installatie krijg je een **koppelcode**: die plak je één keer in de tracker, zodat alleen jouw tracker het programma kan aansturen."
+  "tekst": "Onder **Relaties → Contacten** staat het centrale contactenregister. Elke persoon staat er één keer in, met naam, rol, e-mail, telefoon, bedrijf, LinkedIn-profiel en foto. Overal waar iemand gekoppeld is (activiteiten, functioneel beheerders, externe inhuur, processtappen, managers, directeuren, burgemeester, gemeentesecretaris, College B&W en Control), worden die gegevens live overgenomen. Tekst als *vacature* of *n.v.t.* in een naamveld wordt geen contact.\n\n- **Zoeken** op voornaam, achternaam of beide, en op rol, e-mail of telefoon.\n- Per contact zie je op hoeveel plekken het gekoppeld is.\n- **+ Nieuw contact**, **Bewerken** en **Verwijderen** doe je hier centraal. Bij het koppelen elders kun je ook direct een nieuw contact aanmaken.\n- **Importeren…**: lees contacten in uit een CSV- of Excel-bestand met elke indeling. Je koppelt zelf de kolommen, en wie er al in staat wordt aangevuld in plaats van dubbel aangemaakt. Zie **Exporteren en importeren**.\n- **⇄ Samenvoegen**: staat iemand er dubbel in, bijvoorbeeld een keer alleen met voornaam, dan voeg je de twee samen. Alle koppelingen gaan mee naar het contact dat blijft.\n- Klik op het telefoonnummer om te bellen, bijvoorbeeld via Teams. Met de kopieerknop kopieer je e-mail of telefoon.\n- **LinkedIn**: plak in de contacteditor het profieladres (of alleen de profielnaam). De knop **Openen** opent het profiel; staat er nog niets, dan zoekt **Zoeken** de persoon op naam op LinkedIn.\n- **Foto**: kies een bestand, of neem de profielfoto van LinkedIn over. LinkedIn staat niet toe dat de app de foto zelf ophaalt, dus: open het profiel, klik met rechts op de profielfoto, kies *Afbeelding kopiëren* en plak hem in de contacteditor met ⌘V (of sleep de foto erheen). De foto verschijnt op de contactkaart, overal waar het contact gekoppeld is, en bij functioneel beheerders zonder eigen foto.\n- **Synchroniseren met iPhone/Mac**: via Instellingen kun je contacten met een telefoonnummer automatisch naar een aparte groep in Contacten op je Mac en iPhone laten zetten. Dat werkt via een eenmalig te installeren achtergrondprogramma in de map *contacten-sync*. Bij de installatie krijg je een **koppelcode**: die plak je één keer in de tracker, zodat alleen jouw tracker het programma kan aansturen."
  },
  {
   "id": "bedrijven",
@@ -12984,7 +14111,7 @@ const HELP_SECTIES = [
    "instellingen"
   ],
   "nav": "instellingen",
-  "tekst": "Instellingen open je met het tandwiel linksonder. Per onderdeel staat er een korte uitleg; klik erop om het te openen.\n\n# Opslag en synchronisatie\n- **Map koppelen** en **Vernieuwen uit map**: zie **Opslaan, gekoppelde map en back-ups**.\n- **Contacten synchroniseren met iPhone/Mac**.\n- **Markdown-bestanden bijwerken** en **opschonen en opnieuw genereren**.\n\n# Inrichting\n- **Applicatietitel wijzigen**: de naam bovenin de app, handig als een collega de tool voor een andere afdeling gebruikt.\n- **Standaardbedrijf**: zie **Bedrijven**.\n- **Sectoren & afdelingen beheren**.\n- **Weekstart & processen instellen**: zie **Processjablonen en werkinstructies**.\n- **Meldingen**: zie **Meldingen**.\n- **Tags & statussen beheren**.\n\n# Importeren en exporteren\nZie **Exporteren en importeren**."
+  "tekst": "Instellingen open je met het tandwiel linksonder. Per onderdeel staat er een korte uitleg; klik erop om het te openen.\n\n# Opslag en synchronisatie\n- **Map koppelen** en **Vernieuwen uit map**: zie **Opslaan, gekoppelde map en back-ups**.\n- **Contacten synchroniseren met iPhone/Mac**.\n- **Markdown-bestanden bijwerken** en **opschonen en opnieuw genereren**.\n\n# Inrichting\n- **Applicatietitel wijzigen**: de naam bovenin de app, handig als een collega de tool voor een andere afdeling gebruikt.\n- **Standaardbedrijf**: zie **Bedrijven**.\n- **Sectoren & afdelingen beheren**.\n- **Weekstart & processen instellen**: zie **Processjablonen en werkinstructies**.\n- **Meldingen**: zie **Meldingen**.\n- **Tags & statussen beheren**.\n\n# Importeren en exporteren\nAlle import- en exportfuncties staan in het menu onder Instellingen → **Importeren & exporteren**. Zie **Exporteren en importeren**."
  },
  {
   "id": "organisatie-beheer",
@@ -13024,9 +14151,11 @@ const HELP_SECTIES = [
   "groep": "Instellingen",
   "titel": "Exporteren en importeren",
   "icon": "export",
-  "views": [],
-  "nav": "instellingen",
-  "tekst": "Alle import- en exportfuncties staan onder Instellingen → **Importeren & exporteren**.\n\n# Exporteren\n- **JSON exporteren (volledige back-up)**: al je gegevens in één bestand, inclusief activiteiten, acties, logboeken en notities.\n- **Basisdata exporteren (delen)**: alleen de organisatiestructuur, managers, teams, processen, wetten, software, functioneel beheerders en collegeleden, zonder activiteiten en notities. Bedoeld om met een collega te delen.\n- **Gegevens exporteren (Excel, CSV of PDF)**: kies een onderwerp (afdelingen, activiteiten, functioneel beheerders, applicaties, externe inhuur, begroting of contacten) en vink de kolommen aan. Met **Alles**, **Standaard** en **Geen** zet je ze snel goed. Filter eventueel op één sector. PDF opent een afdrukweergave; kies daar *Opslaan als PDF*.\n- **Applicatie-overzicht exporteren**: een losse HTML-pagina per sector en afdeling, met applicaties en functioneel beheerders, die iedereen in de browser kan openen, doorzoeken en afdrukken. Kies één sector of alle sectoren, en of e-mail/telefoon en Middel-ID's erin moeten.\n- **Werkinstructie exporteren**: bij een processjabloon (zie **Processjablonen en werkinstructies**).\n\n# Importeren\n- **Basisdata importeren (samenvoegen)**: voegt structuur, managers, teams, processen, wetten, software, beheerders en collegeleden uit een basisdata-bestand toe aan je eigen gegevens. Bestaande gegevens en activiteiten worden nooit overschreven.\n- **Software assets importeren vanuit Topdesk**: een Excel-export met Middel-ID, applicatienaam en BIV-classificatie. Eerst zie je een voorvertoning.\n- **JSON importeren (volledig)**: vervangt **al** je gegevens door de inhoud van het bestand. Maak eerst een back-up."
+  "views": [
+   "import-export"
+  ],
+  "nav": "import-export",
+  "tekst": "Alle import- en exportfuncties staan onder Instellingen → **Importeren & exporteren**, in het menu onder Algemeen. Ze zijn ingedeeld in *Back-up*, *Exporteren* en *Importeren*.\n\n# Exporteren\n- **JSON exporteren (volledige back-up)**: al je gegevens in één bestand, inclusief activiteiten, acties, logboeken en notities.\n- **Basisdata exporteren (delen)**: alleen de organisatiestructuur, managers, teams, processen, wetten, software, functioneel beheerders en collegeleden, zonder activiteiten en notities. Bedoeld om met een collega te delen.\n- **Gegevens exporteren (Excel, CSV of PDF)**: kies een onderwerp (afdelingen, activiteiten, functioneel beheerders, applicaties, externe inhuur, begroting of contacten) en vink de kolommen aan. Bij afdelingen kan ook de directeur van de sector mee, bij contacten het LinkedIn-profiel. Met **Alles**, **Standaard** en **Geen** zet je ze snel goed. Filter eventueel op één sector. PDF opent een afdrukweergave; kies daar *Opslaan als PDF*.\n- **Organogram exporteren**: het organogram als afbeelding of PDF. Zie **Organogram exporteren** hieronder.\n- **Applicatie-overzicht exporteren**: een losse HTML-pagina per sector en afdeling, met applicaties en functioneel beheerders, die iedereen in de browser kan openen, doorzoeken en afdrukken. Kies één sector of alle sectoren, en of e-mail/telefoon en Middel-ID's erin moeten.\n- **Werkinstructie exporteren**: bij een processjabloon (zie **Processjablonen en werkinstructies**).\n\n# Importeren\n- **Contacten importeren (CSV of Excel)**: zie **Contacten importeren** hieronder.\n- **Basisdata importeren (samenvoegen)**: voegt structuur, managers, teams, processen, wetten, software, beheerders en collegeleden uit een basisdata-bestand toe aan je eigen gegevens. Bestaande gegevens en activiteiten worden nooit overschreven.\n- **Software assets importeren vanuit Topdesk**: een Excel-export met Middel-ID, applicatienaam en BIV-classificatie. Eerst zie je een voorvertoning.\n- **JSON importeren (volledig)**: vervangt **al** je gegevens door de inhoud van het bestand. Maak eerst een back-up.\n\n# Organogram exporteren\nOpen het via **Exporteren…** rechtsboven in het organogram, of via Instellingen → Importeren & exporteren. Rechts zie je meteen een voorbeeld.\n- **Titel**: komt bovenaan, met daaronder de datum.\n- **Sector**: alle sectoren, of één sector. Bij één sector worden de kolommen breder.\n- **Wat staat erin?**: de bestuurslaag (raad, burgemeester, griffie, college, control en gemeentesecretaris), de namen van managers, directeuren en bestuurders, foto's bij die namen, en de teams per afdeling.\n- **Formaat**:\n  - **Afbeelding (PNG)**: een scherpe afbeelding voor PowerPoint, Word of een mail.\n  - **PDF**: opent een afdrukweergave waarin het organogram op één A4- of A3-pagina past. Kies daar *Opslaan als PDF*.\n  - **SVG**: een afbeelding die scherp blijft bij vergroten en die je in bijvoorbeeld PowerPoint of Visio verder kunt bewerken.\n- **Kopiëren als afbeelding** zet het organogram op het klembord, zodat je het direct plakt in PowerPoint, Word, Teams of een mail.\n- Liever een lijst? Via de link onderin exporteer je de afdelingen met managers en teams naar Excel, CSV of PDF.\n\nDe app onthoudt je keuzes zolang hij openstaat.\n\n# Contacten importeren\nOpen het via **Importeren…** in Relaties → Contacten, of via Instellingen → Importeren & exporteren. Het werkt met elk CSV- of Excel-bestand, bijvoorbeeld een export uit Outlook of Google of een eigen lijst.\n1. **Kies een bestand** (CSV, TXT, XLSX, XLS of ODS), sleep het in het venster, of plak rijen die je uit Excel of een tabel hebt gekopieerd. Het scheidingsteken (komma, puntkomma of tab) en de tekenset worden vanzelf herkend.\n2. **Koppel de kolommen.** Per kolom zie je een voorbeeld en kies je **Niet importeren** of een veld: naam, voornaam, tussenvoegsel, achternaam, rol / functie, e-mail, telefoon, bedrijf of LinkedIn. De app doet een voorstel op basis van de kolomnamen.\n   - Meerdere kolommen bij hetzelfde veld mag. Voornaam, tussenvoegsel en achternaam worden samen de naam. Meerdere kolommen bij rol / functie, zoals functie en afdeling, worden met een komma samengevoegd. Bij e-mail, bedrijf en LinkedIn telt de eerste kolom met een waarde.\n   - Bij meerdere telefoonkolommen gaat het **mobiele nummer** voor. De app herkent dat aan de kolomnaam (zoals *Mobiel* of *GSM*) of aan het nummer zelf (06 of +31 6). Is er geen mobiel nummer, dan telt de eerste kolom met een waarde.\n   - Met **Alle contacten koppelen aan** geef je alle contacten in één keer hetzelfde bedrijf, bijvoorbeeld je eigen organisatie. Het standaardbedrijf staat al voorgeselecteerd. Een kolom met bedrijfsnamen wordt dan niet gebruikt. Contacten die al een ander bedrijf hebben, houden dat, tenzij je bij het controleren kiest voor overschrijven.\n   - Staan de kolomnamen niet op de eerste rij, of zijn er geen kolomnamen? Kies dat bij **Kolomnamen**. Heeft het bestand meerdere tabbladen, dan kies je het tabblad.\n   - Staan namen er als *Jansen, Jan*? Vink dan aan dat ze worden omgedraaid naar *Jan Jansen*.\n   - Onderin zie je hoe de eerste contacten worden ingelezen.\n3. **Controleer.** Per persoon zie je wat er gebeurt:\n   - **Nieuw**: het contact komt erbij.\n   - **Aanvullen**: de persoon staat al in je contacten (zelfde e-mailadres, of anders dezelfde naam). Alleen lege velden worden aangevuld; je ziet welke.\n   - **Staat er al in**: er is niets nieuws.\n   - **Geen naam**: de rij heeft geen naam en hoort niet bij een bestaand contact; die wordt overgeslagen.\n   - Komt iemand meer dan eens voor in het bestand, dan worden die rijen eerst samengevoegd.\n   - Per persoon kun je kiezen voor **Overslaan**, of bij een bestaand contact voor **Als nieuw contact**. Een oranje melding waarschuwt als het e-mailadres afwijkt van wat er in je contacten staat.\n   - Wil je bestaande gegevens vervangen door wat in het bestand staat, vink dan **Bestaande gegevens overschrijven** aan.\n   - Een bedrijf dat nog niet bestaat, wordt aangemaakt bij Relaties → Bedrijven.\n4. Klik op **Importeren**. Klopt er iets niet, dan zet **Ongedaan maken** de contacten en bedrijven terug zoals ze vóór de import waren.\n\nGebruik je **Contacten synchroniseren met iPhone/Mac**, dan komen geïmporteerde contacten met een telefoonnummer daar ook in."
  },
  {
   "id": "tips",
@@ -15205,38 +16334,42 @@ function renderInstellingenView(main){
       { ic:"tags", btn:"btnBeheer", tit:"Tags & statussen beheren",
         desc:"Beheer de tags en statussen die je bij activiteiten kunt gebruiken." },
     ]},
-    { titel: "Importeren & exporteren", items: [
-      { ic:"excel", btn:"btnImportSoftware", tit:"Software assets importeren vanuit Topdesk",
-        desc:"Lees een Topdesk Excel-export in met Middel-ID, applicatienaam en BIV-classificatie. Je krijgt eerst een voorbeeldweergave van wat er wijzigt." },
-      { ic:"import", btn:"btnMergeImport", tit:"Basisdata importeren (samenvoegen)",
-        desc:"Voeg structuur, managers, teams, processen, wetten, software, beheerders en collegeleden uit een basisdata-bestand samen met je huidige data. Bestaande gegevens en activiteiten worden nooit overschreven." },
-      { ic:"export", btn:"btnExportBasis", tit:"Basisdata exporteren (delen)",
-        desc:"Exporteer de organisatiestructuur, managers, functioneel beheerders en collegeleden — zonder activiteiten en notities. Een collega importeert dit via 'Basisdata importeren'." },
-      { ic:"excel", btn:"btnExportTabel", tit:"Gegevens exporteren (Excel, CSV of PDF)",
-        desc:"Exporteer een lijst naar keuze — afdelingen, activiteiten, functioneel beheerders, applicaties, externe inhuur of contacten. Je kiest zelf welke kolommen erin komen, optioneel per sector." },
-      { ic:"export", btn:"btnExportAppOverzicht", tit:"Applicatie-overzicht exporteren (delen)",
-        desc:"Download een visueel overzicht per sector en afdeling met de applicaties en hun functioneel beheerders — als HTML-bestand dat iedereen in de browser kan openen, doorzoeken en als PDF kan opslaan." },
-      { ic:"upload", btn:"btnImport", tit:"JSON importeren (volledig)",
-        desc:"Vervang ál je data door de inhoud van een JSON-bestand. Let op: dit overschrijft de huidige gegevens volledig." },
-      { ic:"download", btn:"btnExport", tit:"JSON exporteren (volledige back-up)",
-        desc:"Download al je data als JSON-bestand, inclusief activiteiten, acties, logboeken en notities." },
+    { titel: "Gegevens", items: [
+      { ic:"export", nav:"import-export", tit:"Importeren & exporteren",
+        desc:"Back-ups maken en terugzetten, gegevens en het organogram exporteren, en contacten, software of basisdata importeren." },
     ]},
   ];
 
+  renderSetSecties(main, {
+    titel: "Instellingen",
+    sub: `Versie ${APP_VERSION} · klik op een onderdeel om het te openen`,
+    toolbar: `<div class="toolbar"><button class="ghost-btn" id="setChangelog">Wat is er nieuw?</button></div>`,
+  }, secties);
+  document.getElementById("setChangelog").onclick = ()=> showChangelog();
+}
+
+/* Gedeelde opbouw van de instellingenschermen (Algemeen, Importeren & exporteren): secties met
+   klikbare regels. Een regel opent een scherm (nav), klikt een verborgen menuknop aan (btn) of
+   roept een functie aan (run). */
+let setSchermLaatst = null;   // wissel je tussen deze schermen, dan begint het nieuwe scherm bovenaan
+function renderSetSecties(main, kop, secties){
+  const runs = [];
+  if (setSchermLaatst !== kop.titel){ main.scrollTop = 0; if (main.parentElement) main.parentElement.scrollTop = 0; }
+  setSchermLaatst = kop.titel;
   main.innerHTML = `
     <div class="afd-header">
       <div>
-        <h2>Instellingen</h2>
-        <div class="sub">Versie ${APP_VERSION} · klik op een onderdeel om het te openen</div>
+        <h2>${escapeHTML(kop.titel)}</h2>
+        <div class="sub">${escapeHTML(kop.sub)}</div>
       </div>
-      <div class="toolbar"><button class="ghost-btn" id="setChangelog">Wat is er nieuw?</button></div>
+      ${kop.toolbar || ""}
     </div>
     <div style="padding:0 24px 24px;max-width:760px">
       ${secties.map(s => `
         <div class="set-section-title">${escapeHTML(s.titel)}</div>
         <div class="card" style="padding:0">
           ${s.items.map(it => `
-            <div class="set-row" data-btn="${it.btn||""}" data-nav="${it.nav||""}" tabindex="0" role="button">
+            <div class="set-row" data-btn="${it.btn||""}" data-nav="${it.nav||""}" data-run="${it.run ? runs.push(it.run) - 1 : ""}" tabindex="0" role="button">
               <span class="ic">${faIcon(it.ic)}</span>
               <div style="flex:1;min-width:0">
                 <div class="tit">${escapeHTML(it.tit)}</div>
@@ -15248,10 +16381,46 @@ function renderInstellingenView(main){
     </div>
   `;
   main.querySelectorAll(".set-row").forEach(row => {
-    row.onclick = ()=> row.dataset.nav ? navTo(row.dataset.nav) : document.getElementById(row.dataset.btn)?.click();
+    row.onclick = ()=>{
+      if (row.dataset.run !== "") runs[+row.dataset.run]();
+      else if (row.dataset.nav) navTo(row.dataset.nav);
+      else document.getElementById(row.dataset.btn)?.click();
+    };
     row.onkeydown = (e)=>{ if (e.key === "Enter"){ e.preventDefault(); row.onclick(); } };
   });
-  document.getElementById("setChangelog").onclick = ()=> showChangelog();
+}
+
+/* ====== Instellingen → Importeren & exporteren ====== */
+function renderImportExportView(main){
+  renderSetSecties(main, {
+    titel: "Importeren & exporteren",
+    sub: "Back-ups, gegevens delen en lijsten · klik op een onderdeel om het te openen",
+  }, [
+    { titel: "Back-up", items: [
+      { ic:"download", btn:"btnExport", tit:"JSON exporteren (volledige back-up)",
+        desc:"Download al je gegevens als JSON-bestand, inclusief activiteiten, acties, logboeken en notities." },
+      { ic:"upload", btn:"btnImport", tit:"JSON importeren (volledig)",
+        desc:"Vervang al je gegevens door de inhoud van een JSON-bestand. Let op: dit overschrijft de huidige gegevens volledig. Maak eerst een back-up." },
+    ]},
+    { titel: "Exporteren", items: [
+      { ic:"excel", btn:"btnExportTabel", tit:"Gegevens exporteren (Excel, CSV of PDF)",
+        desc:"Exporteer een lijst naar keuze: afdelingen, activiteiten, functioneel beheerders, applicaties, externe inhuur, begroting of contacten. Je kiest zelf welke kolommen erin komen, optioneel per sector." },
+      { ic:"organogram", run: ()=> openOrganogramExport(), tit:"Organogram exporteren",
+        desc:"Het organogram als afbeelding (PNG of SVG) voor een presentatie of document, of als PDF om af te drukken. Je kiest zelf wat erin staat, voor de hele organisatie of één sector." },
+      { ic:"export", btn:"btnExportAppOverzicht", tit:"Applicatie-overzicht exporteren (delen)",
+        desc:"Download een visueel overzicht per sector en afdeling met de applicaties en hun functioneel beheerders, als HTML-bestand dat iedereen in de browser kan openen, doorzoeken en als PDF kan opslaan." },
+      { ic:"export", btn:"btnExportBasis", tit:"Basisdata exporteren (delen)",
+        desc:"Exporteer de organisatiestructuur, managers, functioneel beheerders en collegeleden, zonder activiteiten en notities. Een collega importeert dit via 'Basisdata importeren'." },
+    ]},
+    { titel: "Importeren", items: [
+      { ic:"contacten", run: ()=> openContactenImport(), tit:"Contacten importeren (CSV of Excel)",
+        desc:"Lees contacten in uit elk CSV- of Excel-bestand, bijvoorbeeld een export uit Outlook of een eigen lijst. Je koppelt zelf de kolommen aan de velden. Staat iemand er al in, dan worden de ontbrekende gegevens aangevuld." },
+      { ic:"import", btn:"btnMergeImport", tit:"Basisdata importeren (samenvoegen)",
+        desc:"Voeg structuur, managers, teams, processen, wetten, software, beheerders en collegeleden uit een basisdata-bestand samen met je huidige gegevens. Bestaande gegevens en activiteiten worden nooit overschreven." },
+      { ic:"excel", btn:"btnImportSoftware", tit:"Software assets importeren vanuit Topdesk",
+        desc:"Lees een Topdesk Excel-export in met Middel-ID, applicatienaam en BIV-classificatie. Je krijgt eerst een voorbeeldweergave van wat er wijzigt." },
+    ]},
+  ]);
 }
 
 function renderManagersOverview(main){

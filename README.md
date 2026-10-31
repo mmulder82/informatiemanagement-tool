@@ -70,6 +70,7 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
   - de applicaties die de afdeling gebruikt;
   - de gekoppelde functioneel beheerders en externe inhuur.
 - **Organogram.** Je ziet de bestuurlijke opbouw: raad, griffie, College B&W, Control, de gemeentesecretaris en de sectoren met hun afdelingen. Per collegelid houd je de portefeuille, acties en notities bij. De burgemeester, de gemeentesecretaris en de directeuren van de sectoren kies je hier uit je contacten.
+  - Je exporteert het organogram als afbeelding (PNG of SVG) voor een presentatie of document, of als PDF om af te drukken. Je kiest zelf of namen, foto's en teams erin staan, voor de hele organisatie of één sector. Je kunt het ook direct kopiëren en in PowerPoint, Word of Teams plakken.
 - **Functioneel beheerders.** Je registreert wie welke applicaties beheert, voor welke afdelingen.
 - **Externe inhuur.** Hier staan per inhuur:
   - de contractperiode, het aantal mogelijke verlengingen en de verlengduur;
@@ -83,8 +84,15 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
 ### Relaties
 
 - **Contacten** staan in één centraal register: naam, rol, e-mail, telefoon, bedrijf, LinkedIn en foto. Overal waar iemand gekoppeld is, worden wijzigingen direct overgenomen. Ook managers, directeuren, de burgemeester, de gemeentesecretaris, collegeleden en de personen bij Control komen hier automatisch in. Dubbele contacten voeg je eenvoudig samen.
+- **Contacten importeren** uit een CSV- of Excel-bestand met elke indeling, bijvoorbeeld een export uit Outlook of Google of een eigen lijst.
+  - Je kiest per kolom of hij wordt ingelezen en bij welk veld hij hoort. Meerdere kolommen kunnen samen één veld vormen, zoals voornaam en achternaam.
+  - Met één vinkje koppel je alle contacten aan hetzelfde bedrijf, bijvoorbeeld je eigen organisatie. Staan er meerdere telefoonnummers in het bestand, dan wordt het mobiele nummer gekozen.
+  - Staat iemand al in je contacten, of komt iemand twee keer voor in het bestand? Dan worden de gegevens aangevuld in plaats van dubbel aangemaakt.
+  - Je ziet vooraf per persoon wat er gebeurt, en je kunt de import daarna nog ongedaan maken.
 - **Bedrijven** leg je één keer vast en koppel je aan contacten, managers en collegeleden.
 - Optioneel synchroniseer je contacten met een telefoonnummer naar **Contacten op je iPhone en Mac**. Zie [hieronder](#contacten-synchroniseren-met-iphone-en-mac-optioneel).
+
+![Contacten importeren: per kolom kies je het veld, met een voorbeeld van hoe de contacten worden ingelezen](screenshots/contactimport.png)
 
 ### ICT en kennis
 
@@ -99,10 +107,14 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
 
 ### Importeren en exporteren
 
+Alles staat bij elkaar onder Instellingen → **Importeren & exporteren**.
+
 - **Volledige back-up** als JSON-bestand.
 - **Basisdata delen** met een collega. Dat is alleen de organisatiestructuur, managers, processen, wetten, software en beheerders, zonder je activiteiten en notities.
 - **Exporteren naar Excel, CSV of PDF** voor afdelingen, activiteiten, functioneel beheerders, applicaties, externe inhuur, begroting en contacten. Je kiest zelf de kolommen.
+- **Organogram** als afbeelding (PNG of SVG) of als PDF.
 - **Applicatie-overzicht** als losse webpagina die iedereen kan openen, doorzoeken en afdrukken.
+- **Contacten importeren** uit CSV of Excel, met elke indeling. Bestaande contacten worden aangevuld.
 - **Markdown-bestand per activiteit** in je gekoppelde map. Zo vind je activiteiten ook terug met Spotlight, Verkenner of Obsidian.
 
 De ingebouwde **Help & handleiding** (de knop **?** rechtsboven, of F1) legt elk onderdeel stap voor stap uit.
