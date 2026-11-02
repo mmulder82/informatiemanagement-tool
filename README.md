@@ -23,7 +23,7 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
 
 ### Dagelijks werk
 
-- **Dashboard.** Je ziet in één oogopslag wat er vandaag speelt: kengetallen, alle acties met een deadline deze week (te laat in rood), lopende weekstarts en processen, recent bewerkte activiteiten en een vrij aantekeningenveld.
+- **Dashboard.** Je ziet in één oogopslag wat er vandaag speelt: kengetallen, alle acties met een deadline deze week (te laat in rood), lopende weekstarts en processen, recent bewerkte activiteiten (ook na een nieuwe notitie in het logboek) en een vrij aantekeningenveld.
 - **Activiteiten per afdeling.** Een activiteit is alles waar je mee bezig bent: een project, een vraag of een traject. Per activiteit leg je vast:
   - status, prioriteit, start- en einddatum en tags;
   - acties met deadlines;

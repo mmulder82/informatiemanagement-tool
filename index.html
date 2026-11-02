@@ -1924,8 +1924,11 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.40.0";
+const APP_VERSION = "4.40.1";
 const CHANGELOG = [
+  { version: "4.40.1", datum: "2026-11-02", items: [
+    "Zet je een notitie in het logboek van een activiteit, dan staat die activiteit nu ook bovenaan bij Recent bewerkt op het dashboard. Dat geldt ook voor notities die je al eerder had toegevoegd, en voor het verwijderen van een notitie.",
+  ]},
   { version: "4.40.0", datum: "2026-11-02", items: [
     "Is er geen map gekoppeld, dan staat er bovenaan het dashboard een duidelijke melding dat je gegevens alleen in deze browser staan en weg zijn als je de browsergegevens wist. Met één klik koppel je meteen een map of download je een back-up. De melding verdwijnt zodra er een map gekoppeld is.",
     "Was er eerder een map gekoppeld en vraagt de browser na het opnieuw openen om toestemming, dan blijft er op het dashboard een knop Hervatten staan, ook als je die vraag eerst wegklikt.",
@@ -8620,6 +8623,18 @@ function mapStatusBijgewerkt(){
   if (stat) stat.textContent = folderHandle ? `Map gekoppeld: ${folderHandle.name||""}` : "Geen gekoppelde map";
 }
 
+/* Moment van de laatste wijziging aan een activiteit, voor Recent bewerkt op het dashboard:
+   p.gewijzigd, of de nieuwste logboeknotitie als die later is. Zo tellen ook notities mee
+   die zijn toegevoegd voordat het toevoegen p.gewijzigd bijwerkte. */
+function laatstGewijzigd(p){
+  let t = p.gewijzigd || "";
+  for (const e of (p.logboek||[])){
+    const s = (e.bewerkt && e.bewerkt > (e.ts||"")) ? e.bewerkt : (e.ts || "");
+    if (s > t) t = s;
+  }
+  return t;
+}
+
 function renderDashboard(main){
   const today = todayISO();
   let lopend=0, onhold=0, afgerond=0, gearchiveerd=0, totalProjects=0;
@@ -8657,7 +8672,8 @@ function renderDashboard(main){
   for (const a of getLosseActies()){
     acties.push({ a, p: null, label: "Losse actie", kind:"los" });
   }
-  recent.sort((x,y)=> (y.p.gewijzigd||"").localeCompare(x.p.gewijzigd||""));
+  for (const x of recent) x.t = laatstGewijzigd(x.p);
+  recent.sort((x,y)=> y.t.localeCompare(x.t));
   const recentTop = recent.slice(0, 5);
   // Activiteiten die deze week (maandag t/m zondag) starten — vandaag bovenaan uitgelicht
   const isoLocal = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -8818,7 +8834,7 @@ function renderDashboard(main){
               <div class="dash-item-title">${escapeHTML(x.p.titel||"(zonder titel)")}</div>
               <div class="dash-item-meta">${escapeHTML(x.label)}${x.kind==="afd" ? ` · <span class="pill ${x.p.status==='afgerond'?'afgerond':x.p.status==='on hold'?'onhold':x.p.status==='gearchiveerd'?'gearchiveerd':'lopend'}" style="font-size:10px;padding:1px 6px">${escapeHTML(x.p.status||"")}</span>` : ""}</div>
             </div>
-            <div class="dash-item-time">${relativeTime(x.p.gewijzigd)}</div>
+            <div class="dash-item-time">${relativeTime(x.t)}</div>
           </div>`).join("")}</div>`
           : `<div class="dash-empty">Nog geen activiteiten aangemaakt.</div>`}
       </div>
@@ -13977,7 +13993,7 @@ const HELP_SECTIES = [
    "welcome"
   ],
   "nav": "welcome",
-  "tekst": "Het dashboard is je startpagina: in één oogopslag zie je wat er vandaag speelt. Je komt er via **Start** in de linkerbalk of door op de titel linksboven te klikken.\n\n# Melding: geen map gekoppeld\nZolang er geen map gekoppeld is, staat er bovenaan een oranje melding. Je gegevens staan dan alleen in deze browser: wis je de browsergegevens of werk je in een privévenster, dan ben je ze kwijt.\n- **Map koppelen…** kiest meteen een map, bij voorkeur een map die met OneDrive of SharePoint synchroniseert.\n- **Back-up downloaden** bewaart al je gegevens als JSON-bestand.\n- Was er eerder een map gekoppeld en vraagt de browser opnieuw toestemming, dan staat er een knop **Hervatten**.\n- In Safari en Firefox kan geen map gekoppeld worden. Download daar regelmatig een back-up.\n\nDe melding is niet weg te klikken. Hij verdwijnt zodra er een map gekoppeld is.\n\n# Nieuwe activiteit\nMet **+ Nieuwe activiteit** rechtsboven leg je snel een activiteit vast, zonder eerst naar de afdeling te gaan. Geef een titel, kies de afdeling of het congres en vul eventueel start- en einddatum, prioriteit en een omschrijving in.\n- **Aanmaken** zet de activiteit klaar en je blijft op het dashboard. Je ziet hem meteen bij *Recent bewerkt*.\n- **Aanmaken en openen** brengt je direct naar de nieuwe activiteit.\n- De laatst gekozen afdeling staat de volgende keer al klaar.\n\n# Kengetallen\nBovenaan staan tegels met het aantal afdelingen, lopende activiteiten, open acties en te late acties. Moet er iets met externe inhuur gebeuren, dan staat er ook een rode tegel. Klik op een tegel om naar dat overzicht te gaan. **Lopende activiteiten** opent het Activiteiten-overzicht met alleen de lopende activiteiten.\n\n# Deze week\n- Alle acties en processtappen met een deadline tot en met zondag van deze week. Wat al te laat is staat bovenaan in rood (met hoeveel dagen te laat), daarna wat vandaag moet en dan de rest van de week op datum.\n- Rechts zie je wanneer iets moet: *vandaag*, *morgen* of de dag en datum.\n- Vink ze direct af met het vinkje. Klik op een actie om hem te bewerken, of op een processtap om het stappenplan te openen.\n- Bovenin voeg je met een invoerveld meteen een **losse actie** toe; die krijgt vandaag als deadline.\n- Onderaan staat een link naar alle open acties.\n\n# Weekstart & processen\nStaat in de linkerkolom, onder *Deze week*. Je lopende weekstart en processen, met hoeveel taken al klaar zijn en welke taak de volgende is.\n- Het vinkje vóór een regel vinkt meteen de volgende taak af.\n- Klik op de regel om alle taken uit te klappen.\n- Is de weekstart voor deze week nog niet gestart, dan staat hier een startknop.\n\n# Start deze week en Recent bewerkt\n- **Start deze week**: activiteiten met een startdatum van maandag tot en met zondag van deze week. Wat vandaag start, staat bovenaan en is blauw uitgelicht; daarna komt wat later deze week start, en onderaan wat eerder deze week al begonnen is.\n- **Recent bewerkt**: de vijf laatst gewijzigde activiteiten.\n- Klik op een activiteit om er direct naartoe te gaan.\n\n# Aantekeningen\nEen vrij notitieveld, als een gele plakker. Het opent in leesweergave. Met **Bewerken** wissel je naar bewerken; opslaan gaat automatisch. Opmaak met Markdown en plakken uit Word, Outlook of OneNote werken hier ook.\n\n# Activiteiten per status en externe inhuur\n- Een balk met de verdeling van je activiteiten over lopend, on hold, afgerond en gearchiveerd.\n- Klik op een kleur of status om daarop te filteren. Daaronder zie je de verdeling per afdeling; klik op een afdeling om het Activiteiten-overzicht gefilterd te openen.\n- Bovenaan staat **Externe inhuur — actie nodig**: contracten die verlengd moeten worden of een kwartaalbeoordeling nodig hebben. Verlengen kan hier direct.\n- De regels onderaan (functioneel beheerders, applicaties, gekoppelde map) zijn klikbaar."
+  "tekst": "Het dashboard is je startpagina: in één oogopslag zie je wat er vandaag speelt. Je komt er via **Start** in de linkerbalk of door op de titel linksboven te klikken.\n\n# Melding: geen map gekoppeld\nZolang er geen map gekoppeld is, staat er bovenaan een oranje melding. Je gegevens staan dan alleen in deze browser: wis je de browsergegevens of werk je in een privévenster, dan ben je ze kwijt.\n- **Map koppelen…** kiest meteen een map, bij voorkeur een map die met OneDrive of SharePoint synchroniseert.\n- **Back-up downloaden** bewaart al je gegevens als JSON-bestand.\n- Was er eerder een map gekoppeld en vraagt de browser opnieuw toestemming, dan staat er een knop **Hervatten**.\n- In Safari en Firefox kan geen map gekoppeld worden. Download daar regelmatig een back-up.\n\nDe melding is niet weg te klikken. Hij verdwijnt zodra er een map gekoppeld is.\n\n# Nieuwe activiteit\nMet **+ Nieuwe activiteit** rechtsboven leg je snel een activiteit vast, zonder eerst naar de afdeling te gaan. Geef een titel, kies de afdeling of het congres en vul eventueel start- en einddatum, prioriteit en een omschrijving in.\n- **Aanmaken** zet de activiteit klaar en je blijft op het dashboard. Je ziet hem meteen bij *Recent bewerkt*.\n- **Aanmaken en openen** brengt je direct naar de nieuwe activiteit.\n- De laatst gekozen afdeling staat de volgende keer al klaar.\n\n# Kengetallen\nBovenaan staan tegels met het aantal afdelingen, lopende activiteiten, open acties en te late acties. Moet er iets met externe inhuur gebeuren, dan staat er ook een rode tegel. Klik op een tegel om naar dat overzicht te gaan. **Lopende activiteiten** opent het Activiteiten-overzicht met alleen de lopende activiteiten.\n\n# Deze week\n- Alle acties en processtappen met een deadline tot en met zondag van deze week. Wat al te laat is staat bovenaan in rood (met hoeveel dagen te laat), daarna wat vandaag moet en dan de rest van de week op datum.\n- Rechts zie je wanneer iets moet: *vandaag*, *morgen* of de dag en datum.\n- Vink ze direct af met het vinkje. Klik op een actie om hem te bewerken, of op een processtap om het stappenplan te openen.\n- Bovenin voeg je met een invoerveld meteen een **losse actie** toe; die krijgt vandaag als deadline.\n- Onderaan staat een link naar alle open acties.\n\n# Weekstart & processen\nStaat in de linkerkolom, onder *Deze week*. Je lopende weekstart en processen, met hoeveel taken al klaar zijn en welke taak de volgende is.\n- Het vinkje vóór een regel vinkt meteen de volgende taak af.\n- Klik op de regel om alle taken uit te klappen.\n- Is de weekstart voor deze week nog niet gestart, dan staat hier een startknop.\n\n# Start deze week en Recent bewerkt\n- **Start deze week**: activiteiten met een startdatum van maandag tot en met zondag van deze week. Wat vandaag start, staat bovenaan en is blauw uitgelicht; daarna komt wat later deze week start, en onderaan wat eerder deze week al begonnen is.\n- **Recent bewerkt**: de vijf laatst gewijzigde activiteiten. Ook een nieuwe notitie in het logboek telt als wijziging.\n- Klik op een activiteit om er direct naartoe te gaan.\n\n# Aantekeningen\nEen vrij notitieveld, als een gele plakker. Het opent in leesweergave. Met **Bewerken** wissel je naar bewerken; opslaan gaat automatisch. Opmaak met Markdown en plakken uit Word, Outlook of OneNote werken hier ook.\n\n# Activiteiten per status en externe inhuur\n- Een balk met de verdeling van je activiteiten over lopend, on hold, afgerond en gearchiveerd.\n- Klik op een kleur of status om daarop te filteren. Daaronder zie je de verdeling per afdeling; klik op een afdeling om het Activiteiten-overzicht gefilterd te openen.\n- Bovenaan staat **Externe inhuur — actie nodig**: contracten die verlengd moeten worden of een kwartaalbeoordeling nodig hebben. Verlengen kan hier direct.\n- De regels onderaan (functioneel beheerders, applicaties, gekoppelde map) zijn klikbaar."
  },
  {
   "id": "activiteit",
@@ -17716,6 +17732,7 @@ ${isStd ? `
         };
         row.querySelector(".del").onclick = ()=>{
           p.logboek = p.logboek.filter(x=>x.id !== entry.id);
+          p.gewijzigd = new Date().toISOString();
           markDirty(); renderLog();
         };
       }
@@ -17747,7 +17764,9 @@ ${isStd ? `
     const v = ta.value.trim();
     if (!v) return;
     p.logboek = p.logboek || [];
-    p.logboek.push({ id: uid(), ts: new Date().toISOString(), text: v });
+    const nu = new Date().toISOString();
+    p.logboek.push({ id: uid(), ts: nu, text: v });
+    p.gewijzigd = nu;   // telt als wijziging: activiteit komt bij Recent bewerkt op het dashboard
     ta.value = "";
     p.logboekDraft = "";
     autoResize(ta);
