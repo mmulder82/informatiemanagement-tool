@@ -368,6 +368,24 @@
   .kpi-num{font-size:32px;font-weight:600;letter-spacing:-0.02em;line-height:1.1;color:var(--text)}
   .kpi-label{font-size:12px;color:var(--muted);margin-top:6px}
   .dash-count.is-warn{color:var(--danger);font-weight:600}
+  /* Melding bovenaan het dashboard zolang er geen map gekoppeld is */
+  .dash-map-melding{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;padding:16px 18px;
+    background:#fff8eb;border:1px solid #f1c376;border-radius:12px;box-shadow:var(--shadow-sm)}
+  .dash-map-melding[hidden]{display:none}
+  .dmm-ic{flex-shrink:0;width:34px;height:34px;border-radius:9px;background:#fde4b8;color:#8a5300;
+    display:flex;align-items:center;justify-content:center;font-size:16px}
+  .dmm-body{flex:1;min-width:0}
+  .dmm-tit{font-size:14px;font-weight:600;color:#4f3000;margin-bottom:3px}
+  .dmm-tekst{font-size:13px;color:#5a4526;line-height:1.5;max-width:880px}
+  .dmm-acties{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+  .dmm-acties button{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
+    border:1px solid transparent;display:inline-flex;align-items:center;gap:7px;font-family:inherit}
+  .dmm-primair{background:var(--accent);color:#fff;box-shadow:0 1px 2px rgba(15,108,189,.25)}
+  .dmm-primair:hover{background:var(--accent-hover)}
+  .dmm-secundair{background:var(--panel);color:var(--text);border-color:var(--border-strong) !important}
+  .dmm-secundair:hover{background:var(--panel-soft)}
+  .dmm-acties .dmm-link{background:none;color:#8a5300;padding:7px 4px;text-decoration:underline;text-underline-offset:2px}
+  .dmm-acties button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
   .dash-2col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:12px}
   .dash-2col > *{min-width:0}
@@ -1906,8 +1924,14 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.39.2";
+const APP_VERSION = "4.40.0";
 const CHANGELOG = [
+  { version: "4.40.0", datum: "2026-11-02", items: [
+    "Is er geen map gekoppeld, dan staat er bovenaan het dashboard een duidelijke melding dat je gegevens alleen in deze browser staan en weg zijn als je de browsergegevens wist. Met één klik koppel je meteen een map of download je een back-up. De melding verdwijnt zodra er een map gekoppeld is.",
+    "Was er eerder een map gekoppeld en vraagt de browser na het opnieuw openen om toestemming, dan blijft er op het dashboard een knop Hervatten staan, ook als je die vraag eerst wegklikt.",
+    "In Safari en Firefox, die geen map kunnen koppelen, raadt de melding aan om regelmatig een back-up te downloaden.",
+    "Koppel je een nieuwe, lege map, dan staat onderaan het dashboard nu ook meteen dat de map gekoppeld is.",
+  ]},
   { version: "4.39.2", datum: "2026-11-02", items: [
     "Het app-icoon is nu licht: een wit vlak met het blauwe lijst-logo. Zo valt het goed op in de blauwe titelbalk van de geïnstalleerde app, en ook in de taakbalk en het startmenu. Installeer de app opnieuw om het nieuwe icoon te zien.",
   ]},
@@ -2001,6 +2025,8 @@ let folderFileMtime = 0;           // laatst bekende mtime van tracker-data.json
 let folderFileText = null;         // laatst bekende inhoud — OneDrive/SharePoint wijzigt soms de mtime zonder inhoudswijziging
 let folderSavePending = false;     // true zolang lokale wijzigingen nog niet (succesvol) naar de gekoppelde map geschreven zijn
 let localSaveFailedAlerted = false; // voorkomt dat dezelfde "lokaal opslaan mislukt"-melding bij elke wijziging opnieuw verschijnt
+let mapStatusBekend = false;       // false zolang de app bij het openen nog nakijkt of er eerder een map gekoppeld was (zodat de dashboardmelding niet even oplicht)
+let mapHervatten = null;           // { naam, run } — eerder gekoppelde map die na het opnieuw openen nog toestemming nodig heeft
 
 /* Vergelijkt twee JSON-teksten op data-inhoud, ongevoelig voor regeleindes,
    BOM of andere cosmetische verschillen die sync-clients kunnen introduceren. */
@@ -8533,6 +8559,67 @@ function renderDashStatusWidget(host, statusSegments, totalProjects){
   });
 }
 
+/* Opslagstatus voor de melding op het dashboard:
+   "gekoppeld" | "laden" (de app kijkt bij het openen nog na of er een map was) | "hervatten" (map bekend,
+   de browser vraagt opnieuw toestemming) | "niet-ondersteund" (browser kan geen map koppelen) | "geen". */
+function mapOpslagStatus(){
+  if (folderHandle) return "gekoppeld";
+  if (!mapStatusBekend) return "laden";
+  if (mapHervatten) return "hervatten";
+  if (!("showDirectoryPicker" in window)) return "niet-ondersteund";
+  return "geen";
+}
+/* Melding bovenaan het dashboard zolang je gegevens alleen in de browser staan. Bewust niet weg te
+   klikken: hij verdwijnt pas als er een map gekoppeld is. */
+function renderDashMapMelding(el){
+  if (!el) return;
+  const st = mapOpslagStatus();
+  if (st === "gekoppeld" || st === "laden"){ el.hidden = true; el.innerHTML = ""; return; }
+  const kwijt = "Wis je de browsergegevens of werk je in een privévenster, dan ben je ze kwijt. Ook op een andere computer of in een andere browser zie je ze niet.";
+  const m = {
+    "geen": {
+      tit: "Je gegevens staan nog alleen in deze browser",
+      tekst: `Er is nog geen map gekoppeld. ${kwijt} Koppel daarom een map, bij voorkeur een map die met OneDrive of SharePoint synchroniseert. De app bewaart dan alles automatisch in <i>tracker-data.json</i> in die map, met een reservekopie.`,
+      knop: { id:"dmmKoppel", label:"Map koppelen…", icon:"folder" },
+    },
+    "hervatten": {
+      tit: `De map \u201c${escapeHTML(mapHervatten?.naam || "")}\u201d is nog niet verbonden`,
+      tekst: "Na het opnieuw openen vraagt de browser nog één keer toestemming voor de map. Tot je hervat, bewaart de app je wijzigingen alleen in deze browser en komen ze niet in de map.",
+      knop: { id:"dmmHervat", label:"Hervatten", icon:"sync" },
+    },
+    "niet-ondersteund": {
+      tit: "Je gegevens staan alleen in deze browser",
+      tekst: `Deze browser kan geen map koppelen. ${kwijt} Download daarom regelmatig een back-up. Automatisch opslaan in een map kan in Chrome en Edge.`,
+      knop: null,
+    },
+  }[st];
+  el.hidden = false;
+  el.innerHTML = `
+    <div class="dmm-ic">${faIcon("warning")}</div>
+    <div class="dmm-body">
+      <div class="dmm-tit">${m.tit}</div>
+      <div class="dmm-tekst">${m.tekst}</div>
+      <div class="dmm-acties">
+        ${m.knop ? `<button type="button" class="dmm-primair" id="${m.knop.id}">${faIcon(m.knop.icon)}${m.knop.label}</button>` : ``}
+        <button type="button" class="dmm-secundair" id="dmmBackup" title="Download al je gegevens als JSON-bestand. Terugzetten doe je via Instellingen → Importeren & exporteren.">${faIcon("download")}Back-up downloaden</button>
+        <button type="button" class="dmm-link" id="dmmUitleg">Meer uitleg</button>
+      </div>
+    </div>`;
+  const koppel = el.querySelector("#dmmKoppel");
+  if (koppel) koppel.onclick = ()=> document.getElementById("btnLinkFolder").click();
+  const hervat = el.querySelector("#dmmHervat");
+  if (hervat) hervat.onclick = ()=> mapHervatten && mapHervatten.run();
+  el.querySelector("#dmmBackup").onclick = ()=> document.getElementById("btnExport").click();
+  el.querySelector("#dmmUitleg").onclick = ()=>{ helpDoel = "opslag"; helpZoekterm = ""; navTo("help"); };
+}
+/* Na een wijziging in de koppeling alleen de melding bijwerken, niet het hele dashboard
+   (dan verspringt bijvoorbeeld het aantekeningenveld niet). */
+function mapStatusBijgewerkt(){
+  renderDashMapMelding(document.getElementById("dashMapMelding"));
+  const stat = document.getElementById("dashMapStat");
+  if (stat) stat.textContent = folderHandle ? `Map gekoppeld: ${folderHandle.name||""}` : "Geen gekoppelde map";
+}
+
 function renderDashboard(main){
   const today = todayISO();
   let lopend=0, onhold=0, afgerond=0, gearchiveerd=0, totalProjects=0;
@@ -8643,6 +8730,8 @@ function renderDashboard(main){
         <button id="dashNewActivity" title="Leg snel een nieuwe activiteit vast bij een afdeling of congres">+ Nieuwe activiteit</button>
       </div>
     </div>
+
+    <div class="dash-map-melding" id="dashMapMelding" role="status" hidden></div>
 
     <div class="dash-kpis">
       <div class="dash-kpi" data-nav="managers">
@@ -8775,12 +8864,13 @@ function renderDashboard(main){
         <div class="dash-stats">
           <button class="stat-link" data-nav="beheerders" title="Naar Functioneel beheerders">${totalFB} functioneel beheerder${totalFB===1?"":"s"}</button>
           <button class="stat-link" data-nav="software" title="Naar Software">${allSw.length} applicaties</button>
-          <button class="stat-link" data-nav="instellingen" title="Naar Instellingen">${folderHandle ? `Map gekoppeld: ${escapeHTML(folderHandle.name||"")}` : "Geen gekoppelde map"}</button>
+          <button class="stat-link" id="dashMapStat" data-nav="instellingen" title="Naar Instellingen">${folderHandle ? `Map gekoppeld: ${escapeHTML(folderHandle.name||"")}` : "Geen gekoppelde map"}</button>
         </div>
       </div>
     </div>
   `;
   main.innerHTML = html;
+  renderDashMapMelding(main.querySelector("#dashMapMelding"));
   renderDashStatusWidget(main.querySelector("#dashStatusWidget"), statusSegments, totalProjects);
   renderDashChecklists(main.querySelector("#dashChecklists"));
   main.querySelector("#dashNewActivity").onclick = ()=> openNieuweActiviteitModal();
@@ -13876,7 +13966,7 @@ const HELP_SECTIES = [
   "icon": "folder",
   "views": [],
   "nav": "instellingen",
-  "tekst": "Elke wijziging wordt automatisch opgeslagen. Een opslaan-knop is er niet. Rechtsboven zie je de status, bijvoorbeeld *Wijzigingen worden opgeslagen…* of *Klaar*.\n\n# Waar staan je gegevens?\n- **In je browser (altijd)**: alles wordt in de lokale opslag van de browser bewaard. Open je de app in een andere browser of op een andere computer, dan zie je die gegevens daar niet.\n- **In een gekoppelde map (aanbevolen)**: via Instellingen → **Map koppelen** kies je een map, bij voorkeur een map die met OneDrive/SharePoint synchroniseert. De app schrijft dan alles naar *tracker-data.json* in die map. Dit werkt in Chrome en Edge. De app onthoudt de koppeling; na het herstarten van de browser kan hij één keer om toestemming vragen.\n\n# Back-up en conflicten\n- Bij elke opslag naar de map houdt de app een reservekopie bij in *tracker-data.bak.json*.\n- Is het bestand in de map intussen ergens anders gewijzigd, bijvoorbeeld op een andere computer, en heb je hier zelf niets openstaan, dan neemt de app de nieuwe versie stil over zodra je terugkeert naar het venster. Heb je hier ook wijzigingen, dan voegt de app beide samen. Alleen als op beide plekken hetzelfde onderdeel anders is aangepast, vraagt de app welke versie je wilt houden; de melding noemt dan ook waar de andere wijziging vandaan kwam (computer, browser, tijd). De app schrijft alleen naar de map als er echt iets gewijzigd is. Houdt OneDrive het bestand even vast tijdens het uploaden, dan probeert de app het een paar seconden later opnieuw. Hij vergelijkt de echte inhoud van de gegevens, dus alleen een gewijzigde bestandstijd door OneDrive geeft geen valse melding.\n- Is het bestand onleesbaar, dan biedt de app aan om te herstellen uit de reservekopie.\n- **Vernieuwen uit map** leest het bestand opnieuw in, bijvoorbeeld als je op een ander apparaat hebt gewerkt. Zijn er nog wijzigingen die niet naar de map zijn geschreven, dan vraagt de app eerst om bevestiging.\n- Heb je de app in meerdere tabbladen open, dan houden die hun gegevens onderling gelijk.\n\n# Bijlagen en Markdown-bestanden\n- **Bijlagen** van activiteiten en van externe inhuur komen in submappen van de gekoppelde map. Zonder gekoppelde map kun je geen bijlagen toevoegen.\n- **Markdown-spiegel**: bij een gekoppelde map maakt de app per activiteit een doorzoekbaar *.md*-bestand in de map *Activiteiten (Markdown)*. Zo vind je activiteiten ook met Spotlight, Verkenner of Obsidian. Alleen activiteiten die gewijzigd zijn, worden opnieuw geschreven.\n- Via Instellingen kun je alle Markdown-bestanden in één keer **bijwerken**, of de map **opschonen en opnieuw genereren**. Dat laatste is handig als OneDrive dubbele of conflictbestanden heeft gemaakt. Je activiteiten zelf blijven daarbij gewoon bestaan.\n\n# Veilig werken\nMaak af en toe een volledige back-up met Instellingen → **JSON exporteren**."
+  "tekst": "Elke wijziging wordt automatisch opgeslagen. Een opslaan-knop is er niet. Rechtsboven zie je de status, bijvoorbeeld *Wijzigingen worden opgeslagen…* of *Klaar*.\n\n# Waar staan je gegevens?\n- **In je browser (altijd)**: alles wordt in de lokale opslag van de browser bewaard. Open je de app in een andere browser of op een andere computer, dan zie je die gegevens daar niet.\n- **In een gekoppelde map (aanbevolen)**: via Instellingen → **Map koppelen** kies je een map, bij voorkeur een map die met OneDrive/SharePoint synchroniseert. De app schrijft dan alles naar *tracker-data.json* in die map. Dit werkt in Chrome en Edge. De app onthoudt de koppeling; na het herstarten van de browser kan hij één keer om toestemming vragen.\n- **Geen map gekoppeld?** Dan staat er bovenaan het dashboard een melding, met knoppen om meteen een map te koppelen of een back-up te downloaden. Was de map al gekoppeld maar vraagt de browser opnieuw toestemming, dan hervat je daar de koppeling.\n\n# Back-up en conflicten\n- Bij elke opslag naar de map houdt de app een reservekopie bij in *tracker-data.bak.json*.\n- Is het bestand in de map intussen ergens anders gewijzigd, bijvoorbeeld op een andere computer, en heb je hier zelf niets openstaan, dan neemt de app de nieuwe versie stil over zodra je terugkeert naar het venster. Heb je hier ook wijzigingen, dan voegt de app beide samen. Alleen als op beide plekken hetzelfde onderdeel anders is aangepast, vraagt de app welke versie je wilt houden; de melding noemt dan ook waar de andere wijziging vandaan kwam (computer, browser, tijd). De app schrijft alleen naar de map als er echt iets gewijzigd is. Houdt OneDrive het bestand even vast tijdens het uploaden, dan probeert de app het een paar seconden later opnieuw. Hij vergelijkt de echte inhoud van de gegevens, dus alleen een gewijzigde bestandstijd door OneDrive geeft geen valse melding.\n- Is het bestand onleesbaar, dan biedt de app aan om te herstellen uit de reservekopie.\n- **Vernieuwen uit map** leest het bestand opnieuw in, bijvoorbeeld als je op een ander apparaat hebt gewerkt. Zijn er nog wijzigingen die niet naar de map zijn geschreven, dan vraagt de app eerst om bevestiging.\n- Heb je de app in meerdere tabbladen open, dan houden die hun gegevens onderling gelijk.\n\n# Bijlagen en Markdown-bestanden\n- **Bijlagen** van activiteiten en van externe inhuur komen in submappen van de gekoppelde map. Zonder gekoppelde map kun je geen bijlagen toevoegen.\n- **Markdown-spiegel**: bij een gekoppelde map maakt de app per activiteit een doorzoekbaar *.md*-bestand in de map *Activiteiten (Markdown)*. Zo vind je activiteiten ook met Spotlight, Verkenner of Obsidian. Alleen activiteiten die gewijzigd zijn, worden opnieuw geschreven.\n- Via Instellingen kun je alle Markdown-bestanden in één keer **bijwerken**, of de map **opschonen en opnieuw genereren**. Dat laatste is handig als OneDrive dubbele of conflictbestanden heeft gemaakt. Je activiteiten zelf blijven daarbij gewoon bestaan.\n\n# Veilig werken\nMaak af en toe een volledige back-up met Instellingen → **JSON exporteren**."
  },
  {
   "id": "dashboard",
@@ -13887,7 +13977,7 @@ const HELP_SECTIES = [
    "welcome"
   ],
   "nav": "welcome",
-  "tekst": "Het dashboard is je startpagina: in één oogopslag zie je wat er vandaag speelt. Je komt er via **Start** in de linkerbalk of door op de titel linksboven te klikken.\n\n# Nieuwe activiteit\nMet **+ Nieuwe activiteit** rechtsboven leg je snel een activiteit vast, zonder eerst naar de afdeling te gaan. Geef een titel, kies de afdeling of het congres en vul eventueel start- en einddatum, prioriteit en een omschrijving in.\n- **Aanmaken** zet de activiteit klaar en je blijft op het dashboard. Je ziet hem meteen bij *Recent bewerkt*.\n- **Aanmaken en openen** brengt je direct naar de nieuwe activiteit.\n- De laatst gekozen afdeling staat de volgende keer al klaar.\n\n# Kengetallen\nBovenaan staan tegels met het aantal afdelingen, lopende activiteiten, open acties en te late acties. Moet er iets met externe inhuur gebeuren, dan staat er ook een rode tegel. Klik op een tegel om naar dat overzicht te gaan. **Lopende activiteiten** opent het Activiteiten-overzicht met alleen de lopende activiteiten.\n\n# Deze week\n- Alle acties en processtappen met een deadline tot en met zondag van deze week. Wat al te laat is staat bovenaan in rood (met hoeveel dagen te laat), daarna wat vandaag moet en dan de rest van de week op datum.\n- Rechts zie je wanneer iets moet: *vandaag*, *morgen* of de dag en datum.\n- Vink ze direct af met het vinkje. Klik op een actie om hem te bewerken, of op een processtap om het stappenplan te openen.\n- Bovenin voeg je met een invoerveld meteen een **losse actie** toe; die krijgt vandaag als deadline.\n- Onderaan staat een link naar alle open acties.\n\n# Weekstart & processen\nStaat in de linkerkolom, onder *Deze week*. Je lopende weekstart en processen, met hoeveel taken al klaar zijn en welke taak de volgende is.\n- Het vinkje vóór een regel vinkt meteen de volgende taak af.\n- Klik op de regel om alle taken uit te klappen.\n- Is de weekstart voor deze week nog niet gestart, dan staat hier een startknop.\n\n# Start deze week en Recent bewerkt\n- **Start deze week**: activiteiten met een startdatum van maandag tot en met zondag van deze week. Wat vandaag start, staat bovenaan en is blauw uitgelicht; daarna komt wat later deze week start, en onderaan wat eerder deze week al begonnen is.\n- **Recent bewerkt**: de vijf laatst gewijzigde activiteiten.\n- Klik op een activiteit om er direct naartoe te gaan.\n\n# Aantekeningen\nEen vrij notitieveld, als een gele plakker. Het opent in leesweergave. Met **Bewerken** wissel je naar bewerken; opslaan gaat automatisch. Opmaak met Markdown en plakken uit Word, Outlook of OneNote werken hier ook.\n\n# Activiteiten per status en externe inhuur\n- Een balk met de verdeling van je activiteiten over lopend, on hold, afgerond en gearchiveerd.\n- Klik op een kleur of status om daarop te filteren. Daaronder zie je de verdeling per afdeling; klik op een afdeling om het Activiteiten-overzicht gefilterd te openen.\n- Bovenaan staat **Externe inhuur — actie nodig**: contracten die verlengd moeten worden of een kwartaalbeoordeling nodig hebben. Verlengen kan hier direct.\n- De regels onderaan (functioneel beheerders, applicaties, gekoppelde map) zijn klikbaar."
+  "tekst": "Het dashboard is je startpagina: in één oogopslag zie je wat er vandaag speelt. Je komt er via **Start** in de linkerbalk of door op de titel linksboven te klikken.\n\n# Melding: geen map gekoppeld\nZolang er geen map gekoppeld is, staat er bovenaan een oranje melding. Je gegevens staan dan alleen in deze browser: wis je de browsergegevens of werk je in een privévenster, dan ben je ze kwijt.\n- **Map koppelen…** kiest meteen een map, bij voorkeur een map die met OneDrive of SharePoint synchroniseert.\n- **Back-up downloaden** bewaart al je gegevens als JSON-bestand.\n- Was er eerder een map gekoppeld en vraagt de browser opnieuw toestemming, dan staat er een knop **Hervatten**.\n- In Safari en Firefox kan geen map gekoppeld worden. Download daar regelmatig een back-up.\n\nDe melding is niet weg te klikken. Hij verdwijnt zodra er een map gekoppeld is.\n\n# Nieuwe activiteit\nMet **+ Nieuwe activiteit** rechtsboven leg je snel een activiteit vast, zonder eerst naar de afdeling te gaan. Geef een titel, kies de afdeling of het congres en vul eventueel start- en einddatum, prioriteit en een omschrijving in.\n- **Aanmaken** zet de activiteit klaar en je blijft op het dashboard. Je ziet hem meteen bij *Recent bewerkt*.\n- **Aanmaken en openen** brengt je direct naar de nieuwe activiteit.\n- De laatst gekozen afdeling staat de volgende keer al klaar.\n\n# Kengetallen\nBovenaan staan tegels met het aantal afdelingen, lopende activiteiten, open acties en te late acties. Moet er iets met externe inhuur gebeuren, dan staat er ook een rode tegel. Klik op een tegel om naar dat overzicht te gaan. **Lopende activiteiten** opent het Activiteiten-overzicht met alleen de lopende activiteiten.\n\n# Deze week\n- Alle acties en processtappen met een deadline tot en met zondag van deze week. Wat al te laat is staat bovenaan in rood (met hoeveel dagen te laat), daarna wat vandaag moet en dan de rest van de week op datum.\n- Rechts zie je wanneer iets moet: *vandaag*, *morgen* of de dag en datum.\n- Vink ze direct af met het vinkje. Klik op een actie om hem te bewerken, of op een processtap om het stappenplan te openen.\n- Bovenin voeg je met een invoerveld meteen een **losse actie** toe; die krijgt vandaag als deadline.\n- Onderaan staat een link naar alle open acties.\n\n# Weekstart & processen\nStaat in de linkerkolom, onder *Deze week*. Je lopende weekstart en processen, met hoeveel taken al klaar zijn en welke taak de volgende is.\n- Het vinkje vóór een regel vinkt meteen de volgende taak af.\n- Klik op de regel om alle taken uit te klappen.\n- Is de weekstart voor deze week nog niet gestart, dan staat hier een startknop.\n\n# Start deze week en Recent bewerkt\n- **Start deze week**: activiteiten met een startdatum van maandag tot en met zondag van deze week. Wat vandaag start, staat bovenaan en is blauw uitgelicht; daarna komt wat later deze week start, en onderaan wat eerder deze week al begonnen is.\n- **Recent bewerkt**: de vijf laatst gewijzigde activiteiten.\n- Klik op een activiteit om er direct naartoe te gaan.\n\n# Aantekeningen\nEen vrij notitieveld, als een gele plakker. Het opent in leesweergave. Met **Bewerken** wissel je naar bewerken; opslaan gaat automatisch. Opmaak met Markdown en plakken uit Word, Outlook of OneNote werken hier ook.\n\n# Activiteiten per status en externe inhuur\n- Een balk met de verdeling van je activiteiten over lopend, on hold, afgerond en gearchiveerd.\n- Klik op een kleur of status om daarop te filteren. Daaronder zie je de verdeling per afdeling; klik op een afdeling om het Activiteiten-overzicht gefilterd te openen.\n- Bovenaan staat **Externe inhuur — actie nodig**: contracten die verlengd moeten worden of een kwartaalbeoordeling nodig hebben. Verlengen kan hier direct.\n- De regels onderaan (functioneel beheerders, applicaties, gekoppelde map) zijn klikbaar."
  },
  {
   "id": "activiteit",
@@ -19058,6 +19148,16 @@ async function tryReadJsonFile(dirHandle, name){
   }
 }
 
+/* Kop-badge en dashboardmelding bijwerken zodra er een map gekoppeld is. */
+function toonMapGekoppeld(){
+  const badge = document.getElementById("folderBadge");
+  badge.textContent = "Map: " + (folderHandle.name||"");
+  badge.classList.add("on");
+  badge.style.cursor = ""; badge.title = ""; badge.onclick = null;
+  mapHervatten = null;
+  mapStatusBijgewerkt();
+}
+
 async function tryLoadFromFolder(){
   if (!folderHandle) return;
   try{
@@ -19065,8 +19165,7 @@ async function tryLoadFromFolder(){
     const file = await fileHandle.getFile();
     if (file.size === 0){
       await saveToFolder();
-      document.getElementById("folderBadge").textContent = "Map: " + (folderHandle.name||"");
-      document.getElementById("folderBadge").classList.add("on");
+      toonMapGekoppeld();
       return;
     }
     const text = await file.text();
@@ -19093,8 +19192,7 @@ async function tryLoadFromFolder(){
         await saveToFolder();
         saveToLocal();
         renderSidebar(); renderMain();
-        document.getElementById("folderBadge").textContent = "Map: " + (folderHandle.name||"");
-        document.getElementById("folderBadge").classList.add("on");
+        toonMapGekoppeld();
         alert(
           "Het hoofdbestand 'tracker-data.json' was corrupt.\n\n" +
           "We hebben de laatste backup ('tracker-data.bak.json') hersteld.\n" +
@@ -19113,8 +19211,7 @@ async function tryLoadFromFolder(){
       }catch(_){}
       // Overschrijf het hoofdbestand met de huidige (lokaal geladen) state, zodat het weer leesbaar is
       try{ await saveToFolder(); }catch(_){}
-      document.getElementById("folderBadge").textContent = "Map: " + (folderHandle.name||"");
-      document.getElementById("folderBadge").classList.add("on");
+      toonMapGekoppeld();
       alert(
         "Het bestand 'tracker-data.json' in de map was corrupt en er was geen geldige backup.\n\n" +
         "We werken nu door met de laatste lokaal opgeslagen versie. Het corrupte bestand is bewaard als 'tracker-data.corrupt-…json' zodat je het zelf nog kunt inspecteren.\n\n" +
@@ -19129,8 +19226,7 @@ async function tryLoadFromFolder(){
     saveToLocal();
     applyAppTitle();
     renderSidebar(); renderMain();
-    document.getElementById("folderBadge").textContent = "Map: " + (folderHandle.name||"");
-    document.getElementById("folderBadge").classList.add("on");
+    toonMapGekoppeld();
   }catch(e){
     console.warn("tryLoadFromFolder", e);
     alert("Kon bestand in map niet openen: " + e.message);
@@ -19198,8 +19294,13 @@ async function idbClearHandle(){
   }catch(e){}
 }
 
-/* Probeer een opgeslagen handle automatisch te herstellen. */
+/* Probeer een opgeslagen handle automatisch te herstellen. Daarna is de opslagstatus bekend
+   en kan het dashboard zo nodig de melding 'geen map gekoppeld' tonen. */
 async function tryRestoreFolder(){
+  try{ await _tryRestoreFolder(); }
+  finally{ mapStatusBekend = true; mapStatusBijgewerkt(); }
+}
+async function _tryRestoreFolder(){
   if (!("showDirectoryPicker" in window)) return;
   const handle = await idbGetHandle();
   if (!handle) return;
@@ -19244,6 +19345,7 @@ function showRestorePrompt(handle){
     }
   };
   badge.onclick = ()=> reconnect();
+  mapHervatten = { naam: handle.name || "", run: ()=> reconnect() };   // knop Hervatten op het dashboard
 
   // Overlay-modal — duidelijk in beeld zodat je niet vergeet de map weer aan te koppelen
   const backdrop = document.createElement("div");
@@ -19519,6 +19621,8 @@ document.getElementById("btnVersion").onclick = showChangelog;
 renderSidebar();
 renderMain();
 tryRestoreFolder();  // probeer eerder gekoppelde map automatisch te herstellen
+// Vangnet: reageert de browseropslag niet, toon de melding over de map dan toch na een paar seconden
+setTimeout(()=>{ if (!mapStatusBekend){ mapStatusBekend = true; mapStatusBijgewerkt(); } }, 4000);
 // Elke minuut alléén opnieuw proberen als er nog lokale wijzigingen niet in de map staan.
 // (Vroeger werd hier élke minuut het hele bestand herschreven — op elk apparaat/tabblad waar de
 // app openstond. Via OneDrive kwam dat bij de andere sessie binnen als 'extern gewijzigd'.)

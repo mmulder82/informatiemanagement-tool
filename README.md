@@ -124,7 +124,7 @@ De ingebouwde **Help & handleiding** (de knop **?** rechtsboven, of F1) legt elk
 ## Aan de slag
 
 1. **Open de tool** in Chrome of Edge: <https://mmulder82.github.io/informatiemanagement-tool/>
-2. **Koppel een map** (aanbevolen). Ga naar Instellingen (het tandwiel linksonder) → **Map koppelen** en kies een map, bij voorkeur een map die met OneDrive of SharePoint synchroniseert. De app slaat alles automatisch op in `tracker-data.json` in die map, met een reservekopie.
+2. **Koppel een map** (aanbevolen). Zolang er geen map gekoppeld is, staat er bovenaan het dashboard een melding met de knop **Map koppelen…**. Je vindt het ook bij Instellingen (het tandwiel linksonder) → **Map koppelen**. Kies bij voorkeur een map die met OneDrive of SharePoint synchroniseert. De app slaat alles automatisch op in `tracker-data.json` in die map, met een reservekopie.
 3. **Richt je organisatie in** via Instellingen → **Sectoren & afdelingen beheren**. Heeft een collega de tool al ingericht? Dan kun je ook zijn basisdata importeren.
 4. **Stel je gemeente in als standaardbedrijf** (optioneel). Dat doe je met de ster bij Relaties → Bedrijven. Nieuwe afdelingen en managers krijgen het bedrijf dan automatisch.
 5. **Begin.** Met **+ Nieuwe activiteit** op het dashboard leg je je eerste activiteit vast.
@@ -139,6 +139,7 @@ De ingebouwde **Help & handleiding** (de knop **?** rechtsboven, of F1) legt elk
 
 - **Er is geen server en geen account.** De tool draait helemaal in je browser. GitHub levert alleen het bestand. Je gegevens gaan nooit naar GitHub of naar een andere server.
 - Alles wordt bewaard in de **lokale opslag van je browser**. Heb je een map gekoppeld, dan ook in **`tracker-data.json`** in die map, met **`tracker-data.bak.json`** als reservekopie.
+- Zonder gekoppelde map staat alles alleen in je browser. Wis je de browsergegevens, dan ben je het kwijt. Het dashboard waarschuwt je daarvoor met een melding, totdat je een map koppelt.
 - Werk je op twee computers of in twee vensters tegelijk, dan herkent de app dat en voegt hij de wijzigingen samen.
 - De app maakt maar een paar verbindingen met internet:
   - Bij importeren of exporteren naar Excel laadt hij de bibliotheek [SheetJS](https://sheetjs.com) van cdnjs.
