@@ -1300,6 +1300,13 @@
   .item-chip .x{color:var(--muted);cursor:pointer;font-size:13px;line-height:1;padding:0 2px}
   .item-chip .x:hover{color:var(--danger)}
   .cat-empty{font-size:12.5px;color:var(--muted);padding:4px 2px}
+  .item-chip .ct-chip-rol{color:var(--muted);font-size:11px}
+  .afd-contacten-wrap{padding:0 24px 12px}
+  .ct-afd-hint{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.4}
+  .ct-afd-link{color:inherit;text-decoration:underline;text-decoration-color:var(--border-strong);text-underline-offset:2px;cursor:pointer}
+  .ct-afd-link:hover{color:var(--accent);text-decoration-color:currentColor}
+  .ct-afd-filter{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--panel);color:var(--text);max-width:320px}
+  .modal input.lep-zoek{margin-bottom:8px}
 
   /* ---- Item edit popover ---- */
   .modal-backdrop{
@@ -1411,6 +1418,8 @@
   .ci-map td.ci-vb{color:var(--muted);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ci-map tr.is-on td.ci-kol{color:var(--accent)}
   .modal .ci-map select{padding:4px 8px;font-size:12.5px;width:100%;min-width:150px}
+  .ci-map.ci-vbt{table-layout:fixed}
+  .ci-map.ci-vbt th{overflow:hidden;text-overflow:ellipsis}
   .ci-map.ci-vbt td{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 10px}
   .ci-leeg{color:var(--muted);font-style:italic}
   .ci-klein{font-size:12px;color:var(--muted);margin:6px 0}
@@ -1439,6 +1448,9 @@
   .ci-badge.overslaan{background:rgba(197,15,31,.08);color:var(--danger)}
   .ci-klaar{display:flex;flex-direction:column;gap:6px;font-size:14px;margin:4px 0 12px}
   .ci-klaar b{font-weight:650}
+  .ci-afd{margin:12px 0 2px}
+  .ci-afd .ci-klein{margin:0 0 6px}
+  .ci-map tr.is-niet td.ci-kol{color:#875800}
   .imp-stat{background:var(--panel-soft);border-radius:8px;padding:10px 12px;text-align:center;font-size:11px;color:var(--muted)}
   .imp-stat b{display:block;font-size:22px;color:var(--text);font-weight:600;line-height:1.1;margin-bottom:2px}
   .imp-section-head{padding:8px 12px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;background:var(--panel-soft);border-bottom:1px solid var(--border)}
@@ -1924,8 +1936,15 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.40.1";
+const APP_VERSION = "4.41.0";
 const CHANGELOG = [
+  { version: "4.41.0", datum: "2026-11-03", items: [
+    "Contacten van je eigen organisatie (het standaardbedrijf) koppel je nu aan een afdeling. Je kiest uit de afdelingen in het organogram, of uit de afdelingsoverstijgende onderdelen: Raad, Griffie, College B&W, Control en Directie. Dat doe je in de contacteditor, onder Bedrijf.",
+    "Op het tabblad Mensen & teams van een afdeling, en bij College B&W en Control, staat een nieuwe kaart Contacten met de mensen van die afdeling. Met + Koppelen voeg je ze toe of maak je meteen een nieuw contact aan. Het koppelvenster heeft een zoekveld.",
+    "In Contacten filter je op afdeling, of op alle contacten van je eigen organisatie. Je kunt ook zoeken op de naam van een afdeling. Op de contactkaart staat de afdeling achter het bedrijf; klik erop om naar de afdeling te gaan.",
+    "Contacten importeren: een kolom met de afdeling wordt herkend. Daarna koppel je elke afdeling uit het bestand aan een afdeling uit het organogram. De app doet al een voorstel, en onthoudt je keuzes zolang hij openstaat. Contacten zonder bedrijf krijgen met hun afdeling ook het standaardbedrijf.",
+    "Bij het exporteren van contacten kan de afdeling mee. Hernoem of verwijder je een afdeling, dan worden de contacten bijgewerkt.",
+  ]},
   { version: "4.40.1", datum: "2026-11-02", items: [
     "Zet je een notitie in het logboek van een activiteit, dan staat die activiteit nu ook bovenaan bij Recent bewerkt op het dashboard. Dat geldt ook voor notities die je al eerder had toegevoegd, en voor het verwijderen van een notitie.",
   ]},
@@ -2186,6 +2205,7 @@ let swFilter = "all";              // filter-chip in software-overzicht
 let actSearch = "";                // zoekstring binnen activiteiten-overzicht
 let actFilters = { tags:new Set(), afdelingen:new Set(), managers:new Set(), statuses:new Set() };
 let actIncludeArchived = false;
+let contactenAfdFilter = "";       // filter op afdeling in het Contacten-overzicht: "", "__eigen", "__zonder" of een afdelingsnaam
 let contactenSearch = "";          // zoekstring binnen het centrale Contacten-overzicht
 let bedrijvenSearch = "";          // zoekstring binnen het centrale Bedrijven-overzicht
 
@@ -2202,6 +2222,54 @@ let bedrijvenSearch = "";          // zoekstring binnen het centrale Bedrijven-o
 function getContacts(){ return state.contacten || (state.contacten = []); }
 function getContact(id){ return id ? (getContacts().find(c => c.id === id) || null) : null; }
 function newContact(){ return { id: uid(), naam: "", rol: "", email: "", telefoon: "", bedrijfId: null, linkedin: "", foto: null }; }
+
+/* Afdeling van een contact (c.afdeling?, optioneel): alleen voor contacten van het standaardbedrijf,
+   de eigen organisatie. De waarde is de naam van een afdeling uit het organogram (state.org) of van
+   een afdelingsoverstijgend onderdeel (AFD_OVERSTIJGEND, aangevuld met de afdelingen van de sector
+   "Sector overstijgend"). Net als bij functioneel beheerders gaat de koppeling op naam; hernoemen en
+   verwijderen lopen via renameAfdelingOveral / verwijderAfdelingOveral. Hoort het contact (nu) niet
+   bij het standaardbedrijf, dan telt een eventueel opgeslagen afdeling niet mee (contactAfdeling = ""). */
+const AFD_OVERSTIJGEND = ["Raad", "Griffie", "College B&W", "Control", "Directie"];
+const AFD_MET_SCHERM = ["Raad", "Griffie", "College B&W", "Control"];
+function isEigenOrganisatie(c){ const s = standaardBedrijfId(); return !!(s && c && c.bedrijfId === s); }
+function contactAfdeling(c){ return (c && c.afdeling && isEigenOrganisatie(c)) ? c.afdeling : ""; }
+function contactenVanAfdeling(naam){
+  return getContacts().filter(c => contactAfdeling(c) === naam)
+    .sort((a, b) => (a.naam || "").localeCompare(b.naam || "", "nl"));
+}
+/* Keuzelijst voor de afdeling van een contact: [{ groep, afdelingen: [naam] }], eerst
+   "Afdelingsoverstijgend", daarna de sectoren uit het organogram in hun eigen volgorde. */
+function contactAfdelingGroepen(){
+  const over = [...AFD_OVERSTIJGEND];
+  const groepen = [];
+  for (const b of ORG){
+    if (b.sector === "Sector overstijgend"){
+      for (const a of (b.afdelingen || [])) if (!over.includes(a.naam)) over.push(a.naam);
+      continue;
+    }
+    if ((b.afdelingen || []).length) groepen.push({ groep: b.sector, afdelingen: b.afdelingen.map(a => a.naam) });
+  }
+  return [{ groep: "Afdelingsoverstijgend", afdelingen: over }, ...groepen];
+}
+/* <option>s voor een afdelingskeuze, gegroepeerd. Een opgeslagen afdeling die niet meer in het
+   organogram staat, blijft kiesbaar zodat hij niet ongemerkt verdwijnt. */
+function contactAfdelingOptiesHTML(huidig, leegLabel){
+  huidig = huidig || "";
+  const groepen = contactAfdelingGroepen();
+  const bekend = groepen.some(g => g.afdelingen.includes(huidig));
+  return `<option value="">${escapeHTML(leegLabel)}</option>`
+    + (huidig && !bekend ? `<option value="${escapeHTML(huidig)}" selected>${escapeHTML(huidig)} (staat niet meer in het organogram)</option>` : "")
+    + groepen.map(g => `<optgroup label="${escapeHTML(g.groep)}">${g.afdelingen.map(n =>
+        `<option value="${escapeHTML(n)}" ${n === huidig ? "selected" : ""}>${escapeHTML(n)}</option>`).join("")}</optgroup>`).join("");
+}
+/* Afdelingsnaam als link naar het afdelingsscherm (tabblad Mensen & teams), als dat scherm bestaat */
+function afdelingHeeftScherm(naam){ return !!naam && (!!findOrgMeta(naam) || AFD_MET_SCHERM.includes(naam)); }
+function contactAfdelingLinkHTML(naam){
+  if (!naam) return "";
+  return afdelingHeeftScherm(naam)
+    ? `<a class="ct-afd-link" data-goto-afd="${escapeHTML(naam)}" title="Naar ${escapeHTML(naam)}">${escapeHTML(naam)}</a>`
+    : escapeHTML(naam);
+}
 /* LinkedIn-profiel van een contact (c.linkedin?, optioneel). Accepteert een volledige URL,
    "linkedin.com/in/…", "in/…" of alleen de profielnaam ("jan-jansen-1a2b3c") en maakt daar een
    nette https-URL van. Lege invoer → "". */
@@ -2285,6 +2353,7 @@ function mergeContacts(sourceId, targetId){
   if (!target.email && source.email) target.email = source.email;
   if (!target.telefoon && source.telefoon) target.telefoon = source.telefoon;
   if (!target.linkedin && source.linkedin) target.linkedin = source.linkedin;
+  if (!target.afdeling && source.afdeling) target.afdeling = source.afdeling;
   if (!target.foto && source.foto) target.foto = source.foto;
   forEachContactLink((entry, veld) => { if (entry[veld] === sourceId) entry[veld] = targetId; });
   state.contacten = getContacts().filter(c => c.id !== sourceId);
@@ -2673,6 +2742,7 @@ function openContactEditor(id, onSaved, opts={}){
         <div><label>Telefoon</label><input id="cTel" value="${escapeHTML(c.telefoon)}"></div>
       </div>
       <div class="row"><label>Bedrijf</label><div id="cBedrijf"></div></div>
+      <div class="row" id="cAfdRow" style="display:none"><label for="cAfd">Afdeling</label><div id="cAfdVak"></div></div>
       <div class="row"><label>LinkedIn-profiel</label>
         <div style="display:flex;gap:6px">
           <input id="cLinkedin" placeholder="https://www.linkedin.com/in/…" value="${escapeHTML(c.linkedin||"")}" style="flex:1;min-width:0">
@@ -2693,8 +2763,34 @@ function openContactEditor(id, onSaved, opts={}){
   attachBedrijfPicker({
     container: backdrop.querySelector("#cBedrijf"),
     getBedrijfId: ()=> c.bedrijfId,
-    setBedrijfId: (id)=>{ c.bedrijfId = id; markDirty(); }
+    setBedrijfId: (id)=>{ c.bedrijfId = id; markDirty(); },
+    onChange: ()=> renderAfdRow()
   });
+
+  /* Afdeling: alleen bij contacten van het standaardbedrijf (de eigen organisatie). Heeft het contact
+     nog geen bedrijf, dan mag je ook een afdeling kiezen: bij Opslaan krijgt het dan het standaardbedrijf.
+     Bij een ander bedrijf is de keuze verborgen. De keuze wordt pas bij Opslaan bewaard. */
+  let afdDraft = c.afdeling || "";
+  function renderAfdRow(){
+    const row = backdrop.querySelector("#cAfdRow"), vak = backdrop.querySelector("#cAfdVak");
+    const std = getStandaardBedrijf();
+    if (!std){
+      row.style.display = "";
+      vak.innerHTML = `<div class="ct-afd-hint">Een afdeling kies je bij contacten van je eigen organisatie. Stel die eerst in als standaardbedrijf bij Relaties → Bedrijven (ster).</div>`;
+      return;
+    }
+    if (c.bedrijfId && c.bedrijfId !== std.id){ row.style.display = "none"; vak.innerHTML = ""; return; }
+    row.style.display = "";
+    vak.innerHTML = `<select id="cAfd">${contactAfdelingOptiesHTML(afdDraft, "Geen afdeling")}</select><div class="ct-afd-hint" id="cAfdHint"></div>`;
+    const sel = vak.querySelector("#cAfd"), hint = vak.querySelector("#cAfdHint");
+    const zetHint = ()=>{
+      hint.textContent = (!c.bedrijfId && afdDraft) ? `Bij Opslaan wordt het contact ook gekoppeld aan ${std.naam || "het standaardbedrijf"}.` : "";
+      hint.style.display = hint.textContent ? "" : "none";
+    };
+    sel.onchange = ()=>{ afdDraft = sel.value; zetHint(); };
+    zetHint();
+  }
+  renderAfdRow();
 
   /* Foto: kiezen, plakken (⌘V of knop) of slepen. De foto wordt pas bij Opslaan bewaard. */
   let fotoDraft = c.foto || null;
@@ -2800,6 +2896,11 @@ function openContactEditor(id, onSaved, opts={}){
     c.telefoon = backdrop.querySelector("#cTel").value.trim();
     c.linkedin = normalizeLinkedInUrl(backdrop.querySelector("#cLinkedin").value);
     c.foto = fotoDraft || null;
+    const stdId = standaardBedrijfId();
+    if (stdId && (!c.bedrijfId || c.bedrijfId === stdId)){
+      if (afdDraft && !c.bedrijfId) c.bedrijfId = stdId;
+      if (afdDraft) c.afdeling = afdDraft; else delete c.afdeling;
+    } else if (stdId) delete c.afdeling;   // ander bedrijf: geen afdeling van de eigen organisatie
     markDirty(); close();
     onSaved && onSaved();
   };
@@ -4270,6 +4371,7 @@ const EXPORT_DATASETS = {
       { key:"email",  label:"E-mail",   std:true,  get:c => c.email || "" },
       { key:"tel",    label:"Telefoon", std:true,  get:c => c.telefoon || "" },
       { key:"bedrijf",label:"Bedrijf",  std:false, get:c => getBedrijf(c.bedrijfId)?.naam || "" },
+      { key:"afd",    label:"Afdeling", std:false, get:c => contactAfdeling(c) },
       { key:"linkedin",label:"LinkedIn", std:false, get:c => c.linkedin || "" },
     ],
   },
@@ -6229,11 +6331,11 @@ function runGlobalSearch(q){
     }
   }
   for (const c of getContacts()){
-    if (zoekMatch(terms, c.naam, c.email, c.rol, c.telefoon)){
+    if (zoekMatch(terms, c.naam, c.email, c.rol, c.telefoon, contactAfdeling(c))){
       const bd = getBedrijf(c.bedrijfId);
       mensen.push({ titel: c.naam || c.email || "(naamloos)", icon: "contacten",
         email: c.email, telefoon: c.telefoon,
-        bron: ["Contact", c.rol, bd && bd.naam].filter(Boolean).join(" · "),
+        bron: ["Contact", c.rol, bd && bd.naam, contactAfdeling(c)].filter(Boolean).join(" · "),
         go: ()=> openContactEditor(c.id, ()=>{ renderMain(); renderSidebar(); }) });
     }
   }
@@ -9751,7 +9853,7 @@ function openLinkSoftwareToFB(softwareName){
    CSV en geplakte tekst lezen we zelf (scheidingsteken en tekenset worden herkend); Excel via SheetJS. */
 const CI_VELDEN = [
   ["naam", "Naam (volledig)"], ["voornaam", "Voornaam"], ["tussen", "Tussenvoegsel"], ["achter", "Achternaam"],
-  ["rol", "Rol / functie"], ["email", "E-mail"], ["telefoon", "Telefoon"], ["bedrijf", "Bedrijf"], ["linkedin", "LinkedIn"],
+  ["rol", "Rol / functie"], ["email", "E-mail"], ["telefoon", "Telefoon"], ["bedrijf", "Bedrijf"], ["afdeling", "Afdeling"], ["linkedin", "LinkedIn"],
 ];
 const CI_HERKEN = {
   naam: ["naam","volledigenaam","weergavenaam","displayname","name","fullname","contactpersoon","medewerker","persoon","naammedewerker","naamcontactpersoon"],
@@ -9762,10 +9864,11 @@ const CI_HERKEN = {
   email: ["email","emailadres","mail","mailadres","emailaddress","email1","emailadres1","email1value","primaryemail","werkemail","zakelijkemail","zakelijkeemail","emailzakelijk","emailwerk"],
   telefoon: ["telefoon","telefoonnummer","tel","telnr","telefoonnr","phone","phonenumber","mobiel","mobielnummer","mobielenummer","mobile","mobilephone","gsm","telefoonwerk","werktelefoon","businessphone","telefoonzakelijk","zakelijketelefoon","mobieletelefoon","phone1value"],
   bedrijf: ["bedrijf","bedrijfsnaam","organisatie","organisatienaam","company","organization","organisation","werkgever","leverancier","firma","organization1name"],
+  afdeling: ["afdeling","afdelingsnaam","afdelingnaam","afd","department","dept","organisatieonderdeel","organisatieeenheid","organisatorischeeenheid","eenheid","organization1department","businessunit"],
   linkedin: ["linkedin","linkedinurl","linkedinprofiel","linkedinprofile","linkedinadres"],
 };
-const CI_LABEL = { naam:"naam", rol:"rol", email:"e-mail", telefoon:"telefoon", bedrijf:"bedrijf", linkedin:"LinkedIn" };
-const CI_DOELVELDEN = ["naam", "rol", "email", "telefoon", "bedrijf", "linkedin"];
+const CI_LABEL = { naam:"naam", rol:"rol", email:"e-mail", telefoon:"telefoon", bedrijf:"bedrijf", afdeling:"afdeling", linkedin:"LinkedIn" };
+const CI_DOELVELDEN = ["naam", "rol", "email", "telefoon", "bedrijf", "afdeling", "linkedin"];
 
 function ciSleutel(s){ return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, ""); }
 /* Raadt bij een kolomnaam het veld; "" = niet importeren. */
@@ -9779,9 +9882,48 @@ function ciRaadVeld(kop){
   if (/voornaam|firstname|givenname/.test(k)) return "voornaam";
   if (/tussenvoegsel/.test(k)) return "tussen";
   if (/telefoon|phone|mobiel|mobile|gsm/.test(k) && !/(type|fax|label)/.test(k)) return "telefoon";
+  if (/afdeling|department/.test(k)) return "afdeling";
   if (/functie|jobtitle/.test(k)) return "rol";
   if (/bedrijf|company|organisatie|organization|organisation/.test(k) && !/(afdeling|department|title|functie|eenheid|unit)/.test(k)) return "bedrijf";
   return "";
+}
+/* Afdeling uit een bestand herkennen: zelfde sleutel als ciSleutel, maar "&" en "+" tellen als "en"
+   ("P&O" = "P en O"). Bekende namen voor de afdelingsoverstijgende onderdelen staan in CI_AFD_ALIAS. */
+function ciAfdSleutel(s){ return ciSleutel(String(s || "").replace(/&|\+/g, " en ")); }
+const CI_AFD_ALIAS = {
+  gemeenteraad: "Raad", raad: "Raad", raadsleden: "Raad",
+  griffie: "Griffie", raadsgriffie: "Griffie",
+  college: "College B&W", benw: "College B&W", collegebenw: "College B&W", collegevanbenw: "College B&W", collegevanburgemeesterenwethouders: "College B&W",
+  control: "Control", concerncontrol: "Control",
+  directie: "Directie", directieteam: "Directie", concerndirectie: "Directie", gemeentesecretaris: "Directie",
+  algemeendirecteur: "Directie", gemeentesecretarisalgemeendirecteur: "Directie", gemeentesecretarisendirectie: "Directie",
+};
+/* Welke afdeling uit het organogram hoort bij deze tekst? "" = niet herkend.
+   1. dezelfde naam (hoofdletters, leestekens en & / en tellen niet), of een bekende andere naam;
+   2. zonder voorvoegsel als "Afdeling" of "Team";
+   3. bij "Sector / Afdeling / Team" of "Afdeling - Team" de delen apart, het meest specifieke eerst;
+   4. precies één afdeling waarvan de naam erin staat, of waar de tekst in staat (minstens 5 tekens). */
+function ciMatchAfdeling(raw){
+  const opties = contactAfdelingGroepen().flatMap(g => g.afdelingen);
+  const index = new Map();
+  for (const n of opties){ const k = ciAfdSleutel(n); if (k && !index.has(k)) index.set(k, n); }
+  const zoek = k => index.get(k) || ((CI_AFD_ALIAS[k] && opties.includes(CI_AFD_ALIAS[k])) ? CI_AFD_ALIAS[k] : "");
+  const probeer = s => {
+    const k = ciAfdSleutel(s);
+    if (!k) return "";
+    const m = zoek(k);
+    if (m) return m;
+    const kaal = k.replace(/^(afdeling|afd|team|cluster|bureau|unit)/, "");
+    return kaal && kaal !== k ? zoek(kaal) : "";
+  };
+  let m = probeer(raw);
+  if (m) return m;
+  const delen = String(raw || "").split(/\s*[\/\\>|;]\s*|\s+[-–]\s+/).map(s => s.trim()).filter(Boolean);
+  if (delen.length > 1) for (const d of delen.slice().reverse()){ m = probeer(d); if (m) return m; }
+  const k = ciAfdSleutel(raw);
+  if (!k) return "";
+  const kand = [...index.entries()].filter(([ik]) => (ik.length >= 5 && k.includes(ik)) || (k.length >= 5 && ik.includes(k)));
+  return kand.length === 1 ? kand[0][1] : "";
 }
 function ciKolomLetter(i){
   let s = "";
@@ -9889,9 +10031,11 @@ function ciOmdraaien(naam){
   const m = String(naam).match(/^([^,]+),\s*([^,]+)$/);
   return m ? `${m[2].trim()} ${m[1].trim()}` : naam;
 }
-/* Eén rij uit het bestand → { naam, rol, email, telefoon, bedrijf, bedrijfId, linkedin } volgens de koppeling.
+/* Eén rij uit het bestand → { naam, rol, email, telefoon, bedrijf, bedrijfId, afdeling, afdelingRuw, linkedin }
+   volgens de koppeling.
    opt: { omdraaien, mobiel: Set met kolommen waarvan de naam op een mobiel nummer wijst,
-          bedrijf: { id, naam } als alle contacten aan één bedrijf gekoppeld worden }
+          bedrijf: { id, naam } als alle contacten aan één bedrijf gekoppeld worden,
+          afdeling: functie tekst → afdelingsnaam ("" = niet koppelen), of null als dat niet kan }
    Telefoon: een mobiel nummer gaat voor (kolomnaam of nummer), anders de eerste kolom met een waarde. */
 function ciRecord(rij, koppeling, opt){
   opt = opt || {};
@@ -9919,6 +10063,8 @@ function ciRecord(rij, koppeling, opt){
     telefoonMobiel: !!(tel.find(t => t.mobiel)),
     bedrijf: opt.bedrijf ? opt.bedrijf.naam : eerste("bedrijf"),
     bedrijfId: opt.bedrijf ? opt.bedrijf.id : null,
+    afdelingRuw: eerste("afdeling"),
+    afdeling: (opt.afdeling && eerste("afdeling")) ? (opt.afdeling(eerste("afdeling")) || "") : "",
     linkedin: li ? normalizeLinkedInUrl(li) : "",
   };
 }
@@ -9968,11 +10114,25 @@ function ciBeoordeel(groepen, overschrijven){
     const k = normName(c.naam);
     if (k && !opNaam.has(k)) opNaam.set(k, c);
   }
+  /* Afdeling: alleen voor contacten van het standaardbedrijf. Heeft een contact (nog) geen bedrijf,
+     dan krijgt het met de afdeling ook het standaardbedrijf. Bij een ander bedrijf: niet overnemen. */
+  const std = getStandaardBedrijf();
+  const isStd = (id, naam) => !!std && (id ? id === std.id : !!naam && naam.trim().toLowerCase() === (std.naam || "").trim().toLowerCase());
+  const stdNaam = std ? (std.naam || "het standaardbedrijf") : "";
   for (const g of groepen){
     const doel = (g.email && opEmail.get(g.email.toLowerCase())) || (g.naam && opNaam.get(normName(g.naam))) || null;
-    g.doel = doel; g.wijzigingen = []; g.waarschuwing = "";
-    if (!doel){ g.status = g.naam ? "nieuw" : "overslaan"; continue; }
+    g.doel = doel; g.wijzigingen = []; g.waarschuwing = ""; g.afdWaarschuwing = ""; g.afdNieuw = ""; g.stdViaAfd = false;
+    if (!doel){
+      g.status = g.naam ? "nieuw" : "overslaan";
+      if (g.afdeling && std){
+        if (!g.bedrijfId && !g.bedrijf){ g.afdNieuw = g.afdeling; g.stdViaAfd = true; }
+        else if (isStd(g.bedrijfId, g.bedrijf)) g.afdNieuw = g.afdeling;
+        else g.afdWaarschuwing = `Afdeling ${g.afdeling} niet overgenomen: dit contact hoort bij ${g.bedrijf || getBedrijf(g.bedrijfId)?.naam || "een ander bedrijf"}, niet bij ${stdNaam}.`;
+      }
+      continue;
+    }
     for (const v of CI_DOELVELDEN){
+      if (v === "afdeling") continue;   // hieronder, want die hangt af van het bedrijf
       const nieuw = g[v];
       if (!nieuw) continue;
       const oud = v === "bedrijf" ? bedrijfNaam(doel) : (doel[v] || "");
@@ -9981,13 +10141,26 @@ function ciBeoordeel(groepen, overschrijven){
       if (!oud) g.wijzigingen.push({ ...w, oud: "" });
       else if (overschrijven && !ciGelijk(v, oud, nieuw)) g.wijzigingen.push(w);
     }
+    if (g.afdeling && std){
+      const bw = g.wijzigingen.find(w => w.veld === "bedrijf");
+      const wordtStd = bw ? isStd(bw.bedrijfId, bw.nieuw) : (!doel.bedrijfId || doel.bedrijfId === std.id);
+      if (wordtStd){
+        const oud = isEigenOrganisatie(doel) ? (doel.afdeling || "") : "";
+        if (!oud || (overschrijven && oud !== g.afdeling)){
+          if (!bw && !doel.bedrijfId) g.wijzigingen.push({ veld: "bedrijf", oud: "", nieuw: std.naam || "", bedrijfId: std.id });
+          g.wijzigingen.push({ veld: "afdeling", oud, nieuw: g.afdeling });
+        }
+      } else {
+        g.afdWaarschuwing = `Afdeling ${g.afdeling} niet overgenomen: ${doel.naam || "dit contact"} hoort bij ${bw ? bw.nieuw : (bedrijfNaam(doel) || "een ander bedrijf")}, niet bij ${stdNaam}.`;
+      }
+    }
     if (!overschrijven && g.email && doel.email && !ciGelijk("email", g.email, doel.email))
       g.waarschuwing = `In je contacten staat een ander e-mailadres: ${doel.email}.`;
     g.status = g.wijzigingen.length ? "aanvullen" : "gelijk";
   }
 }
 
-let ciOnthoud = { alleBedrijf: false, bedrijfId: null };   // keuze "alle contacten aan één bedrijf", zolang de app open is
+let ciOnthoud = { alleBedrijf: false, bedrijfId: null, afdKeuze: {} };   // keuzes die de app onthoudt zolang hij open is: "alle contacten aan één bedrijf" en de gekoppelde afdelingen (sleutel → afdelingsnaam, "" = niet koppelen)
 function openContactenImport(){
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
@@ -10012,8 +10185,22 @@ function openContactenImport(){
     const mobiel = new Set();
     kop.forEach((k, i) => { if (ciIsMobielKolom(k)) mobiel.add(i); });
     const b = st.alleBedrijf ? getBedrijf(st.bedrijfId) : null;
-    return { omdraaien: omdraaienAan(), mobiel, bedrijf: b ? { id: b.id, naam: b.naam || "" } : null };
+    return { omdraaien: omdraaienAan(), mobiel, bedrijf: b ? { id: b.id, naam: b.naam || "" } : null,
+             afdeling: standaardBedrijfId() ? afdKeuzeVoor : null };
   };
+  /* Afdeling bij een tekst uit het bestand: je eigen keuze (ook uit een eerdere import), anders de
+     automatische herkenning. Een gekozen afdeling die niet meer bestaat, telt niet. */
+  const afdAuto = new Map();
+  function afdKeuzeVoor(raw){
+    const k = ciAfdSleutel(raw);
+    if (!k) return "";
+    const kz = ciOnthoud.afdKeuze;
+    if (Object.prototype.hasOwnProperty.call(kz, k)){
+      if (!kz[k] || contactAfdelingGroepen().some(g => g.afdelingen.includes(kz[k]))) return kz[k];
+    }
+    if (!afdAuto.has(k)) afdAuto.set(k, ciMatchAfdeling(raw));
+    return afdAuto.get(k);
+  }
   function zetAutoKoppeling(){
     const rijen = st.data.bladen[st.blad].rijen;
     const kop = st.kopRij >= 0 ? rijen[st.kopRij] : [];
@@ -10109,7 +10296,7 @@ function openContactenImport(){
         </tr>`).join("")}</tbody></table>
       </div>
       ${leeg ? `<div class="ci-klein">${leeg} lege kolom${leeg === 1 ? "" : "men"} niet getoond.</div>` : ""}
-      <div class="ci-hint">Je kunt meerdere kolommen aan hetzelfde veld koppelen. Voornaam, tussenvoegsel en achternaam worden samen de naam. Meerdere kolommen bij <i>Rol / functie</i>, zoals functie en afdeling, worden met een komma samengevoegd. Bij meerdere telefoonkolommen gaat het mobiele nummer voor. Bij e-mail, bedrijf en LinkedIn telt de eerste kolom met een waarde.</div>
+      <div class="ci-hint">Je kunt meerdere kolommen aan hetzelfde veld koppelen. Voornaam, tussenvoegsel en achternaam worden samen de naam. Meerdere kolommen bij <i>Rol / functie</i> worden met een komma samengevoegd. Bij meerdere telefoonkolommen gaat het mobiele nummer voor. Bij e-mail, bedrijf, afdeling en LinkedIn telt de eerste kolom met een waarde.</div>
       <label class="ci-check" id="ciOmdraaiRij" style="display:none"><input type="checkbox" id="ciOmdraai"><span>Namen als <i>Jansen, Jan</i> omdraaien naar <i>Jan Jansen</i></span></label>
       ${getBedrijven().length ? `<div class="ci-hb">
         <label class="ci-check"><input type="checkbox" id="ciHb" ${st.alleBedrijf ? "checked" : ""}><span>Alle contacten koppelen aan</span></label>
@@ -10117,6 +10304,7 @@ function openContactenImport(){
           `<option value="${escapeHTML(b.id)}" ${b.id === st.bedrijfId ? "selected" : ""}>${escapeHTML(b.naam || "(naamloos)")}${b.id === state.standaardBedrijfId ? " (standaardbedrijf)" : ""}</option>`).join("")}</select>
       </div>
       <div class="ci-hb-info" id="ciHbInfo"></div>` : ""}
+      <div id="ciAfdPaneel"></div>
       <div class="ci-vb-kop">Zo worden de eerste contacten ingelezen</div>
       <div class="ci-scroll" id="ciVoorbeeld"></div>
       <div class="ci-fout" id="ciFout"></div>
@@ -10146,7 +10334,70 @@ function openContactenImport(){
     }
     $("#ciVerder").onclick = stapControle;
 
+    /* Paneel "Afdelingen koppelen": elke afdeling uit het bestand één keer, met een voorstel uit het
+       organogram. Wordt alleen opnieuw opgebouwd als de afdelingen in het bestand veranderen. */
+    function tekenAfdPaneel(){
+      const box = $("#ciAfdPaneel");
+      const kols = st.koppeling.map((v, i) => v === "afdeling" ? i : -1).filter(i => i >= 0);
+      const std = getStandaardBedrijf();
+      if (!kols.length){ box.innerHTML = ""; box.dataset.sig = ""; return; }
+      if (!std){
+        if (box.dataset.sig === "geen-std") return;
+        box.dataset.sig = "geen-std";
+        box.innerHTML = `<div class="ci-afd"><div class="ci-vb-kop">Afdelingen koppelen</div><div class="ci-fout">Een afdeling koppel je alleen bij contacten van je eigen organisatie. Stel die eerst in als standaardbedrijf bij Relaties → Bedrijven (ster). Zonder standaardbedrijf wordt de afdeling niet geïmporteerd.</div></div>`;
+        return;
+      }
+      const waarden = new Map();   // sleutel → { tekst, n }
+      for (const r of data){
+        const raw = kols.map(i => String(r[i] ?? "").replace(/\s+/g, " ").trim()).find(Boolean);
+        const k = raw ? ciAfdSleutel(raw) : "";
+        if (!k) continue;
+        const w = waarden.get(k) || { tekst: raw, n: 0 };
+        w.n++;
+        waarden.set(k, w);
+      }
+      const sig = kols.join(",") + "#" + [...waarden.keys()].join("|");
+      if (box.dataset.sig === sig){ afdSamenvatting(); return; }
+      box.dataset.sig = sig;
+      if (!waarden.size){
+        box.innerHTML = `<div class="ci-afd"><div class="ci-vb-kop">Afdelingen koppelen</div><div class="ci-klein">De kolom bij Afdeling is leeg.</div></div>`;
+        return;
+      }
+      const rijenAfd = [...waarden.entries()].map(([k, w]) => ({ k, tekst: w.tekst, n: w.n, keuze: afdKeuzeVoor(w.tekst) }))
+        .sort((a, b) => (!!a.keuze - !!b.keuze) || a.tekst.localeCompare(b.tekst, "nl"));
+      box.innerHTML = `<div class="ci-afd">
+        <div class="ci-vb-kop">Afdelingen koppelen</div>
+        <div class="ci-klein" id="ciAfdSamen"></div>
+        <div class="ci-scroll" style="max-height:min(24vh,200px)">
+          <table class="ci-map"><thead><tr><th>Afdeling in het bestand</th><th style="width:60px">Rijen</th><th style="width:260px">Koppelen aan</th></tr></thead>
+          <tbody>${rijenAfd.map(r => `<tr class="${r.keuze ? "is-on" : "is-niet"}">
+            <td class="ci-kol" title="${escapeHTML(r.tekst)}">${escapeHTML(r.tekst)}</td>
+            <td class="ci-vb">${r.n}</td>
+            <td><select data-afd="${escapeHTML(r.k)}" aria-label="Afdeling voor ${escapeHTML(r.tekst)}">${contactAfdelingOptiesHTML(r.keuze, "Niet koppelen")}</select></td>
+          </tr>`).join("")}</tbody></table>
+        </div>
+      </div>`;
+      box.querySelectorAll("select[data-afd]").forEach(sel => sel.onchange = ()=>{
+        ciOnthoud.afdKeuze[sel.dataset.afd] = sel.value;
+        const tr = sel.closest("tr");
+        tr.classList.toggle("is-on", !!sel.value);
+        tr.classList.toggle("is-niet", !sel.value);
+        toonVoorbeeld();
+      });
+      afdSamenvatting();
+    }
+    function afdSamenvatting(){
+      const el = $("#ciAfdSamen");
+      if (!el) return;
+      const sels = [...modal.querySelectorAll("select[data-afd]")];
+      const n = sels.filter(s => s.value).length;
+      const std = getStandaardBedrijf();
+      const sn = (std && std.naam) || "je standaardbedrijf";
+      el.textContent = `${n} van ${sels.length} afdeling${sels.length === 1 ? "" : "en"} gekoppeld aan het organogram${n < sels.length ? "; kies bij de rest zelf een afdeling of laat ze leeg" : ""}. Alleen contacten van ${sn} krijgen een afdeling. Contacten zonder bedrijf krijgen daarbij ook ${sn}.`;
+    }
+
     function toonVoorbeeld(){
+      tekenAfdPaneel();
       const heeft = new Set(st.koppeling.filter(Boolean));
       const naamOk = heeft.has("naam") || heeft.has("voornaam") || heeft.has("achter");
       // namen in de vorm "Achternaam, Voornaam"? Dan het omdraaien aanbieden (en voorstellen als het de meeste zijn)
@@ -10155,7 +10406,7 @@ function openContactenImport(){
       st.omdraaiAuto = metKomma > 0 && metKomma >= namen.length / 2;
       $("#ciOmdraaiRij").style.display = metKomma ? "" : "none";
       $("#ciOmdraai").checked = omdraaienAan();
-      const velden = [["naam", "Naam"], ["rol", "Rol / functie"], ["email", "E-mail"], ["telefoon", "Telefoon"], ["bedrijf", "Bedrijf"], ["linkedin", "LinkedIn"]]
+      const velden = [["naam", "Naam"], ["rol", "Rol / functie"], ["email", "E-mail"], ["telefoon", "Telefoon"], ["bedrijf", "Bedrijf"], ["afdeling", "Afdeling"], ["linkedin", "LinkedIn"]]
         .filter(([v]) => v === "naam" || heeft.has(v) || (v === "bedrijf" && st.alleBedrijf));
       if ($("#ciHbInfo")){
         const b = getBedrijf(st.bedrijfId);
@@ -10165,7 +10416,9 @@ function openContactenImport(){
       }
       const recs = data.slice(0, 5).map(r => ciRecord(r, st.koppeling, recOpt()));
       $("#ciVoorbeeld").innerHTML = `<table class="ci-map ci-vbt"><thead><tr>${velden.map(([, l]) => `<th>${l}</th>`).join("")}</tr></thead><tbody>${
-        recs.map(x => `<tr>${velden.map(([v]) => `<td title="${escapeHTML(x[v])}">${x[v] ? escapeHTML(x[v]) : (v === "naam" ? `<span class="ci-leeg">geen naam</span>` : "")}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+        recs.map(x => `<tr>${velden.map(([v]) => `<td title="${escapeHTML(v === "afdeling" ? (x.afdeling || x.afdelingRuw) : x[v])}">${x[v] ? escapeHTML(x[v])
+          : v === "naam" ? `<span class="ci-leeg">geen naam</span>`
+          : (v === "afdeling" && x.afdelingRuw) ? `<span class="ci-leeg">niet gekoppeld</span>` : ""}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
       const ok = naamOk || heeft.has("email");
       $("#ciVerder").disabled = !ok;
       $("#ciFout").textContent = !ok ? "Koppel minstens één kolom aan de naam, of aan e-mail om bestaande contacten aan te vullen."
@@ -10232,7 +10485,8 @@ function openContactenImport(){
     const a = actie(g, i);
     const badge = { nieuw: "Nieuw", aanvullen: "Aanvullen", gelijk: "Staat er al in", overslaan: "Geen naam" }[g.status];
     let det;
-    if (g.status === "nieuw") det = [g.rol, g.email, g.telefoon, g.bedrijf, g.linkedin ? "LinkedIn" : ""].filter(Boolean).map(escapeHTML).join(" · ");
+    if (g.status === "nieuw") det = [g.rol, g.email, g.telefoon, g.bedrijf || (g.stdViaAfd ? (getStandaardBedrijf()?.naam || "") : ""),
+                                     g.afdNieuw ? `afdeling ${g.afdNieuw}` : "", g.linkedin ? "LinkedIn" : ""].filter(Boolean).map(escapeHTML).join(" · ");
     else if (g.status === "overslaan") det = `Geen naam, en niet gevonden in je contacten${g.email ? ` (${escapeHTML(g.email)})` : ""}.`;
     else {
       const bij = `Bij <b>${escapeHTML(g.doel.naam || "(naamloos)")}</b>`;
@@ -10251,6 +10505,7 @@ function openContactenImport(){
         <div class="ci-res-naam">${escapeHTML(g.naam || g.email)}${g.rijen > 1 ? ` <span class="ci-klein">· ${g.rijen} rijen samengevoegd</span>` : ""}</div>
         <div class="ci-res-det">${det}</div>
         ${g.waarschuwing ? `<div class="ci-warn">${escapeHTML(g.waarschuwing)}</div>` : ""}
+        ${g.afdWaarschuwing ? `<div class="ci-warn">${escapeHTML(g.afdWaarschuwing)}</div>` : ""}
       </div>
       ${opties.length ? `<select data-g="${i}" aria-label="Wat doen met ${escapeHTML(g.naam || g.email || "")}">${opties.map(([v, l]) => `<option value="${v}" ${v === a ? "selected" : ""}>${l}</option>`).join("")}</select>` : ""}
     </div>`;
@@ -10288,6 +10543,12 @@ function openContactenImport(){
         c.naam = g.naam; c.rol = g.rol; c.email = g.email; c.telefoon = g.telefoon; c.linkedin = g.linkedin || "";
         if (g.bedrijfId && getBedrijf(g.bedrijfId)) c.bedrijfId = g.bedrijfId;
         else if (g.bedrijf) c.bedrijfId = findOrCreateBedrijfByName(g.bedrijf)?.id || null;
+        // afdeling: alleen bij de eigen organisatie; zonder bedrijf wordt dat het standaardbedrijf
+        const stdId = standaardBedrijfId();
+        if (g.afdeling && stdId){
+          if (!c.bedrijfId) c.bedrijfId = stdId;
+          if (c.bedrijfId === stdId) c.afdeling = g.afdeling;
+        }
         getContacts().push(c);
         toegevoegd++;
       } else {
@@ -10338,15 +10599,47 @@ function openContactenImport(){
 function renderContactenView(main){
   const all = getContacts();
   const q = contactenSearch.toLowerCase().trim();
+  const std = getStandaardBedrijf();
+  const af = std ? contactenAfdFilter : "";
   const sorted = all
+    .filter(c => !af
+      || (af === "__eigen" ? isEigenOrganisatie(c)
+        : af === "__zonder" ? (isEigenOrganisatie(c) && !contactAfdeling(c))
+        : contactAfdeling(c) === af))
     .filter(c => !q
       || (c.naam||"").toLowerCase().includes(q)
       || (c.rol||"").toLowerCase().includes(q)
       || (c.email||"").toLowerCase().includes(q)
       || (c.telefoon||"").toLowerCase().includes(q)
-      || bedrijfNaam(c).toLowerCase().includes(q))
+      || bedrijfNaam(c).toLowerCase().includes(q)
+      || contactAfdeling(c).toLowerCase().includes(q))
     .slice()
     .sort((a,b)=> (a.naam||"").localeCompare(b.naam||"", "nl"));
+
+  /* Filter op afdeling: alleen als er een standaardbedrijf is. Toont alleen afdelingen met contacten. */
+  let afdFilterHtml = "";
+  if (std){
+    const telling = new Map();
+    let eigen = 0, zonder = 0;
+    for (const c of all){
+      if (!isEigenOrganisatie(c)) continue;
+      eigen++;
+      const a = contactAfdeling(c);
+      if (a) telling.set(a, (telling.get(a) || 0) + 1); else zonder++;
+    }
+    const groepen = contactAfdelingGroepen();
+    const bekend = new Set(groepen.flatMap(g => g.afdelingen));
+    const zicht = groepen.map(g => ({ groep: g.groep, afd: g.afdelingen.filter(n => telling.has(n) || n === af) })).filter(g => g.afd.length);
+    const los = [...telling.keys()].filter(n => !bekend.has(n)).sort((a, b) => a.localeCompare(b, "nl"));
+    if (los.length) zicht.push({ groep: "Staat niet meer in het organogram", afd: los });
+    const opt = (v, l) => `<option value="${escapeHTML(v)}" ${v === af ? "selected" : ""}>${escapeHTML(l)}</option>`;
+    afdFilterHtml = `<select class="ct-afd-filter" id="ctAfdFilter" aria-label="Filter op afdeling" title="Toon alleen contacten van je eigen organisatie, of van één afdeling">
+      ${opt("", "Alle contacten")}
+      ${opt("__eigen", `${std.naam || "Eigen organisatie"} (${eigen})`)}
+      ${opt("__zonder", `${std.naam || "Eigen organisatie"}, zonder afdeling (${zonder})`)}
+      ${zicht.map(g => `<optgroup label="${escapeHTML(g.groep)}">${g.afd.map(n => opt(n, `${n} (${telling.get(n) || 0})`)).join("")}</optgroup>`).join("")}
+    </select>`;
+  }
 
   let html = `
     <div class="afd-header">
@@ -10360,13 +10653,14 @@ function renderContactenView(main){
       </div>
     </div>
     <div class="applib-toolbar" style="padding:0 24px 14px">
-      <input class="applib-search" id="ctSearch" placeholder="Zoek op naam, rol, e-mail of telefoon…" value="${escapeHTML(contactenSearch)}">
+      <input class="applib-search" id="ctSearch" placeholder="Zoek op naam, rol, e-mail, telefoon of afdeling…" value="${escapeHTML(contactenSearch)}">
+      ${afdFilterHtml}
     </div>`;
 
   if (!all.length){
     html += `<div class="empty"><h3>Nog geen contacten</h3><p>Klik op <b>+ Nieuw contact</b> om iemand toe te voegen, of lees een lijst in met <b>Importeren…</b> (CSV of Excel). Contacten die je koppelt bij een activiteit, functioneel beheerder of externe inhuur, en collegeleden en control-personen, verschijnen ook automatisch hier.</p></div>`;
   } else if (!sorted.length){
-    html += `<div style="padding:0 24px;color:var(--muted);font-size:13px">Geen contacten gevonden voor "${escapeHTML(contactenSearch)}".</div>`;
+    html += `<div style="padding:0 24px;color:var(--muted);font-size:13px">Geen contacten gevonden${contactenSearch.trim() ? ` voor "${escapeHTML(contactenSearch)}"` : ""}${af ? " met dit afdelingsfilter" : ""}.</div>`;
   } else {
     html += `<div class="fb-grid">`;
     for (const c of sorted){
@@ -10380,7 +10674,7 @@ function renderContactenView(main){
               ${c.rol ? `<div class="fb-meta">${escapeHTML(c.rol)}</div>` : ``}
               ${c.email ? `<div class="fb-meta copy-row"><a href="mailto:${escapeHTML(c.email)}">${escapeHTML(c.email)}</a>${copyBtnHTML(c.email, "E-mailadres")}</div>` : ``}
               ${c.telefoon ? `<div class="fb-meta copy-row"><a href="tel:${escapeHTML(c.telefoon.replace(/[^0-9+]/g,""))}">${escapeHTML(c.telefoon)}</a>${copyBtnHTML(c.telefoon, "Telefoonnummer")}</div>` : ``}
-              ${bedrijfNaam(c) ? `<div class="fb-meta">${escapeHTML(bedrijfNaam(c))}</div>` : ``}
+              ${bedrijfNaam(c) ? `<div class="fb-meta">${escapeHTML(bedrijfNaam(c))}${contactAfdeling(c) ? ` · ${contactAfdelingLinkHTML(contactAfdeling(c))}` : ``}</div>` : ``}
               ${c.linkedin ? `<div class="fb-meta"><a class="ct-linkedin" href="${escapeHTML(c.linkedin)}" target="_blank" rel="noopener" title="LinkedIn-profiel openen">${faIcon("linkedin")}${escapeHTML(linkedInLabel(c.linkedin))}</a></div>` : ``}
             </div>
           </div>
@@ -10400,6 +10694,9 @@ function renderContactenView(main){
     contactenSearch = val;
     renderContactenView(main);
   });
+  const afdSel = main.querySelector("#ctAfdFilter");
+  if (afdSel) afdSel.onchange = ()=>{ contactenAfdFilter = afdSel.value; renderContactenView(main); };
+  main.querySelectorAll("[data-goto-afd]").forEach(a => a.onclick = (e)=>{ e.preventDefault(); zoekGaNaarAfdeling(a.dataset.gotoAfd, "mensen"); });
   main.querySelector("#importContacten").onclick = ()=> openContactenImport();
   main.querySelector("#addContact").onclick = ()=>{
     const nc = newContact();
@@ -10929,7 +11226,8 @@ function openLinkEntityPicker(opts, onChange){
       <h3>${escapeHTML(opts.titel)}</h3>
       <div class="row">
         <label>${escapeHTML(opts.lijstLabel)}</label>
-        <div class="fb-afdlist">${list.length ? rows : `<div class="cat-empty" style="padding:6px">${escapeHTML(opts.legeMelding)}</div>`}</div>
+        ${opts.zoeken && list.length > 6 ? `<input type="search" class="lep-zoek" id="lepZoek" placeholder="Zoeken op naam…" autocomplete="off">` : ``}
+        <div class="fb-afdlist">${list.length ? rows : `<div class="cat-empty" style="padding:6px">${escapeHTML(opts.legeMelding)}</div>`}<div class="cat-empty lep-geen" style="padding:6px;display:none">Niets gevonden.</div></div>
       </div>${nieuwVeldHtml}
       <div class="modal-actions">
         <button class="secondary" id="lepCancel">Annuleren</button>
@@ -10942,6 +11240,21 @@ function openLinkEntityPicker(opts, onChange){
   const close = ()=> document.body.removeChild(backdrop);
   backdrop.onclick = (e)=>{ if (e.target===backdrop) close(); };
   backdrop.querySelector("#lepCancel").onclick = close;
+  /* opts.zoeken: zoekveld boven een lange lijst; filtert alleen de weergave, vinkjes blijven staan */
+  const lepZoek = backdrop.querySelector("#lepZoek");
+  if (lepZoek){
+    lepZoek.addEventListener("input", ()=>{
+      const q = normName(lepZoek.value);
+      let n = 0;
+      backdrop.querySelectorAll(".fb-afdlist label.fb-afd-row").forEach(l => {
+        const zie = !q || normName(l.textContent).includes(q);
+        l.style.display = zie ? "" : "none";
+        if (zie) n++;
+      });
+      backdrop.querySelector(".lep-geen").style.display = n ? "none" : "";
+    });
+    setTimeout(()=> lepZoek.focus(), 50);
+  }
   if (opts.nieuw.type === "knop"){
     backdrop.querySelector("#lepNewBtn").onclick = ()=>{
       close();
@@ -12784,6 +13097,12 @@ function renderCollegeView(main){
   }
   refresh();
 
+  const ctWrap = document.createElement("div");
+  ctWrap.className = "afd-contacten-wrap";
+  ctWrap.innerHTML = afdelingContactenKaartHTML();
+  main.appendChild(ctWrap);
+  vulAfdelingContacten(naam, ctWrap);
+
   document.getElementById("addCollegelid").onclick = ()=>{
     state.collegeleden.push({ id:uid(), naam:"", functie:"Wethouder", portefeuille:"", acties:[], notities:"", bedrijfId: standaardBedrijfId() });
     markDirty(); refresh();
@@ -12850,6 +13169,12 @@ function renderControlView(main){
   }
   refresh();
 
+  const ctWrap = document.createElement("div");
+  ctWrap.className = "afd-contacten-wrap";
+  ctWrap.innerHTML = afdelingContactenKaartHTML();
+  main.appendChild(ctWrap);
+  vulAfdelingContacten("Control", ctWrap);
+
   document.getElementById("addControlPersoon").onclick = ()=>{
     state.controlPersonen.push({ id:uid(), naam:"", functie:"", acties:[], notities:"", bedrijfId: standaardBedrijfId() });
     markDirty(); refresh();
@@ -12874,12 +13199,14 @@ function renameAfdelingOveral(oud, nieuw){
   for (const b of (state.beheerders||[])){
     if (Array.isArray(b.afdelingen)) b.afdelingen = b.afdelingen.map(n => n === oud ? nieuw : n);
   }
+  for (const c of getContacts()) if (c.afdeling === oud) c.afdeling = nieuw;
 }
 function verwijderAfdelingOveral(naam){
   delete state.afdelingen[naam];
   for (const b of (state.beheerders||[])){
     if (Array.isArray(b.afdelingen)) b.afdelingen = b.afdelingen.filter(n => n !== naam);
   }
+  for (const c of getContacts()) if (c.afdeling === naam) delete c.afdeling;
 }
 function renderOrgBeheerView(main){
   main.innerHTML = `
@@ -14099,7 +14426,7 @@ const HELP_SECTIES = [
    "afdeling"
   ],
   "nav": "",
-  "tekst": "Onder **Afdelingen** in de linkerbalk staan alle sectoren met hun afdelingen. Met ⇕ klap je alle sectoren tegelijk in of uit. Het getal achter een afdeling is het aantal lopende activiteiten.\n\nOnder de naam van een afdeling staan de sector, de manager en het bedrijf. Een afdeling heeft vier tabbladen:\n\n# Activiteiten\nDe activiteiten van deze afdeling. Zie **Een activiteit bijhouden**.\n\n# Mensen & teams\n- **Manager**: typ een naam of kies iemand uit je contacten. De manager staat daarmee ook in **Relaties → Contacten**, en naam en foto zijn overal gelijk. E-mail en telefoon staan onder de naam; met het potloodje vul je ze aan. Een foto voeg je toe door op de foto te klikken.\n- **Teams**: de teams binnen de afdeling, toe te voegen met **+ Team**.\n- **Functioneel beheerders** en **Externe inhuur** die aan deze afdeling gekoppeld zijn. Met **+ Koppelen** koppel je een bestaande, of maak je er direct een nieuwe aan.\n\n# Processen & wetten\n- De **hoofdprocessen** en de **wet- en regelgeving** van de afdeling. Voeg ze toe met **+ Proces** of **+ Wet**.\n- Komt iets ook bij andere afdelingen voor, dan zie je dat aan een getal (bijvoorbeeld *3×*).\n- Klik op een item om het te hernoemen, naar een andere categorie te verplaatsen of te verwijderen.\n- Bij een **hoofdproces** kun je in dat venster een **werkinstructie (processjabloon)** kiezen. Daarna staat er een ▶ bij het proces: één klik start het proces met werkinstructie. De koppeling geldt voor dit proces in alle afdelingen met dezelfde naam, en blijft bestaan als je het proces hernoemt.\n\n# Software\nDe applicaties die de afdeling gebruikt, met de functioneel beheerders. Zie **Software**.\n\n# Financiën\nHet tabblad **Financiën** toont de begrotingsregels die gekoppeld zijn aan activiteiten van de afdeling, met per jaar het begrote en uitgegeven bedrag. Klik op een regel om hem te openen, of op de activiteit om ernaartoe te gaan."
+  "tekst": "Onder **Afdelingen** in de linkerbalk staan alle sectoren met hun afdelingen. Met ⇕ klap je alle sectoren tegelijk in of uit. Het getal achter een afdeling is het aantal lopende activiteiten.\n\nOnder de naam van een afdeling staan de sector, de manager en het bedrijf. Een afdeling heeft vier tabbladen:\n\n# Activiteiten\nDe activiteiten van deze afdeling. Zie **Een activiteit bijhouden**.\n\n# Mensen & teams\n- **Manager**: typ een naam of kies iemand uit je contacten. De manager staat daarmee ook in **Relaties → Contacten**, en naam en foto zijn overal gelijk. E-mail en telefoon staan onder de naam; met het potloodje vul je ze aan. Een foto voeg je toe door op de foto te klikken.\n- **Teams**: de teams binnen de afdeling, toe te voegen met **+ Team**.\n- **Functioneel beheerders** en **Externe inhuur** die aan deze afdeling gekoppeld zijn. Met **+ Koppelen** koppel je een bestaande, of maak je er direct een nieuwe aan.\n- **Contacten**: de mensen van je eigen organisatie die bij deze afdeling horen. Met **+ Koppelen** vink je contacten aan (met een zoekveld), of maak je direct een nieuw contact aan. Een contact heeft één afdeling: koppel je iemand die al bij een andere afdeling staat, dan verhuist hij naar deze afdeling. Met × koppel je iemand los. Zie ook **Contacten**.\n\n# Processen & wetten\n- De **hoofdprocessen** en de **wet- en regelgeving** van de afdeling. Voeg ze toe met **+ Proces** of **+ Wet**.\n- Komt iets ook bij andere afdelingen voor, dan zie je dat aan een getal (bijvoorbeeld *3×*).\n- Klik op een item om het te hernoemen, naar een andere categorie te verplaatsen of te verwijderen.\n- Bij een **hoofdproces** kun je in dat venster een **werkinstructie (processjabloon)** kiezen. Daarna staat er een ▶ bij het proces: één klik start het proces met werkinstructie. De koppeling geldt voor dit proces in alle afdelingen met dezelfde naam, en blijft bestaan als je het proces hernoemt.\n\n# Software\nDe applicaties die de afdeling gebruikt, met de functioneel beheerders. Zie **Software**.\n\n# Financiën\nHet tabblad **Financiën** toont de begrotingsregels die gekoppeld zijn aan activiteiten van de afdeling, met per jaar het begrote en uitgegeven bedrag. Klik op een regel om hem te openen, of op de activiteit om ernaartoe te gaan."
  },
  {
   "id": "organogram",
@@ -14112,7 +14439,7 @@ const HELP_SECTIES = [
    "control-functies"
   ],
   "nav": "organogram",
-  "tekst": "# Organogram\nOnder **Organisatie → Organogram** zie je de bestuurlijke opbouw: Raad en burgemeester, Griffie, College B&W en Control, de gemeentesecretaris/algemeen directeur en daaronder de sectoren met hun afdelingen.\n- Per afdeling zie je de manager, de teams en het aantal activiteiten. Klik op een afdeling om ernaartoe te gaan.\n- Klik op de regel onder een sector (directeur), onder **Burgemeester** of onder **Gemeentesecretaris / Algemeen Directeur** om een naam te typen of iemand uit je contacten te kiezen. Enter slaat op, Escape annuleert. Deze mensen staan daarmee ook in **Relaties → Contacten**.\n- Klik op College B&W of Control om die schermen te openen.\n- **Exporteren…** rechtsboven maakt van het organogram een afbeelding (PNG of SVG) of een PDF, voor de hele organisatie of één sector. Zie **Exporteren en importeren**.\n\n# College B&W\n- Houd per collegelid de **portefeuille**, een **foto** (klik op de avatar), **acties** en **notities** bij. Een nieuw lid voeg je toe met **+ Nieuw collegelid**.\n- Je kunt hier ook **activiteiten** aanmaken, net als bij een afdeling. Die tellen mee in alle overzichten.\n\n# Control\nHoud personen en functies bij, met acties en notities per persoon. Toevoegen met **+ Nieuw persoon / functie**.\n\n# Koppeling met Contacten\nCollegeleden en control-personen staan ook in **Relaties → Contacten**.\n- Typ je een naam op een kaart, dan zie je suggesties uit je contacten. Kies je er een, dan wordt de kaart daaraan gekoppeld. Een nieuwe naam wordt automatisch een nieuw contact.\n- Naam en foto komen uit het contact. Pas je ze aan op de kaart of in Contacten, dan zie je dat overal.\n- E-mail en telefoon staan onder de functie. Met het potloodje open je het contact om ze in te vullen of te wijzigen.\n- De functie en het bedrijf van de kaart gaan mee naar het contact, tenzij daar al iets anders staat.\n- Verwijder je een kaart, dan blijft het contact bewaard."
+  "tekst": "# Organogram\nOnder **Organisatie → Organogram** zie je de bestuurlijke opbouw: Raad en burgemeester, Griffie, College B&W en Control, de gemeentesecretaris/algemeen directeur en daaronder de sectoren met hun afdelingen.\n- Per afdeling zie je de manager, de teams en het aantal activiteiten. Klik op een afdeling om ernaartoe te gaan.\n- Klik op de regel onder een sector (directeur), onder **Burgemeester** of onder **Gemeentesecretaris / Algemeen Directeur** om een naam te typen of iemand uit je contacten te kiezen. Enter slaat op, Escape annuleert. Deze mensen staan daarmee ook in **Relaties → Contacten**.\n- Klik op College B&W of Control om die schermen te openen.\n- **Exporteren…** rechtsboven maakt van het organogram een afbeelding (PNG of SVG) of een PDF, voor de hele organisatie of één sector. Zie **Exporteren en importeren**.\n\n# College B&W\n- Houd per collegelid de **portefeuille**, een **foto** (klik op de avatar), **acties** en **notities** bij. Een nieuw lid voeg je toe met **+ Nieuw collegelid**.\n- Je kunt hier ook **activiteiten** aanmaken, net als bij een afdeling. Die tellen mee in alle overzichten.\n\n# Control\nHoud personen en functies bij, met acties en notities per persoon. Toevoegen met **+ Nieuw persoon / functie**.\n\nBij College B&W en Control staat ook de kaart **Contacten**: de contacten van je eigen organisatie die je aan College B&W of Control hebt gekoppeld, bijvoorbeeld bestuursadviseurs. Zie **Afdelingen** (Mensen & teams).\n\n# Koppeling met Contacten\nCollegeleden en control-personen staan ook in **Relaties → Contacten**.\n- Typ je een naam op een kaart, dan zie je suggesties uit je contacten. Kies je er een, dan wordt de kaart daaraan gekoppeld. Een nieuwe naam wordt automatisch een nieuw contact.\n- Naam en foto komen uit het contact. Pas je ze aan op de kaart of in Contacten, dan zie je dat overal.\n- E-mail en telefoon staan onder de functie. Met het potloodje open je het contact om ze in te vullen of te wijzigen.\n- De functie en het bedrijf van de kaart gaan mee naar het contact, tenzij daar al iets anders staat.\n- Verwijder je een kaart, dan blijft het contact bewaard."
  },
  {
   "id": "managers",
@@ -14156,7 +14483,7 @@ const HELP_SECTIES = [
    "contacten"
   ],
   "nav": "contacten",
-  "tekst": "Onder **Relaties → Contacten** staat het centrale contactenregister. Elke persoon staat er één keer in, met naam, rol, e-mail, telefoon, bedrijf, LinkedIn-profiel en foto. Overal waar iemand gekoppeld is (activiteiten, functioneel beheerders, externe inhuur, processtappen, managers, directeuren, burgemeester, gemeentesecretaris, College B&W en Control), worden die gegevens live overgenomen. Tekst als *vacature* of *n.v.t.* in een naamveld wordt geen contact.\n\n- **Zoeken** op voornaam, achternaam of beide, en op rol, e-mail of telefoon.\n- Per contact zie je op hoeveel plekken het gekoppeld is.\n- **+ Nieuw contact**, **Bewerken** en **Verwijderen** doe je hier centraal. Bij het koppelen elders kun je ook direct een nieuw contact aanmaken.\n- **Importeren…**: lees contacten in uit een CSV- of Excel-bestand met elke indeling. Je koppelt zelf de kolommen, en wie er al in staat wordt aangevuld in plaats van dubbel aangemaakt. Zie **Exporteren en importeren**.\n- **⇄ Samenvoegen**: staat iemand er dubbel in, bijvoorbeeld een keer alleen met voornaam, dan voeg je de twee samen. Alle koppelingen gaan mee naar het contact dat blijft.\n- Klik op het telefoonnummer om te bellen, bijvoorbeeld via Teams. Met de kopieerknop kopieer je e-mail of telefoon.\n- **LinkedIn**: plak in de contacteditor het profieladres (of alleen de profielnaam). De knop **Openen** opent het profiel; staat er nog niets, dan zoekt **Zoeken** de persoon op naam op LinkedIn.\n- **Foto**: kies een bestand, of neem de profielfoto van LinkedIn over. LinkedIn staat niet toe dat de app de foto zelf ophaalt, dus: open het profiel, klik met rechts op de profielfoto, kies *Afbeelding kopiëren* en plak hem in de contacteditor met ⌘V (of sleep de foto erheen). De foto verschijnt op de contactkaart, overal waar het contact gekoppeld is, en bij functioneel beheerders zonder eigen foto.\n- **Synchroniseren met iPhone/Mac**: via Instellingen kun je contacten met een telefoonnummer automatisch naar een aparte groep in Contacten op je Mac en iPhone laten zetten. Dat werkt via een eenmalig te installeren achtergrondprogramma in de map *contacten-sync*. Bij de installatie krijg je een **koppelcode**: die plak je één keer in de tracker, zodat alleen jouw tracker het programma kan aansturen."
+  "tekst": "Onder **Relaties → Contacten** staat het centrale contactenregister. Elke persoon staat er één keer in, met naam, rol, e-mail, telefoon, bedrijf, LinkedIn-profiel en foto. Overal waar iemand gekoppeld is (activiteiten, functioneel beheerders, externe inhuur, processtappen, managers, directeuren, burgemeester, gemeentesecretaris, College B&W en Control), worden die gegevens live overgenomen. Tekst als *vacature* of *n.v.t.* in een naamveld wordt geen contact.\n\n- **Zoeken** op voornaam, achternaam of beide, en op rol, e-mail, telefoon of afdeling.\n- **Afdeling**: hoort iemand bij je eigen organisatie (het standaardbedrijf, zie **Bedrijven**), dan kies je in de contacteditor onder Bedrijf ook de afdeling. Je kiest uit de afdelingen in het organogram, of uit de afdelingsoverstijgende onderdelen: Raad, Griffie, College B&W, Control en Directie. Heeft het contact nog geen bedrijf, dan krijgt het met de afdeling ook het standaardbedrijf. Bij contacten van een ander bedrijf kies je geen afdeling.\n  - De afdeling staat op de contactkaart achter het bedrijf. Klik erop om naar de afdeling te gaan; daar staat het contact op het tabblad *Mensen & teams*.\n  - Met het keuzemenu naast het zoekveld toon je alleen de contacten van één afdeling, alle contacten van je eigen organisatie, of die zonder afdeling.\n- Per contact zie je op hoeveel plekken het gekoppeld is.\n- **+ Nieuw contact**, **Bewerken** en **Verwijderen** doe je hier centraal. Bij het koppelen elders kun je ook direct een nieuw contact aanmaken.\n- **Importeren…**: lees contacten in uit een CSV- of Excel-bestand met elke indeling. Je koppelt zelf de kolommen, en wie er al in staat wordt aangevuld in plaats van dubbel aangemaakt. Zie **Exporteren en importeren**.\n- **⇄ Samenvoegen**: staat iemand er dubbel in, bijvoorbeeld een keer alleen met voornaam, dan voeg je de twee samen. Alle koppelingen gaan mee naar het contact dat blijft.\n- Klik op het telefoonnummer om te bellen, bijvoorbeeld via Teams. Met de kopieerknop kopieer je e-mail of telefoon.\n- **LinkedIn**: plak in de contacteditor het profieladres (of alleen de profielnaam). De knop **Openen** opent het profiel; staat er nog niets, dan zoekt **Zoeken** de persoon op naam op LinkedIn.\n- **Foto**: kies een bestand, of neem de profielfoto van LinkedIn over. LinkedIn staat niet toe dat de app de foto zelf ophaalt, dus: open het profiel, klik met rechts op de profielfoto, kies *Afbeelding kopiëren* en plak hem in de contacteditor met ⌘V (of sleep de foto erheen). De foto verschijnt op de contactkaart, overal waar het contact gekoppeld is, en bij functioneel beheerders zonder eigen foto.\n- **Synchroniseren met iPhone/Mac**: via Instellingen kun je contacten met een telefoonnummer automatisch naar een aparte groep in Contacten op je Mac en iPhone laten zetten. Dat werkt via een eenmalig te installeren achtergrondprogramma in de map *contacten-sync*. Bij de installatie krijg je een **koppelcode**: die plak je één keer in de tracker, zodat alleen jouw tracker het programma kan aansturen."
  },
  {
   "id": "bedrijven",
@@ -14167,7 +14494,7 @@ const HELP_SECTIES = [
    "bedrijven"
   ],
   "nav": "bedrijven",
-  "tekst": "Onder **Relaties → Bedrijven** leg je elk bedrijf één keer vast: naam, adres, KvK-nummer, telefoon en website. Daarna koppel je het aan contacten, afdelingsmanagers, collegeleden en andere personen in het organogram.\n\n- **Zoeken** op naam, adres, KvK-nummer, telefoon of website. Per bedrijf zie je op hoeveel plekken het gekoppeld is.\n- **⇄ Samenvoegen** bij dubbele invoer.\n- **Standaardbedrijf (ster)**: stel bijvoorbeeld de gemeente zelf in als standaardbedrijf. Nieuwe afdelingen, collegeleden en control-personen krijgen het dan automatisch, en je kunt het meteen koppelen aan alle managers die nog geen bedrijf hebben.\n- Functioneel beheerders en externe inhuur tonen automatisch het bedrijf van hun gekoppelde contact."
+  "tekst": "Onder **Relaties → Bedrijven** leg je elk bedrijf één keer vast: naam, adres, KvK-nummer, telefoon en website. Daarna koppel je het aan contacten, afdelingsmanagers, collegeleden en andere personen in het organogram.\n\n- **Zoeken** op naam, adres, KvK-nummer, telefoon of website. Per bedrijf zie je op hoeveel plekken het gekoppeld is.\n- **⇄ Samenvoegen** bij dubbele invoer.\n- **Standaardbedrijf (ster)**: stel bijvoorbeeld de gemeente zelf in als standaardbedrijf. Nieuwe afdelingen, collegeleden en control-personen krijgen het dan automatisch, en je kunt het meteen koppelen aan alle managers die nog geen bedrijf hebben. Contacten van het standaardbedrijf kun je bovendien aan een afdeling koppelen (zie **Contacten**).\n- Functioneel beheerders en externe inhuur tonen automatisch het bedrijf van hun gekoppelde contact."
  },
  {
   "id": "software",
@@ -14268,7 +14595,7 @@ const HELP_SECTIES = [
    "import-export"
   ],
   "nav": "import-export",
-  "tekst": "Alle import- en exportfuncties staan onder Instellingen → **Importeren & exporteren**, in het menu onder Algemeen. Ze zijn ingedeeld in *Back-up*, *Exporteren* en *Importeren*.\n\n# Exporteren\n- **JSON exporteren (volledige back-up)**: al je gegevens in één bestand, inclusief activiteiten, acties, logboeken en notities.\n- **Basisdata exporteren (delen)**: alleen de organisatiestructuur, managers, teams, processen, wetten, software, functioneel beheerders en collegeleden, zonder activiteiten en notities. Bedoeld om met een collega te delen.\n- **Gegevens exporteren (Excel, CSV of PDF)**: kies een onderwerp (afdelingen, activiteiten, functioneel beheerders, applicaties, externe inhuur, begroting of contacten) en vink de kolommen aan. Bij afdelingen kan ook de directeur van de sector mee, bij contacten het LinkedIn-profiel. Met **Alles**, **Standaard** en **Geen** zet je ze snel goed. Filter eventueel op één sector. PDF opent een afdrukweergave; kies daar *Opslaan als PDF*.\n- **Organogram exporteren**: het organogram als afbeelding of PDF. Zie **Organogram exporteren** hieronder.\n- **Applicatie-overzicht exporteren**: een losse HTML-pagina per sector en afdeling, met applicaties en functioneel beheerders, die iedereen in de browser kan openen, doorzoeken en afdrukken. Kies één sector of alle sectoren, en of e-mail/telefoon en Middel-ID's erin moeten.\n- **Werkinstructie exporteren**: bij een processjabloon (zie **Processjablonen en werkinstructies**).\n\n# Importeren\n- **Contacten importeren (CSV of Excel)**: zie **Contacten importeren** hieronder.\n- **Basisdata importeren (samenvoegen)**: voegt structuur, managers, teams, processen, wetten, software, beheerders en collegeleden uit een basisdata-bestand toe aan je eigen gegevens. Bestaande gegevens en activiteiten worden nooit overschreven.\n- **Software assets importeren vanuit Topdesk**: een Excel-export met Middel-ID, applicatienaam en BIV-classificatie. Eerst zie je een voorvertoning.\n- **JSON importeren (volledig)**: vervangt **al** je gegevens door de inhoud van het bestand. Maak eerst een back-up.\n\n# Organogram exporteren\nOpen het via **Exporteren…** rechtsboven in het organogram, of via Instellingen → Importeren & exporteren. Rechts zie je meteen een voorbeeld.\n- **Titel**: komt bovenaan, met daaronder de datum.\n- **Sector**: alle sectoren, of één sector. Bij één sector worden de kolommen breder.\n- **Wat staat erin?**: de bestuurslaag (raad, burgemeester, griffie, college, control en gemeentesecretaris), de namen van managers, directeuren en bestuurders, foto's bij die namen, en de teams per afdeling.\n- **Formaat**:\n  - **Afbeelding (PNG)**: een scherpe afbeelding voor PowerPoint, Word of een mail.\n  - **PDF**: opent een afdrukweergave waarin het organogram op één A4- of A3-pagina past. Kies daar *Opslaan als PDF*.\n  - **SVG**: een afbeelding die scherp blijft bij vergroten en die je in bijvoorbeeld PowerPoint of Visio verder kunt bewerken.\n- **Kopiëren als afbeelding** zet het organogram op het klembord, zodat je het direct plakt in PowerPoint, Word, Teams of een mail.\n- Liever een lijst? Via de link onderin exporteer je de afdelingen met managers en teams naar Excel, CSV of PDF.\n\nDe app onthoudt je keuzes zolang hij openstaat.\n\n# Contacten importeren\nOpen het via **Importeren…** in Relaties → Contacten, of via Instellingen → Importeren & exporteren. Het werkt met elk CSV- of Excel-bestand, bijvoorbeeld een export uit Outlook of Google of een eigen lijst.\n1. **Kies een bestand** (CSV, TXT, XLSX, XLS of ODS), sleep het in het venster, of plak rijen die je uit Excel of een tabel hebt gekopieerd. Het scheidingsteken (komma, puntkomma of tab) en de tekenset worden vanzelf herkend.\n2. **Koppel de kolommen.** Per kolom zie je een voorbeeld en kies je **Niet importeren** of een veld: naam, voornaam, tussenvoegsel, achternaam, rol / functie, e-mail, telefoon, bedrijf of LinkedIn. De app doet een voorstel op basis van de kolomnamen.\n   - Meerdere kolommen bij hetzelfde veld mag. Voornaam, tussenvoegsel en achternaam worden samen de naam. Meerdere kolommen bij rol / functie, zoals functie en afdeling, worden met een komma samengevoegd. Bij e-mail, bedrijf en LinkedIn telt de eerste kolom met een waarde.\n   - Bij meerdere telefoonkolommen gaat het **mobiele nummer** voor. De app herkent dat aan de kolomnaam (zoals *Mobiel* of *GSM*) of aan het nummer zelf (06 of +31 6). Is er geen mobiel nummer, dan telt de eerste kolom met een waarde.\n   - Met **Alle contacten koppelen aan** geef je alle contacten in één keer hetzelfde bedrijf, bijvoorbeeld je eigen organisatie. Het standaardbedrijf staat al voorgeselecteerd. Een kolom met bedrijfsnamen wordt dan niet gebruikt. Contacten die al een ander bedrijf hebben, houden dat, tenzij je bij het controleren kiest voor overschrijven.\n   - Staan de kolomnamen niet op de eerste rij, of zijn er geen kolomnamen? Kies dat bij **Kolomnamen**. Heeft het bestand meerdere tabbladen, dan kies je het tabblad.\n   - Staan namen er als *Jansen, Jan*? Vink dan aan dat ze worden omgedraaid naar *Jan Jansen*.\n   - Onderin zie je hoe de eerste contacten worden ingelezen.\n3. **Controleer.** Per persoon zie je wat er gebeurt:\n   - **Nieuw**: het contact komt erbij.\n   - **Aanvullen**: de persoon staat al in je contacten (zelfde e-mailadres, of anders dezelfde naam). Alleen lege velden worden aangevuld; je ziet welke.\n   - **Staat er al in**: er is niets nieuws.\n   - **Geen naam**: de rij heeft geen naam en hoort niet bij een bestaand contact; die wordt overgeslagen.\n   - Komt iemand meer dan eens voor in het bestand, dan worden die rijen eerst samengevoegd.\n   - Per persoon kun je kiezen voor **Overslaan**, of bij een bestaand contact voor **Als nieuw contact**. Een oranje melding waarschuwt als het e-mailadres afwijkt van wat er in je contacten staat.\n   - Wil je bestaande gegevens vervangen door wat in het bestand staat, vink dan **Bestaande gegevens overschrijven** aan.\n   - Een bedrijf dat nog niet bestaat, wordt aangemaakt bij Relaties → Bedrijven.\n4. Klik op **Importeren**. Klopt er iets niet, dan zet **Ongedaan maken** de contacten en bedrijven terug zoals ze vóór de import waren.\n\nGebruik je **Contacten synchroniseren met iPhone/Mac**, dan komen geïmporteerde contacten met een telefoonnummer daar ook in."
+  "tekst": "Alle import- en exportfuncties staan onder Instellingen → **Importeren & exporteren**, in het menu onder Algemeen. Ze zijn ingedeeld in *Back-up*, *Exporteren* en *Importeren*.\n\n# Exporteren\n- **JSON exporteren (volledige back-up)**: al je gegevens in één bestand, inclusief activiteiten, acties, logboeken en notities.\n- **Basisdata exporteren (delen)**: alleen de organisatiestructuur, managers, teams, processen, wetten, software, functioneel beheerders en collegeleden, zonder activiteiten en notities. Bedoeld om met een collega te delen.\n- **Gegevens exporteren (Excel, CSV of PDF)**: kies een onderwerp (afdelingen, activiteiten, functioneel beheerders, applicaties, externe inhuur, begroting of contacten) en vink de kolommen aan. Bij afdelingen kan ook de directeur van de sector mee, bij contacten de afdeling en het LinkedIn-profiel. Met **Alles**, **Standaard** en **Geen** zet je ze snel goed. Filter eventueel op één sector. PDF opent een afdrukweergave; kies daar *Opslaan als PDF*.\n- **Organogram exporteren**: het organogram als afbeelding of PDF. Zie **Organogram exporteren** hieronder.\n- **Applicatie-overzicht exporteren**: een losse HTML-pagina per sector en afdeling, met applicaties en functioneel beheerders, die iedereen in de browser kan openen, doorzoeken en afdrukken. Kies één sector of alle sectoren, en of e-mail/telefoon en Middel-ID's erin moeten.\n- **Werkinstructie exporteren**: bij een processjabloon (zie **Processjablonen en werkinstructies**).\n\n# Importeren\n- **Contacten importeren (CSV of Excel)**: zie **Contacten importeren** hieronder.\n- **Basisdata importeren (samenvoegen)**: voegt structuur, managers, teams, processen, wetten, software, beheerders en collegeleden uit een basisdata-bestand toe aan je eigen gegevens. Bestaande gegevens en activiteiten worden nooit overschreven.\n- **Software assets importeren vanuit Topdesk**: een Excel-export met Middel-ID, applicatienaam en BIV-classificatie. Eerst zie je een voorvertoning.\n- **JSON importeren (volledig)**: vervangt **al** je gegevens door de inhoud van het bestand. Maak eerst een back-up.\n\n# Organogram exporteren\nOpen het via **Exporteren…** rechtsboven in het organogram, of via Instellingen → Importeren & exporteren. Rechts zie je meteen een voorbeeld.\n- **Titel**: komt bovenaan, met daaronder de datum.\n- **Sector**: alle sectoren, of één sector. Bij één sector worden de kolommen breder.\n- **Wat staat erin?**: de bestuurslaag (raad, burgemeester, griffie, college, control en gemeentesecretaris), de namen van managers, directeuren en bestuurders, foto's bij die namen, en de teams per afdeling.\n- **Formaat**:\n  - **Afbeelding (PNG)**: een scherpe afbeelding voor PowerPoint, Word of een mail.\n  - **PDF**: opent een afdrukweergave waarin het organogram op één A4- of A3-pagina past. Kies daar *Opslaan als PDF*.\n  - **SVG**: een afbeelding die scherp blijft bij vergroten en die je in bijvoorbeeld PowerPoint of Visio verder kunt bewerken.\n- **Kopiëren als afbeelding** zet het organogram op het klembord, zodat je het direct plakt in PowerPoint, Word, Teams of een mail.\n- Liever een lijst? Via de link onderin exporteer je de afdelingen met managers en teams naar Excel, CSV of PDF.\n\nDe app onthoudt je keuzes zolang hij openstaat.\n\n# Contacten importeren\nOpen het via **Importeren…** in Relaties → Contacten, of via Instellingen → Importeren & exporteren. Het werkt met elk CSV- of Excel-bestand, bijvoorbeeld een export uit Outlook of Google of een eigen lijst.\n1. **Kies een bestand** (CSV, TXT, XLSX, XLS of ODS), sleep het in het venster, of plak rijen die je uit Excel of een tabel hebt gekopieerd. Het scheidingsteken (komma, puntkomma of tab) en de tekenset worden vanzelf herkend.\n2. **Koppel de kolommen.** Per kolom zie je een voorbeeld en kies je **Niet importeren** of een veld: naam, voornaam, tussenvoegsel, achternaam, rol / functie, e-mail, telefoon, bedrijf, afdeling of LinkedIn. De app doet een voorstel op basis van de kolomnamen.\n   - Meerdere kolommen bij hetzelfde veld mag. Voornaam, tussenvoegsel en achternaam worden samen de naam. Meerdere kolommen bij rol / functie worden met een komma samengevoegd. Bij e-mail, bedrijf, afdeling en LinkedIn telt de eerste kolom met een waarde.\n   - Koppel je een kolom aan **Afdeling**, dan verschijnt **Afdelingen koppelen**: elke afdeling uit het bestand staat er één keer, met een voorstel uit je organogram. De app herkent ook schrijfwijzen als *Afdeling Burgerzaken*, *P en O* voor *P&O*, of *Sector / Afdeling / Team*. Niet herkend? Kies zelf een afdeling, of laat het op **Niet koppelen** staan. De app onthoudt je keuzes zolang hij openstaat.\n   - Alleen contacten van je standaardbedrijf krijgen een afdeling. Heeft een contact geen bedrijf, dan krijgt het met de afdeling ook het standaardbedrijf. Bij een contact van een ander bedrijf wordt de afdeling niet overgenomen; dat zie je bij het controleren. Zonder standaardbedrijf wordt er geen afdeling geïmporteerd.\n   - Bij meerdere telefoonkolommen gaat het **mobiele nummer** voor. De app herkent dat aan de kolomnaam (zoals *Mobiel* of *GSM*) of aan het nummer zelf (06 of +31 6). Is er geen mobiel nummer, dan telt de eerste kolom met een waarde.\n   - Met **Alle contacten koppelen aan** geef je alle contacten in één keer hetzelfde bedrijf, bijvoorbeeld je eigen organisatie. Het standaardbedrijf staat al voorgeselecteerd. Een kolom met bedrijfsnamen wordt dan niet gebruikt. Contacten die al een ander bedrijf hebben, houden dat, tenzij je bij het controleren kiest voor overschrijven.\n   - Staan de kolomnamen niet op de eerste rij, of zijn er geen kolomnamen? Kies dat bij **Kolomnamen**. Heeft het bestand meerdere tabbladen, dan kies je het tabblad.\n   - Staan namen er als *Jansen, Jan*? Vink dan aan dat ze worden omgedraaid naar *Jan Jansen*.\n   - Onderin zie je hoe de eerste contacten worden ingelezen.\n3. **Controleer.** Per persoon zie je wat er gebeurt:\n   - **Nieuw**: het contact komt erbij.\n   - **Aanvullen**: de persoon staat al in je contacten (zelfde e-mailadres, of anders dezelfde naam). Alleen lege velden worden aangevuld; je ziet welke.\n   - **Staat er al in**: er is niets nieuws.\n   - **Geen naam**: de rij heeft geen naam en hoort niet bij een bestaand contact; die wordt overgeslagen.\n   - Komt iemand meer dan eens voor in het bestand, dan worden die rijen eerst samengevoegd.\n   - Per persoon kun je kiezen voor **Overslaan**, of bij een bestaand contact voor **Als nieuw contact**. Een oranje melding waarschuwt als het e-mailadres afwijkt van wat er in je contacten staat.\n   - Wil je bestaande gegevens vervangen door wat in het bestand staat, vink dan **Bestaande gegevens overschrijven** aan.\n   - Een bedrijf dat nog niet bestaat, wordt aangemaakt bij Relaties → Bedrijven.\n4. Klik op **Importeren**. Klopt er iets niet, dan zet **Ongedaan maken** de contacten en bedrijven terug zoals ze vóór de import waren.\n\nGebruik je **Contacten synchroniseren met iPhone/Mac**, dan komen geïmporteerde contacten met een telefoonnummer daar ook in."
  },
  {
   "id": "tips",
@@ -16644,6 +16971,99 @@ function renderAfdActivityList(naam, projects){
   }
 }
 
+/* Kaart "Contacten" op een afdelingsscherm (ook bij College B&W en Control): de contacten van de
+   eigen organisatie met deze afdeling (c.afdeling). Koppelen gaat vanaf hier of vanuit de contacteditor. */
+function afdelingContactenKaartHTML(){
+  return `<div class="cat-card" data-cat="contacten">
+      <div class="cat-head">
+        <span class="title"><span class="icon">${faIcon("contacten")}</span> Contacten <span class="count" id="catCount-contacten"></span></span>
+        <span class="actions">
+          <button class="ghost-btn" id="addContactForAfd" title="Contacten van je eigen organisatie aan deze afdeling koppelen">+ Koppelen</button>
+        </span>
+      </div>
+      <div class="item-list" id="catList-contacten"></div>
+    </div>`;
+}
+function vulAfdelingContacten(naam, root){
+  const list = root.querySelector("#catList-contacten");
+  const countEl = root.querySelector("#catCount-contacten");
+  const addBtn = root.querySelector("#addContactForAfd");
+  if (!list) return;
+  function teken(){
+    const xs = contactenVanAfdeling(naam);
+    const std = getStandaardBedrijf();
+    countEl.textContent = xs.length ? xs.length : "";
+    list.innerHTML = "";
+    if (!xs.length){
+      const e = document.createElement("div");
+      e.className = "cat-empty";
+      e.textContent = std
+        ? `Nog geen contacten van ${std.naam || "je organisatie"} aan deze afdeling gekoppeld.`
+        : "Stel eerst bij Relaties → Bedrijven je eigen organisatie in als standaardbedrijf (ster). Daarna koppel je hier contacten aan deze afdeling.";
+      list.appendChild(e);
+      return;
+    }
+    for (const c of xs){
+      const chip = document.createElement("span");
+      chip.className = "item-chip";
+      chip.style.paddingLeft = "4px";
+      chip.title = [c.rol, c.email, c.telefoon].filter(Boolean).join(" · ") || "Contact bewerken";
+      chip.innerHTML = `${avatarHTML(c.naam, c.foto, 22)}<span>${escapeHTML(c.naam || "(naamloos)")}</span>${c.rol ? `<span class="ct-chip-rol">${escapeHTML(c.rol)}</span>` : ``}<span class="x" title="Loskoppelen van deze afdeling">×</span>`;
+      chip.onclick = (e)=>{
+        if (e.target.classList.contains("x")){ delete c.afdeling; markDirty(); teken(); return; }
+        openContactEditor(c.id, teken);
+      };
+      list.appendChild(chip);
+    }
+  }
+  addBtn.onclick = ()=>{
+    if (!getStandaardBedrijf()){
+      alert("Stel eerst bij Relaties → Bedrijven je eigen organisatie in als standaardbedrijf (met de ster). Daarna koppel je contacten aan afdelingen.");
+      return;
+    }
+    openAfdelingContactPicker(naam, teken);
+  };
+  teken();
+}
+/* Contacten van de eigen organisatie (en contacten zonder bedrijf) aan een afdeling koppelen.
+   Een contact heeft één afdeling: aanvinken verplaatst het dus van een eventuele andere afdeling. */
+function openAfdelingContactPicker(afdNaam, onChange){
+  const std = getStandaardBedrijf();
+  if (!std) return;
+  const lijst = getContacts().filter(c => !c.bedrijfId || c.bedrijfId === std.id)
+    .sort((a, b) => (contactAfdeling(b) === afdNaam) - (contactAfdeling(a) === afdNaam) || (a.naam || "").localeCompare(b.naam || "", "nl"));
+  openLinkEntityPicker({
+    titel: `Contacten koppelen aan ${afdNaam}`,
+    lijstLabel: `Contacten van ${std.naam || "je organisatie"} (en contacten zonder bedrijf)`,
+    list: lijst,
+    zoeken: true,
+    getId: c => c.id,
+    rowLabel: c => {
+      const nu = contactAfdeling(c);
+      const extra = [c.rol, nu && nu !== afdNaam ? `nu bij ${nu}` : "", !c.bedrijfId ? "nog geen bedrijf" : ""].filter(Boolean).join(" · ");
+      return `<b>${escapeHTML(c.naam || "(naamloos)")}</b>${extra ? ` <span style="color:var(--muted);font-size:12px">${escapeHTML(extra)}</span>` : ""}`;
+    },
+    legeMelding: `Er zijn nog geen contacten van ${std.naam || "je organisatie"}. Maak hieronder een nieuw contact aan.`,
+    isLinked: c => contactAfdeling(c) === afdNaam,
+    setLinked: (c, checked)=>{
+      const was = contactAfdeling(c) === afdNaam;
+      if (checked && !was){ if (!c.bedrijfId) c.bedrijfId = std.id; c.afdeling = afdNaam; }
+      if (!checked && was) delete c.afdeling;
+    },
+    nieuw: {
+      type: "inline",
+      label: "Nieuw contact aanmaken en koppelen",
+      placeholder: "Voornaam Achternaam",
+      maakAan: (naam)=>{
+        const c = getContact(findOrCreateContactByName(naam, "", "", ""));
+        if (!c) return;
+        if (!c.bedrijfId) c.bedrijfId = std.id;
+        if (c.bedrijfId === std.id) c.afdeling = afdNaam;
+      }
+    }
+  }, onChange);
+}
+
 function renderAfdeling(main, naam){
   ensureAfd(naam);
   const meta = findOrgMeta(naam) || {};
@@ -16654,7 +17074,7 @@ function renderAfdeling(main, naam){
 
   const tabCounts = {
     activiteiten: projects.filter(p => activityInScope(p, "actief")).length,
-    mensen: teams.length + beheerdersFor(naam).length + inhuurFor(naam).length,
+    mensen: teams.length + beheerdersFor(naam).length + inhuurFor(naam).length + contactenVanAfdeling(naam).length,
     kennis: getItems(naam, "processen").length + getItems(naam, "wetten").length,
     software: getItems(naam, "software").length,
     financien: begrRegelsVoorActiviteiten(projects.map(p => p.id)).length,
@@ -16746,6 +17166,8 @@ function renderAfdeling(main, naam){
       </div>
       <div class="item-list" id="catList-inhuur"></div>
     </div>
+
+    ${afdelingContactenKaartHTML()}
 
     </div>
 
@@ -17013,6 +17435,7 @@ function renderAfdeling(main, naam){
   document.getElementById("addInhuurForAfd").onclick = ()=>{
     openInhuurPicker(naam, ()=>{ renderInhuurChips(); renderSidebar(); });
   };
+  vulAfdelingContacten(naam, main);
 
   // Categorieën: processen / wetten / software
   const catLabelSingular = { processen:"proces", wetten:"wet", software:"software-item" };

@@ -84,15 +84,17 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
 ### Relaties
 
 - **Contacten** staan in één centraal register: naam, rol, e-mail, telefoon, bedrijf, LinkedIn en foto. Overal waar iemand gekoppeld is, worden wijzigingen direct overgenomen. Ook managers, directeuren, de burgemeester, de gemeentesecretaris, collegeleden en de personen bij Control komen hier automatisch in. Dubbele contacten voeg je eenvoudig samen.
+- **Afdeling bij een contact.** Hoort iemand bij je eigen organisatie, dan koppel je hem aan een afdeling uit het organogram, of aan Raad, Griffie, College B&W, Control of Directie. Bij elke afdeling zie je zo wie erbij hoort, en in Contacten filter je op afdeling.
 - **Contacten importeren** uit een CSV- of Excel-bestand met elke indeling, bijvoorbeeld een export uit Outlook of Google of een eigen lijst.
   - Je kiest per kolom of hij wordt ingelezen en bij welk veld hij hoort. Meerdere kolommen kunnen samen één veld vormen, zoals voornaam en achternaam.
   - Met één vinkje koppel je alle contacten aan hetzelfde bedrijf, bijvoorbeeld je eigen organisatie. Staan er meerdere telefoonnummers in het bestand, dan wordt het mobiele nummer gekozen.
+  - Staat er een kolom met de afdeling in het bestand? Dan koppel je elke afdeling in één overzicht aan een afdeling uit je organogram. De app doet zelf een voorstel.
   - Staat iemand al in je contacten, of komt iemand twee keer voor in het bestand? Dan worden de gegevens aangevuld in plaats van dubbel aangemaakt.
   - Je ziet vooraf per persoon wat er gebeurt, en je kunt de import daarna nog ongedaan maken.
 - **Bedrijven** leg je één keer vast en koppel je aan contacten, managers en collegeleden.
 - Optioneel synchroniseer je contacten met een telefoonnummer naar **Contacten op je iPhone en Mac**. Zie [hieronder](#contacten-synchroniseren-met-iphone-en-mac-optioneel).
 
-![Contacten importeren: per kolom kies je het veld, met een voorbeeld van hoe de contacten worden ingelezen](screenshots/contactimport.png)
+![Contacten importeren: per kolom kies je het veld, en de afdelingen uit het bestand koppel je aan de afdelingen in je organogram](screenshots/contactimport.png)
 
 ### ICT en kennis
 
@@ -126,7 +128,7 @@ De ingebouwde **Help & handleiding** (de knop **?** rechtsboven, of F1) legt elk
 1. **Open de tool** in Chrome of Edge: <https://mmulder82.github.io/informatiemanagement-tool/>
 2. **Koppel een map** (aanbevolen). Zolang er geen map gekoppeld is, staat er bovenaan het dashboard een melding met de knop **Map koppelen…**. Je vindt het ook bij Instellingen (het tandwiel linksonder) → **Map koppelen**. Kies bij voorkeur een map die met OneDrive of SharePoint synchroniseert. De app slaat alles automatisch op in `tracker-data.json` in die map, met een reservekopie.
 3. **Richt je organisatie in** via Instellingen → **Sectoren & afdelingen beheren**. Heeft een collega de tool al ingericht? Dan kun je ook zijn basisdata importeren.
-4. **Stel je gemeente in als standaardbedrijf** (optioneel). Dat doe je met de ster bij Relaties → Bedrijven. Nieuwe afdelingen en managers krijgen het bedrijf dan automatisch.
+4. **Stel je gemeente in als standaardbedrijf** (optioneel). Dat doe je met de ster bij Relaties → Bedrijven. Nieuwe afdelingen en managers krijgen het bedrijf dan automatisch, en contacten van je gemeente koppel je dan ook aan een afdeling.
 5. **Begin.** Met **+ Nieuwe activiteit** op het dashboard leg je je eerste activiteit vast.
 
 > **Als app installeren.** In Edge en Chrome kun je de tool installeren als app, met het installatie-icoon in de adresbalk. In Edge kan het ook via het menu, onder **Apps**. De tool opent dan in een eigen venster en krijgt een eigen icoon in de Dock of de taakbalk. Je gegevens blijven dezelfde als in het tabblad. Dit werkt met de online versie, niet met een gedownload bestand.
