@@ -1618,6 +1618,17 @@
     cursor:pointer;border:1px solid var(--border);
   }
   .afd-link:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .afd-link.is-los, .afd-link.is-los:hover{background:#fff8eb;color:#8a5300;border:1px dashed #f1c376;cursor:help}
+  .fb-afd-row.is-los span{color:#8a5300}
+  .dash-map-melding.inh-los{margin:0 24px 14px}
+  .inh-los-lijst{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .inh-los-rij{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .inh-los-naam{font-size:13px;font-weight:600;color:#4f3000;min-width:180px}
+  .inh-los-n{font-size:12px;color:#5a4526;min-width:100px}
+  .inh-los-rij select{padding:6px 8px;border:1px solid var(--border-strong);border-radius:8px;font-size:13px;font-family:inherit;background:var(--panel);color:var(--text);max-width:300px}
+  .inh-los-ok{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;border:1px solid var(--border-strong);background:var(--panel);color:var(--text)}
+  .inh-los-ok:hover:not(:disabled){background:var(--panel-soft)}
+  .inh-los-ok:disabled{opacity:.5;cursor:default}
 
   @media (max-width:780px){
     :root{--rail-w:60px}
@@ -1936,8 +1947,13 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.41.0";
+const APP_VERSION = "4.41.1";
 const CHANGELOG = [
+  { version: "4.41.1", datum: "2026-11-03", items: [
+    "Hernoem je een afdeling, dan blijven de koppelingen bij Externe inhuur nu behouden. Tot nu toe raakte een inhuur-registratie die afdeling kwijt. Verwijder je een afdeling, dan wordt hij ook bij de inhuur-registraties weggehaald.",
+    "Is een inhuur-registratie door een eerdere hernoeming nog gekoppeld aan een afdeling die niet meer bestaat? Dan staat er bij Externe inhuur een melding. Per oude naam kies je in één keer de juiste afdeling, of je haalt de koppeling weg. Op de kaart is zo'n oude naam oranje gemarkeerd.",
+    "In het venster van een inhuur-registratie of functioneel beheerder staan zulke oude afdelingsnamen nu apart, zodat ze bij opslaan niet ongemerkt verdwijnen.",
+  ]},
   { version: "4.41.0", datum: "2026-11-03", items: [
     "Contacten van je eigen organisatie (het standaardbedrijf) koppel je nu aan een afdeling. Je kiest uit de afdelingen in het organogram, of uit de afdelingsoverstijgende onderdelen: Raad, Griffie, College B&W, Control en Directie. Dat doe je in de contacteditor, onder Bedrijf.",
     "Op het tabblad Mensen & teams van een afdeling, en bij College B&W en Control, staat een nieuwe kaart Contacten met de mensen van die afdeling. Met + Koppelen voeg je ze toe of maak je meteen een nieuw contact aan. Het koppelvenster heeft een zoekveld.",
@@ -3687,7 +3703,7 @@ function avatarHTML(naam, photo, size){
    functioneel beheerder, externe inhuur). `isChecked(afdNaam)` bepaalt welke al aangevinkt zijn;
    `extraAttr` is optionele extra HTML op de <input> (bijv. `data-kind="afd"` wanneer de modal ook
    een tweede checkbox-groep met een ander data-kind bevat). */
-function renderSectorAfdelingCheckboxes(isChecked, extraAttr){
+function renderSectorAfdelingCheckboxes(isChecked, extraAttr, gekoppeld){
   let rows = "";
   for (const block of ORG){
     rows += `<div class="fb-sector-label">${escapeHTML(block.sector)}</div>`;
@@ -3699,7 +3715,27 @@ function renderSectorAfdelingCheckboxes(isChecked, extraAttr){
       </label>`;
     }
   }
+  /* gekoppeld (optioneel): de huidige koppelingen. Namen die niet meer in het organogram staan,
+     blijven zichtbaar en aangevinkt, zodat ze bij Opslaan niet ongemerkt verdwijnen. */
+  const bekend = alleAfdelingsNamen();
+  const los = [...new Set(gekoppeld || [])].filter(n => n && !bekend.has(n));
+  if (los.length){
+    rows += `<div class="fb-sector-label">Staat niet meer in het organogram</div>`;
+    for (const n of los){
+      rows += `<label class="fb-afd-row is-los" title="Deze afdeling bestaat niet meer, bijvoorbeeld omdat hij is hernoemd. Vink de juiste afdeling aan en vink deze uit.">
+        <input type="checkbox" ${extraAttr||""} data-afd="${escapeHTML(n)}" ${isChecked(n) ? "checked" : ""}>
+        <span>${escapeHTML(n)}</span>
+      </label>`;
+    }
+  }
   return rows;
+}
+/* Afdelingsnaam als klikbaar label (functioneel beheerders, externe inhuur). Een naam die niet meer
+   in het organogram staat, is gemarkeerd en niet klikbaar. */
+function afdKoppelingHTML(a){
+  return findOrgMeta(a)
+    ? `<span class="afd-link" data-afd="${escapeHTML(a)}">${escapeHTML(a)}</span>`
+    : `<span class="afd-link is-los" title="Deze afdeling staat niet meer in het organogram. Kies bij Bewerken de juiste afdeling.">${escapeHTML(a)}</span>`;
 }
 
 function getGlobalSoftware(){ return state.software || (state.software = []); }
@@ -10862,7 +10898,7 @@ function renderBeheerdersView(main){
             <div class="fb-label">Afdeling${afds.length===1?"":"en"}</div>
             <div class="fb-afds">
               ${afds.length
-                ? afds.map(a => `<span class="afd-link" data-afd="${escapeHTML(a)}">${escapeHTML(a)}</span>`).join("")
+                ? afds.map(afdKoppelingHTML).join("")
                 : `<span class="cat-empty">Nog niet gekoppeld</span>`}
             </div>
           </div>
@@ -10985,7 +11021,7 @@ function renderInhuurView(main){
             <div class="fb-label">Afdeling${afds.length===1?"":"en"}</div>
             <div class="fb-afds">
               ${afds.length
-                ? afds.map(a => `<span class="afd-link" data-afd="${escapeHTML(a)}">${escapeHTML(a)}</span>`).join("")
+                ? afds.map(afdKoppelingHTML).join("")
                 : `<span class="cat-empty">Nog niet gekoppeld</span>`}
             </div>
           </div>
@@ -11010,6 +11046,25 @@ function renderInhuurView(main){
         <button id="addInhuur">+ Nieuwe inhuur</button>
       </div>
     </div>`;
+  const losAfd = losseInhuurAfdelingen();
+  if (losAfd.size){
+    const keuzes = `<option value="">Kies een afdeling…</option><option value="__weg">Koppeling weghalen</option>`
+      + ORG.filter(b => (b.afdelingen || []).length).map(b => `<optgroup label="${escapeHTML(b.sector)}">${b.afdelingen.map(a =>
+          `<option value="${escapeHTML(a.naam)}">${escapeHTML(a.naam)}</option>`).join("")}</optgroup>`).join("");
+    html += `<div class="dash-map-melding inh-los" role="status">
+      <div class="dmm-ic">${faIcon("warning")}</div>
+      <div class="dmm-body">
+        <div class="dmm-tit">${losAfd.size === 1 ? "Een gekoppelde afdeling staat" : `${losAfd.size} gekoppelde afdelingen staan`} niet meer in het organogram</div>
+        <div class="dmm-tekst">Deze registraties zijn nog gekoppeld aan een afdelingsnaam die niet meer bestaat, waarschijnlijk omdat de afdeling eerder is hernoemd. Kies per naam bij welke afdeling ze nu horen, of haal de koppeling weg.</div>
+        <div class="inh-los-lijst">${[...losAfd].map(([n, k]) => `<div class="inh-los-rij">
+          <span class="inh-los-naam">${escapeHTML(n)}</span>
+          <span class="inh-los-n">${k} registratie${k === 1 ? "" : "s"}</span>
+          <select data-los="${escapeHTML(n)}" aria-label="Nieuwe afdeling voor ${escapeHTML(n)}">${keuzes}</select>
+          <button type="button" class="inh-los-ok" disabled>Toepassen</button>
+        </div>`).join("")}</div>
+      </div>
+    </div>`;
+  }
   if (!sorted.length){
     html += `<div class="empty"><h3>Nog geen externe inhuur geregistreerd</h3><p>Klik op <b>+ Nieuwe inhuur</b> om een contract vast te leggen — met begin- en einddatum, verlengingsmogelijkheden en projectnummer.</p></div>`;
   } else {
@@ -11024,6 +11079,14 @@ function renderInhuurView(main){
     }
   }
   main.innerHTML = html;
+  main.querySelectorAll(".inh-los-rij").forEach(rij => {
+    const sel = rij.querySelector("select[data-los]"), knop = rij.querySelector(".inh-los-ok");
+    sel.onchange = ()=>{ knop.disabled = !sel.value; };
+    knop.onclick = ()=>{
+      vervangInhuurAfdeling(sel.dataset.los, sel.value === "__weg" ? null : sel.value);
+      markDirty(); renderMain(); renderSidebar();
+    };
+  });
   main.querySelector("#addInhuur").onclick = ()=>{
     const nx = newExterneInhuur();
     getExterneInhuur().push(nx);
@@ -11507,7 +11570,7 @@ function openBeheerderEditor(id){
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   // Afdeling checkboxes grouped by sector
-  const afdRows = renderSectorAfdelingCheckboxes(naam => (b.afdelingen||[]).includes(naam), 'data-kind="afd"');
+  const afdRows = renderSectorAfdelingCheckboxes(naam => (b.afdelingen||[]).includes(naam), 'data-kind="afd"', b.afdelingen);
   // Software checkboxes
   const linkedSwSet = new Set((b.software||[]).map(normName));
   let swRows = "";
@@ -11625,7 +11688,7 @@ function openInhuurEditor(id){
     </div>` : "";
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
-  const afdRows = renderSectorAfdelingCheckboxes(naam => (x.afdelingen||[]).includes(naam), 'data-kind="afd"');
+  const afdRows = renderSectorAfdelingCheckboxes(naam => (x.afdelingen||[]).includes(naam), 'data-kind="afd"', x.afdelingen);
   backdrop.innerHTML = `
     <div class="modal" style="max-width:640px">
       <h3>Externe inhuur bewerken</h3>
@@ -13199,14 +13262,39 @@ function renameAfdelingOveral(oud, nieuw){
   for (const b of (state.beheerders||[])){
     if (Array.isArray(b.afdelingen)) b.afdelingen = b.afdelingen.map(n => n === oud ? nieuw : n);
   }
+  for (const x of getExterneInhuur()){
+    if (Array.isArray(x.afdelingen)) x.afdelingen = [...new Set(x.afdelingen.map(n => n === oud ? nieuw : n))];
+  }
   for (const c of getContacts()) if (c.afdeling === oud) c.afdeling = nieuw;
+  if (actFilters.afdelingen.delete(oud)) actFilters.afdelingen.add(nieuw);
 }
 function verwijderAfdelingOveral(naam){
   delete state.afdelingen[naam];
   for (const b of (state.beheerders||[])){
     if (Array.isArray(b.afdelingen)) b.afdelingen = b.afdelingen.filter(n => n !== naam);
   }
+  for (const x of getExterneInhuur()){
+    if (Array.isArray(x.afdelingen)) x.afdelingen = x.afdelingen.filter(n => n !== naam);
+  }
   for (const c of getContacts()) if (c.afdeling === naam) delete c.afdeling;
+  actFilters.afdelingen.delete(naam);
+}
+/* Externe inhuur die nog gekoppeld is aan een afdelingsnaam die niet meer in het organogram staat
+   (vóór 4.41.1 ging die koppeling bij het hernoemen van een afdeling niet mee): naam → aantal. */
+function losseInhuurAfdelingen(){
+  const bekend = alleAfdelingsNamen();
+  const los = new Map();
+  for (const x of getExterneInhuur())
+    for (const n of (x.afdelingen || [])) if (n && !bekend.has(n)) los.set(n, (los.get(n) || 0) + 1);
+  return los;
+}
+/* Vervangt een oude afdelingsnaam bij alle inhuur-registraties door een bestaande afdeling,
+   of haalt hem weg (nieuw = null). */
+function vervangInhuurAfdeling(oud, nieuw){
+  for (const x of getExterneInhuur()){
+    if (!(x.afdelingen || []).includes(oud)) continue;
+    x.afdelingen = [...new Set(x.afdelingen.flatMap(n => n === oud ? (nieuw ? [nieuw] : []) : [n]))];
+  }
 }
 function renderOrgBeheerView(main){
   main.innerHTML = `
@@ -14472,7 +14560,7 @@ const HELP_SECTIES = [
    "inhuur"
   ],
   "nav": "inhuur",
-  "tekst": "Onder **Organisatie → Externe inhuur** houd je ingehuurde externen bij.\n\n# Een registratie\nMet **+ Nieuwe inhuur** of **Bewerken** vul je in:\n- contact en functie\n- afdelingen waaraan de registratie gekoppeld is\n- begindatum en initiële periode in maanden; de app rekent daarmee de eerste einddatum uit (bijv. 1-1-2027 + 12 maanden = 31-12-2027). Die kun je daarna nog aanpassen, en na een verlenging wordt hij niet meer automatisch herberekend\n- aantal mogelijke verlengingen en verlengduur\n- projectnummer, inkoopordernummer en totaalbedrag\n- bedrijf en of het een ZZP-er is\n- minimaal en maximaal aantal uren per week, en het uurtarief\n\n# Verlengen\n- Vanaf één maand vóór de einddatum signaleert de app dat er een verlenging nodig is: bij het belletje, op het dashboard, met een teller bij Organisatie en op de kaart. Die termijn kun je aanpassen bij Instellingen → **Meldingen**.\n- **↻ Verlengen** schuift de einddatum op met de verlengduur en legt de verlenging vast in een historie. Is het maximum bereikt, dan verdwijnt de knop en heet het contract *Loopt af, max. verlengd*.\n- **Niet verlengen**: het contract loopt gewoon af en verdwijnt uit de signalering. Terugdraaien kan met **↺ Verlenging heropenen**.\n- **Uit dienst melden**: de registratie verhuist naar de inklapbare sectie *Uit dienst*. Terugdraaien kan met **↺ Intrekken**.\n\n# Begroting\nMet **€ Begroting** op de kaart of **€ Begroting instellen…** in het scherm breng je de inhuur ten laste van een begrotingsprogramma. De kosten per jaar worden geraamd uit uren, uurtarief en contractperiode. Zie **Begroting**.\n\n# Kwartaalbeoordeling\nElke drie maanden leg je een kort oordeel vast op vier punten: kwaliteit en functioneren, nut en noodzaak van voortzetting, kosten en budget, en rechtmatigheid. Per punt kies je een stoplicht, met een optionele toelichting. Is een beoordeling nodig, dan zie je dat bij het belletje, op de kaart en op het dashboard. Hoeveel tijd van tevoren stel je in bij Instellingen → **Meldingen**.\n\n# Bijlagen en processen\n- Upload contracten en andere bijlagen, net als bij activiteiten. Daarvoor is een gekoppelde map nodig.\n- Start vanuit de registratie een proces, bijvoorbeeld een offboarding-checklist."
+  "tekst": "Onder **Organisatie → Externe inhuur** houd je ingehuurde externen bij.\n\n# Een registratie\nMet **+ Nieuwe inhuur** of **Bewerken** vul je in:\n- contact en functie\n- afdelingen waaraan de registratie gekoppeld is. Staat een gekoppelde afdeling niet meer in het organogram, bijvoorbeeld na een hernoeming in een oudere versie, dan zie je hem apart onder *Staat niet meer in het organogram*. Bovenaan Externe inhuur staat dan ook een melding: kies per oude naam de juiste afdeling en klik op **Toepassen**, of kies **Koppeling weghalen**.\n- begindatum en initiële periode in maanden; de app rekent daarmee de eerste einddatum uit (bijv. 1-1-2027 + 12 maanden = 31-12-2027). Die kun je daarna nog aanpassen, en na een verlenging wordt hij niet meer automatisch herberekend\n- aantal mogelijke verlengingen en verlengduur\n- projectnummer, inkoopordernummer en totaalbedrag\n- bedrijf en of het een ZZP-er is\n- minimaal en maximaal aantal uren per week, en het uurtarief\n\n# Verlengen\n- Vanaf één maand vóór de einddatum signaleert de app dat er een verlenging nodig is: bij het belletje, op het dashboard, met een teller bij Organisatie en op de kaart. Die termijn kun je aanpassen bij Instellingen → **Meldingen**.\n- **↻ Verlengen** schuift de einddatum op met de verlengduur en legt de verlenging vast in een historie. Is het maximum bereikt, dan verdwijnt de knop en heet het contract *Loopt af, max. verlengd*.\n- **Niet verlengen**: het contract loopt gewoon af en verdwijnt uit de signalering. Terugdraaien kan met **↺ Verlenging heropenen**.\n- **Uit dienst melden**: de registratie verhuist naar de inklapbare sectie *Uit dienst*. Terugdraaien kan met **↺ Intrekken**.\n\n# Begroting\nMet **€ Begroting** op de kaart of **€ Begroting instellen…** in het scherm breng je de inhuur ten laste van een begrotingsprogramma. De kosten per jaar worden geraamd uit uren, uurtarief en contractperiode. Zie **Begroting**.\n\n# Kwartaalbeoordeling\nElke drie maanden leg je een kort oordeel vast op vier punten: kwaliteit en functioneren, nut en noodzaak van voortzetting, kosten en budget, en rechtmatigheid. Per punt kies je een stoplicht, met een optionele toelichting. Is een beoordeling nodig, dan zie je dat bij het belletje, op de kaart en op het dashboard. Hoeveel tijd van tevoren stel je in bij Instellingen → **Meldingen**.\n\n# Bijlagen en processen\n- Upload contracten en andere bijlagen, net als bij activiteiten. Daarvoor is een gekoppelde map nodig.\n- Start vanuit de registratie een proces, bijvoorbeeld een offboarding-checklist."
  },
  {
   "id": "contacten",
@@ -14562,7 +14650,7 @@ const HELP_SECTIES = [
    "organisatie-beheer"
   ],
   "nav": "organisatie-beheer",
-  "tekst": "Hier beheer je de organisatiestructuur. De app bevat geen ingebouwde indeling: je voert sectoren en afdelingen zelf in, of importeert ze met basisdata.\n- **+ Nieuwe sector** en per sector **+ Afdeling**.\n- Met ✎ hernoem je, met ↑ en ↓ wijzig je de volgorde, met × verwijder je.\n- Hernoem je een afdeling, dan verhuizen alle gegevens mee: activiteiten, teams, software en koppelingen met beheerders.\n- **Exporteren** zet de sectoren en afdelingen in Excel, CSV of PDF."
+  "tekst": "Hier beheer je de organisatiestructuur. De app bevat geen ingebouwde indeling: je voert sectoren en afdelingen zelf in, of importeert ze met basisdata.\n- **+ Nieuwe sector** en per sector **+ Afdeling**.\n- Met ✎ hernoem je, met ↑ en ↓ wijzig je de volgorde, met × verwijder je.\n- Hernoem je een afdeling, dan verhuizen alle gegevens mee: activiteiten, teams, software en de koppelingen met functioneel beheerders, externe inhuur en contacten. Verwijder je een afdeling, dan verdwijnen die koppelingen ook.\n- **Exporteren** zet de sectoren en afdelingen in Excel, CSV of PDF."
  },
  {
   "id": "meldingen",
