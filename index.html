@@ -1947,8 +1947,12 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.41.1";
+const APP_VERSION = "4.41.2";
 const CHANGELOG = [
+  { version: "4.41.2", datum: "2026-11-05", items: [
+    "Een proces dat je vanuit een activiteit start, krijgt nu de naam van die activiteit en houdt die ook als je de activiteit later hernoemt. Tot nu toe bleef er bijvoorbeeld \"Nieuwe activiteit\" achter de procesnaam staan. Hetzelfde geldt voor een proces dat je vanuit een registratie bij Externe inhuur start.",
+    "Heb je bij het starten zelf een ander onderwerp ingevuld, dan blijft dat staan. Lopende processen die nog \"Nieuwe activiteit\" als onderwerp hadden, nemen meteen de huidige naam van hun activiteit over.",
+  ]},
   { version: "4.41.1", datum: "2026-11-03", items: [
     "Hernoem je een afdeling, dan blijven de koppelingen bij Externe inhuur nu behouden. Tot nu toe raakte een inhuur-registratie die afdeling kwijt. Verwijder je een afdeling, dan wordt hij ook bij de inhuur-registraties weggehaald.",
     "Is een inhuur-registratie door een eerdere hernoeming nog gekoppeld aan een afdeling die niet meer bestaat? Dan staat er bij Externe inhuur een melding. Per oude naam kies je in één keer de juiste afdeling, of je haalt de koppeling weg. Op de kaart is zo'n oude naam oranje gemarkeerd.",
@@ -3200,7 +3204,7 @@ function getAppLinks(){ return state.appLinks || (state.appLinks = []); }
    sjablonen: [{id, naam, type:"week"|"proces", omschrijving?, taken:[{id, text,
                 instructie?, links?:[{label,url}], rol?, contactId?, termijnDagen?, fase?}]}]
    runs:      [{id, sjabloonId, naam, type?, label, omschrijving?, startdatum?, gestart, afgerond|null,
-                projectId?, inhuurId?, taken:[{id, text, done, doneOp?, instructie?, links?, rol?,
+                projectId?, inhuurId?, labelVolgt?, taken:[{id, text, done, doneOp?, instructie?, links?, rol?,
                 contactId?, fase?, deadline?, nvt?, nvtReden?, notitie?}]}]
    Alle velden met ? zijn optioneel (sinds 4.13.0), zodat oudere data ongewijzigd blijft werken. */
 function getChecklistSjablonen(){ return state.checklistSjablonen || (state.checklistSjablonen = []); }
@@ -3218,6 +3222,22 @@ function clUpdateAfgerond(run){
   const was = run.afgerond;
   run.afgerond = run.taken.length && run.taken.every(clTaakKlaar) ? (run.afgerond || new Date().toISOString()) : null;
   if (run.afgerond && !was) clSchrijfLogboek(run);
+}
+/* Onderwerp van een proces. Is het bij het starten overgenomen van de gekoppelde activiteit of
+   externe-inhuurregistratie (run.labelVolgt: "activiteit" | "inhuur"), dan loopt het mee met de
+   huidige naam daarvan, zodat een hernoemde activiteit ook het proces een nieuwe naam geeft.
+   Een zelf getypt onderwerp blijft ongemoeid. Oudere processen hebben geen labelVolgt: daar
+   volgt alleen de standaardnaam "Nieuwe activiteit" de activiteit (de naam die een activiteit
+   krijgt zolang hij nog niet hernoemd is). */
+function clRunLabel(run){
+  const volgt = run.labelVolgt || (run.projectId && run.label === "Nieuwe activiteit" ? "activiteit" : "");
+  let naam = "";
+  if (volgt === "activiteit" && run.projectId) naam = (findProjectAnywhere(run.projectId)?.p.titel || "").trim();
+  else if (volgt === "inhuur" && run.inhuurId){
+    const x = getExterneInhuur().find(y => y.id === run.inhuurId);
+    naam = x ? (inhuurNaam(x) || "").trim() : "";
+  }
+  return naam || run.label || "";
 }
 /* Bij het afronden van een proces dat aan een activiteit gekoppeld is: samenvatting in het logboek
    van die activiteit. Wordt een proces heropend en opnieuw afgerond, dan wordt dezelfde
@@ -3251,7 +3271,7 @@ function clRunSamenvatting(run){
     if (t.nvt) return `- n.v.t. — ${t.text}${t.nvtReden ? ` (${t.nvtReden})` : ""}`;
     return `- ✓ ${t.text}${uitv ? ` — ${uitv}` : ""}${t.doneOp ? `, ${clDatumKort(t.doneOp)}` : ""}${notitie ? `: ${notitie}` : ""}`;
   });
-  return `**Proces afgerond: ${run.naam}${run.label ? ` — ${run.label}` : ""}**\n`
+  return `**Proces afgerond: ${run.naam}${clRunLabel(run) ? ` — ${clRunLabel(run)}` : ""}**\n`
     + `Gestart ${clDatumLang(run.startdatum || run.gestart)}, afgerond ${clDatumLang(run.afgerond)}.\n\n`
     + regels.join("\n");
 }
@@ -3378,7 +3398,7 @@ function clDashProcesRow({ run, t }, today){
     <input type="checkbox" class="dash-check" title="Stap afvinken">
     <div class="dash-item-main">
       <div class="dash-item-title">${escapeHTML(t.text)}</div>
-      <div class="dash-item-meta">Processtap · ${escapeHTML(run.naam)}${run.label ? ` — ${escapeHTML(run.label)}` : ""}${uitv ? ` · ${escapeHTML(uitv)}` : ""}</div>
+      <div class="dash-item-meta">Processtap · ${escapeHTML(run.naam)}${clRunLabel(run) ? ` — ${escapeHTML(clRunLabel(run))}` : ""}${uitv ? ` · ${escapeHTML(uitv)}` : ""}</div>
     </div>
     <div class="dash-item-time ${isOver ? "is-overdue" : isToday ? "is-today" : ""}">${dashDueLabel(t.deadline, today)}</div>
   </div>`;
@@ -6830,7 +6850,7 @@ function collectMeldingen(today){
     if (!isIsoDatum(t.deadline) || today < meldingSignaalDatum(t.deadline, "processtap")) continue;
     out.push({ key: "stap:" + run.id + ":" + t.id, type: "processtap", sig: sigVan(t.deadline), datum: t.deadline, fase: fase(t.deadline),
       titel: t.text || "(stap zonder naam)",
-      meta: [run.label || run.naam, clUitvoerderNaam(t)].filter(Boolean).join(" · "),
+      meta: [clRunLabel(run) || run.naam, clUitvoerderNaam(t)].filter(Boolean).join(" · "),
       open: ()=> openChecklistRun(run, t.id),
       actie: { label: "Afvinken", icon: "check", run: ()=> clStapAfvinken(run, t) } });
   }
@@ -8024,7 +8044,7 @@ function renderProcesActieRow(a, today){
     <div class="ac-row ac-proces" data-proces-run="${escapeHTML(run.id)}" data-proces-step="${escapeHTML(t.id)}">
       <input type="checkbox" title="Stap afvinken">
       <div class="ac-text" title="Stappenplan openen">${escapeHTML(t.text || "")}</div>
-      <div class="ac-context"><a>${escapeHTML(run.naam)}${run.label ? ` — ${escapeHTML(run.label)}` : ""}</a><br><span style="font-size:11px">Processtap${uitv ? ` · ${escapeHTML(uitv)}` : ""}</span></div>
+      <div class="ac-context"><a>${escapeHTML(run.naam)}${clRunLabel(run) ? ` — ${escapeHTML(clRunLabel(run))}` : ""}</a><br><span style="font-size:11px">Processtap${uitv ? ` · ${escapeHTML(uitv)}` : ""}</span></div>
       <div class="ac-due ${overdue?"overdue":""}"><input type="date" value="${escapeHTML(t.deadline||"")}" style="border:1px solid var(--border);border-radius:5px;padding:3px 5px;font-size:12px;background:#fff"></div>
       <span></span>
     </div>`;
@@ -8562,7 +8582,7 @@ function renderDashChecklists(host){
       <div class="dash-cl-row ${isOpen ? "is-open" : ""}" tabindex="0" role="button" aria-expanded="${isOpen}" data-cl-run="${escapeHTML(run.id)}">
         ${volgende ? `<input type="checkbox" class="dash-check" data-cl-next="${escapeHTML(volgende.id)}" title="Volgende taak afvinken: ${escapeHTML(volgende.text)}">` : ``}
         <div class="dash-cl-main">
-          <div class="dash-cl-title"><span class="dash-cl-chev">▶</span>${escapeHTML(run.naam)}${run.label ? ` — ${escapeHTML(run.label)}` : ""}</div>
+          <div class="dash-cl-title"><span class="dash-cl-chev">▶</span>${escapeHTML(run.naam)}${clRunLabel(run) ? ` — ${escapeHTML(clRunLabel(run))}` : ""}</div>
           <div class="dash-cl-meta">${volgende ? `Volgende: ${escapeHTML(volgende.text)}` : "Alle taken afgevinkt"} · ${gestart}</div>
         </div>
         <div class="dash-cl-side">
@@ -11882,7 +11902,7 @@ function openInhuurEditor(id){
       row.style.cssText = "display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:13px";
       row.title = "Stappenplan openen";
       row.innerHTML = `
-        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(run.naam)}${run.label ? ` — ${escapeHTML(run.label)}` : ""}</span>
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(run.naam)}${clRunLabel(run) ? ` — ${escapeHTML(clRunLabel(run))}` : ""}</span>
         <span style="font-size:11.5px;color:var(--muted);flex-shrink:0">${doneCount}/${run.taken.length}</span>
         <span class="pill ${run.afgerond ? "afgerond" : "lopend"}" style="font-size:10px;padding:1px 6px;flex-shrink:0">${run.afgerond ? "afgerond" : "lopend"}</span>`;
       row.onclick = ()=>{ close(); openChecklistRun(run); };
@@ -13675,6 +13695,7 @@ function startChecklistRun(sjabloon, opts = {}){
     naam: sjabloon.naam,
     type: sjabloon.type === "week" ? "week" : "proces",
     label,
+    labelVolgt: label && opts.labelVolgt ? opts.labelVolgt : undefined,  // "activiteit" | "inhuur": onderwerp loopt mee met de koppeling (optioneel)
     omschrijving: sjabloon.omschrijving || "",
     startdatum,
     gestart: new Date().toISOString(),
@@ -13773,8 +13794,11 @@ function openProcesStartDialog(sjabloon, opts = {}, onStarted){
 
   backdrop.querySelector("#psGo").onclick = ()=>{
     if (!rows.some(r => r.include)){ alert("Zet minstens één stap aan."); return; }
+    // Is het onderwerp ongewijzigd de naam van de koppeling gebleven, dan blijft het die naam volgen.
+    const ongewijzigd = labelInp.value.trim() !== "" && labelInp.value.trim() === String(opts.label || "").trim();
+    const labelVolgt = !ongewijzigd ? null : opts.projectId ? "activiteit" : opts.inhuurId ? "inhuur" : null;
     const run = startChecklistRun(sjabloon, Object.assign({}, opts, {
-      label: labelInp.value, startdatum: startInp.value || todayISO(), stappen: rows }));
+      label: labelInp.value, labelVolgt, startdatum: startInp.value || todayISO(), stappen: rows }));
     if (!run) return;
     close();
     onStarted && onStarted(run);
@@ -13924,7 +13948,7 @@ function renderChecklistsView(main){
     card.className = "cl-run" + (run.afgerond ? " is-done" : "");
     card.innerHTML = `
       <div class="cl-run-head">
-        <span class="cl-run-title ${isProces ? "is-link" : ""}" ${isProces ? `data-open-run title="Stappenplan openen"` : ""}>${escapeHTML(run.naam)}${run.label ? ` — ${escapeHTML(run.label)}` : ""}</span>
+        <span class="cl-run-title ${isProces ? "is-link" : ""}" ${isProces ? `data-open-run title="Stappenplan openen"` : ""}>${escapeHTML(run.naam)}${clRunLabel(run) ? ` — ${escapeHTML(clRunLabel(run))}` : ""}</span>
         <span style="font-size:11.5px;color:var(--muted);flex-shrink:0">${v.klaar}/${v.tot}</span>
       </div>
       <div class="cl-run-meta">Gestart ${clDatumKort(run.startdatum || isoLocalDate(new Date(run.gestart)))}${run.afgerond ? ` · afgerond ${new Date(run.afgerond).toLocaleDateString("nl-NL")}` : ""}${teLaat ? ` · <span class="cl-late">${teLaat} te laat</span>` : ""}${clKoppelLinks(run)}</div>
@@ -13955,7 +13979,7 @@ function renderChecklistsView(main){
       clActiveRunId = run.id; clActiveStepId = null; renderChecklistsView(main);
     });
     card.querySelector("[data-del-run]").onclick = ()=>{
-      if (!confirm(`Checklist "${run.naam}${run.label ? " — " + run.label : ""}" verwijderen?`)) return;
+      if (!confirm(`Checklist "${run.naam}${clRunLabel(run) ? " — " + clRunLabel(run) : ""}" verwijderen?`)) return;
       state.checklistRuns = getChecklistRuns().filter(r => r.id !== run.id);
       markDirty(); renderChecklistsView(main); renderSidebar();
     };
@@ -13997,7 +14021,7 @@ function renderProcesRunView(main, run){
     <div class="afd-header">
       <div style="min-width:0">
         <a href="#" class="cl-back" data-back>← Weekstart &amp; processen</a>
-        <h2>${escapeHTML(run.naam)}${run.label ? ` — ${escapeHTML(run.label)}` : ""}</h2>
+        <h2>${escapeHTML(run.naam)}${clRunLabel(run) ? ` — ${escapeHTML(clRunLabel(run))}` : ""}</h2>
         <div class="sub">Gestart ${clDatumKort(run.startdatum || isoLocalDate(new Date(run.gestart)))} · ${v.klaar}/${v.tot} stappen klaar${teLaat ? ` · <span class="cl-late">${teLaat} te laat</span>` : ""}${run.afgerond ? ` · <b style="color:var(--ok, #2f9e63)">afgerond ${new Date(run.afgerond).toLocaleDateString("nl-NL")}</b>` : ""}${clKoppelLinks(run)}</div>
       </div>
       <div class="toolbar"><button class="cl-del" data-del-run>Verwijderen</button></div>
@@ -14014,7 +14038,7 @@ function renderProcesRunView(main, run){
 
   main.querySelector("[data-back]").onclick = (e)=>{ e.preventDefault(); clActiveRunId = null; renderChecklistsView(main); };
   main.querySelector("[data-del-run]").onclick = ()=>{
-    if (!confirm(`Proces "${run.naam}${run.label ? " — " + run.label : ""}" verwijderen?`)) return;
+    if (!confirm(`Proces "${run.naam}${clRunLabel(run) ? " — " + clRunLabel(run) : ""}" verwijderen?`)) return;
     state.checklistRuns = getChecklistRuns().filter(r => r.id !== run.id);
     clActiveRunId = null;
     markDirty(); renderChecklistsView(main); renderSidebar();
@@ -14481,7 +14505,7 @@ const HELP_SECTIES = [
    "checklists"
   ],
   "nav": "checklists",
-  "tekst": "Hier start en volg je terugkerende checklists. Er zijn twee soorten:\n- **Weekstart**: een vast wekelijks lijstje, bijvoorbeeld *mail doorlopen, agenda checken*. Krijgt automatisch het weeknummer als label.\n- **Proces**: een draaiboek voor iets wat je af en toe doet, zoals *Aanschaf nieuwe software* of de *Jaarlijkse actualisatie indexatietarieven*. Per stap kun je een werkinstructie, uitvoerder en deadline hebben.\n\nDe sjablonen stel je in bij Instellingen → **Weekstart & processen instellen**. Zie **Processjablonen en werkinstructies**.\n\n# Starten\n- Met de knoppen rechtsboven start je een weekstart of proces. Een proces start je ook vanuit een activiteit, een registratie van externe inhuur, of met ▶ bij een hoofdproces van een afdeling.\n- Bij een proces opent eerst een **startscherm**. Daar vul je het onderwerp en de startdatum in. Per stap kies je een uitvoerder uit je contacten en pas je de deadline aan. Deadlines worden berekend uit de termijn in het sjabloon. Stappen die deze keer niet van toepassing zijn, vink je uit.\n\n# Het stappenplan\nEen gestart proces opent als stappenplan:\n- **Links**: alle stappen, per fase, met uitvoerder en deadline. Een groen vinkje betekent klaar, een streepje niet van toepassing. Rood betekent dat de deadline verstreken is.\n- **Rechts**: de geselecteerde stap, met de werkinstructie (inclusief tabellen en links), knoppen voor handige links, de uitvoerder en de deadline (hier aan te passen) en een veld voor je **notitie of uitkomst**, bijvoorbeeld de gebruikte bron of een ticketnummer.\n- **Afvinken en verder** markeert de stap als klaar en springt naar de volgende open stap.\n- **Niet van toepassing…** slaat een stap over, met een reden. **Toch uitvoeren** draait dat terug; **Heropenen** zet een afgevinkte stap weer open.\n- **Over dit proces** toont de omschrijving uit het sjabloon.\n\n# Overzicht en afronden\n- De kaarten in het overzicht tonen de voortgang, hoeveel stappen te laat zijn en een link naar de gekoppelde activiteit of externe inhuur. Taken kun je daar ook direct afvinken.\n- Is alles klaar of niet van toepassing, dan verhuist de checklist naar **Afgerond**.\n- Is het proces aan een activiteit gekoppeld, dan komt er automatisch een **samenvatting in het logboek** van die activiteit: welke stappen, door wie, wanneer en met welke notities.\n- Processtappen met een deadline staan ook in **Acties** en, als ze deze week moeten of al te laat zijn, bij **Deze week** op het dashboard.\n- Een sjabloon wijzigen heeft geen invloed op processen die al lopen. Die houden de instructies zoals ze bij de start waren."
+  "tekst": "Hier start en volg je terugkerende checklists. Er zijn twee soorten:\n- **Weekstart**: een vast wekelijks lijstje, bijvoorbeeld *mail doorlopen, agenda checken*. Krijgt automatisch het weeknummer als label.\n- **Proces**: een draaiboek voor iets wat je af en toe doet, zoals *Aanschaf nieuwe software* of de *Jaarlijkse actualisatie indexatietarieven*. Per stap kun je een werkinstructie, uitvoerder en deadline hebben.\n\nDe sjablonen stel je in bij Instellingen → **Weekstart & processen instellen**. Zie **Processjablonen en werkinstructies**.\n\n# Starten\n- Met de knoppen rechtsboven start je een weekstart of proces. Een proces start je ook vanuit een activiteit, een registratie van externe inhuur, of met ▶ bij een hoofdproces van een afdeling.\n- Bij een proces opent eerst een **startscherm**. Daar vul je het onderwerp en de startdatum in. Start je het proces vanuit een activiteit of een inhuur-registratie, dan staat de naam daarvan alvast ingevuld; laat je die staan, dan verandert het onderwerp mee als je de activiteit later hernoemt. Per stap kies je een uitvoerder uit je contacten en pas je de deadline aan. Deadlines worden berekend uit de termijn in het sjabloon. Stappen die deze keer niet van toepassing zijn, vink je uit.\n\n# Het stappenplan\nEen gestart proces opent als stappenplan:\n- **Links**: alle stappen, per fase, met uitvoerder en deadline. Een groen vinkje betekent klaar, een streepje niet van toepassing. Rood betekent dat de deadline verstreken is.\n- **Rechts**: de geselecteerde stap, met de werkinstructie (inclusief tabellen en links), knoppen voor handige links, de uitvoerder en de deadline (hier aan te passen) en een veld voor je **notitie of uitkomst**, bijvoorbeeld de gebruikte bron of een ticketnummer.\n- **Afvinken en verder** markeert de stap als klaar en springt naar de volgende open stap.\n- **Niet van toepassing…** slaat een stap over, met een reden. **Toch uitvoeren** draait dat terug; **Heropenen** zet een afgevinkte stap weer open.\n- **Over dit proces** toont de omschrijving uit het sjabloon.\n\n# Overzicht en afronden\n- De kaarten in het overzicht tonen de voortgang, hoeveel stappen te laat zijn en een link naar de gekoppelde activiteit of externe inhuur. Taken kun je daar ook direct afvinken.\n- Is alles klaar of niet van toepassing, dan verhuist de checklist naar **Afgerond**.\n- Is het proces aan een activiteit gekoppeld, dan komt er automatisch een **samenvatting in het logboek** van die activiteit: welke stappen, door wie, wanneer en met welke notities.\n- Processtappen met een deadline staan ook in **Acties** en, als ze deze week moeten of al te laat zijn, bij **Deze week** op het dashboard.\n- Een sjabloon wijzigen heeft geen invloed op processen die al lopen. Die houden de instructies zoals ze bij de start waren."
  },
  {
   "id": "checklist-beheer",
@@ -18082,7 +18106,7 @@ ${isStd ? `
       row.style.cssText = "display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:13px";
       row.title = "Stappenplan openen";
       row.innerHTML = `
-        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(run.naam)}${run.label ? ` — ${escapeHTML(run.label)}` : ""}</span>
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(run.naam)}${clRunLabel(run) ? ` — ${escapeHTML(clRunLabel(run))}` : ""}</span>
         <span style="font-size:11.5px;color:var(--muted);flex-shrink:0">${doneCount}/${run.taken.length}</span>
         <span class="pill ${run.afgerond ? "afgerond" : "lopend"}" style="font-size:10px;padding:1px 6px;flex-shrink:0">${run.afgerond ? "afgerond" : "lopend"}</span>`;
       row.onclick = ()=> openChecklistRun(run);
