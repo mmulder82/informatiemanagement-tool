@@ -1947,8 +1947,13 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.41.2";
+const APP_VERSION = "4.42.0";
 const CHANGELOG = [
+  { version: "4.42.0", datum: "2026-11-17", items: [
+    "Vernieuwen bij de bestanden van een activiteit kijkt nu ook of er bestanden uit de map zijn verwijderd. Zo'n bestand verdwijnt dan uit de lijst, ook als je het buiten de app hebt verwijderd, verplaatst of hernoemd. Dit gebeurt ook automatisch als je de activiteit opent.",
+    "De knop meldt na afloop hoeveel bestanden er zijn toegevoegd en verwijderd. Is de map even niet bereikbaar, dan blijft de lijst ongemoeid.",
+    "Hetzelfde geldt voor de bijlagen bij Externe inhuur.",
+  ]},
   { version: "4.41.2", datum: "2026-11-05", items: [
     "Een proces dat je vanuit een activiteit start, krijgt nu de naam van die activiteit en houdt die ook als je de activiteit later hernoemt. Tot nu toe bleef er bijvoorbeeld \"Nieuwe activiteit\" achter de procesnaam staan. Hetzelfde geldt voor een proces dat je vanuit een registratie bij Externe inhuur start.",
     "Heb je bij het starten zelf een ander onderwerp ingevuld, dan blijft dat staan. Lopende processen die nog \"Nieuwe activiteit\" als onderwerp hadden, nemen meteen de huidige naam van hun activiteit over.",
@@ -11816,7 +11821,7 @@ function openInhuurEditor(id){
       <div class="row">
         <label style="display:flex;align-items:center;gap:8px">
           <span>Contracten / bijlagen <span style="font-size:12px;color:var(--muted);font-weight:400" id="ixAttCount"></span></span>
-          ${folderHandle ? `<button type="button" class="ghost-btn" id="ixRefreshAtts" style="margin-left:auto;font-weight:400" title="Map opnieuw uitlezen — voegt bestanden toe die je zelf (buiten de app om) in de map hebt gezet">🔄 Vernieuwen</button>` : ``}
+          ${folderHandle ? `<button type="button" class="ghost-btn" id="ixRefreshAtts" style="margin-left:auto;font-weight:400" title="Map opnieuw uitlezen — voegt bestanden toe die je zelf (buiten de app om) in de map hebt gezet en haalt bestanden uit de lijst die uit de map zijn verwijderd">🔄 Vernieuwen</button>` : ``}
         </label>
         <div class="dropzone" id="ixDropzone">
           ${folderHandle
@@ -11986,27 +11991,34 @@ function openInhuurEditor(id){
   // Wordt automatisch aangeroepen bij het openen van deze registratie, en handmatig via 'Vernieuwen'.
   let ixAttScanBusy = false;
   async function syncInhuurAttachmentsFromDisk(){
-    if (!folderHandle || ixAttScanBusy) return;
+    const resultaat = { toegevoegd: 0, verwijderd: 0 };
+    if (!folderHandle || ixAttScanBusy) return resultaat;
     ixAttScanBusy = true;
     try{
       const dir = await getInhuurDir(x.id);
-      const nieuw = await scanDirForNewFiles(dir, x.attachments);
+      const { nieuw, ontbrekend } = await scanDirForChanges(dir, x.attachments);
+      if (ontbrekend.length){
+        x.attachments = (x.attachments || []).filter(a => !ontbrekend.includes(a.id));
+        resultaat.verwijderd = ontbrekend.length;
+      }
       if (nieuw.length){
         x.attachments = (x.attachments || []).concat(nieuw);
+        resultaat.toegevoegd = nieuw.length;
+      }
+      if (nieuw.length || ontbrekend.length){
         markDirty(); renderInhuurAttachments();
       }
     } finally { ixAttScanBusy = false; }
+    return resultaat;
   }
   syncInhuurAttachmentsFromDisk();
 
   const ixRefreshAttsBtn = backdrop.querySelector("#ixRefreshAtts");
   if (ixRefreshAttsBtn) ixRefreshAttsBtn.onclick = async ()=>{
     ixRefreshAttsBtn.disabled = true;
-    const before = (x.attachments||[]).length;
-    await syncInhuurAttachmentsFromDisk();
-    const added = (x.attachments||[]).length - before;
+    const { toegevoegd, verwijderd } = await syncInhuurAttachmentsFromDisk();
     ixRefreshAttsBtn.disabled = false;
-    if (!added) ixRefreshAttsBtn.textContent = "🔄 Geen nieuwe bestanden";
+    ixRefreshAttsBtn.textContent = syncKnopTekst(toegevoegd, verwijderd);
     setTimeout(()=>{ if (ixRefreshAttsBtn.isConnected) ixRefreshAttsBtn.textContent = "🔄 Vernieuwen"; }, 1800);
   };
 
@@ -14441,7 +14453,7 @@ const HELP_SECTIES = [
   "icon": "activiteiten",
   "views": [],
   "nav": "",
-  "tekst": "Een activiteit is alles waar je mee bezig bent bij een afdeling, een congres of het College B&W: een project, een vraag, een traject. Een activiteit maak je aan met **+ Nieuwe activiteit** op het tabblad Activiteiten van een afdeling. Klik op een activiteitskaart om hem open of dicht te klappen.\n\n# Basisgegevens\n- **Titel, startdatum en einddatum** staan samen op één regel.\n- **Status**: één klik op *lopend*, *on hold*, *afgerond* of *gearchiveerd*.\n- **Prioriteit**: *hoog*, *midden* of *laag*.\n- **Tags**: eerder gebruikte tags staan als knoppen, de meest gebruikte eerst en groter. Eén klik voegt een tag toe. Een nieuwe tag maak je via **+ Nieuwe of andere tag**.\n- **Omschrijving**: vrije tekst.\n\n# Acties\nConcrete to-do's bij de activiteit, met een optionele deadline. Afgevinkte acties verhuizen naar een ingeklapt archief op de kaart. Alle acties samen zie je in het scherm **Acties**.\n\n# Contactpersonen\n- Koppel mensen uit je contactenregister. Typ een naam en kies een suggestie.\n- Je vindt hier ook managers, collegeleden en control-personen die nog niet in Contacten staan; die worden dan automatisch toegevoegd.\n- De **rol** stel je per activiteit in, omdat iemands rol per verband kan verschillen. Naam, e-mail en telefoon komen uit het centrale contact.\n\n# Links\nHandige webadressen bij de activiteit, zoals een SharePoint-map, een Topdesk-melding of een document.\n\n# Logboek\nJe verslag van wat er is gebeurd: notities, mails en gesprekken. Zie **Logboek, opmaak en Snel vastleggen**.\n\n# Bijlagen\n- Sleep bestanden naar het vak, of klik om te bladeren. Ze worden opgeslagen in een eigen submap van je gekoppelde map; klik op een bijlage om hem te openen.\n- Bestanden die je zelf buiten de app in die map zet, worden automatisch herkend als je de activiteit opent. Je kunt de map ook handmatig opnieuw laten uitlezen.\n- Een bestand met dezelfde naam als een bestaande bijlage krijgt automatisch een unieke naam, bijvoorbeeld *rapport (2).pdf*.\n\n# Processen\nStart vanuit de activiteit een proces met werkinstructies, bijvoorbeeld *Aanschaf nieuwe software*. Het onderwerp wordt de titel van de activiteit. Gekoppelde processen staan op de kaart met hun voortgang; klik erop om het stappenplan te openen. Rond je het proces af, dan komt er automatisch een samenvatting in het logboek. Zie **Weekstart & processen**.\n\n# Verplaatsen, verwijderen en volgorde\n- **↔** verplaatst de activiteit naar een andere afdeling of een congres.\n- **×** verwijdert de activiteit.\n- Activiteiten staan in een vaste logische volgorde: eerst op status (lopend, on hold, afgerond, gearchiveerd), dan op prioriteit, dan op de eerstvolgende deadline en tot slot op titel.\n- Je kunt slepen om de volgorde aan te passen, binnen dezelfde status en prioriteit. **Standaardvolgorde** zet die handmatige volgorde weer terug.\n- Met de knoppen **Lopend / On hold / Afgerond / Gearchiveerd / Alle** kies je welke activiteiten je ziet. Afgeronde en gearchiveerde activiteiten zijn standaard verborgen.\n\n# Financiën\nIn een activiteit staat het blok **Financiën** met de begrotingsregels die aan de activiteit gekoppeld zijn, met begroot, uitgegeven en restant. Klik op een regel om hem te openen. Met **+ Begrotingsregel** maak je direct een regel aan voor deze activiteit. Zie **Begroting**."
+  "tekst": "Een activiteit is alles waar je mee bezig bent bij een afdeling, een congres of het College B&W: een project, een vraag, een traject. Een activiteit maak je aan met **+ Nieuwe activiteit** op het tabblad Activiteiten van een afdeling. Klik op een activiteitskaart om hem open of dicht te klappen.\n\n# Basisgegevens\n- **Titel, startdatum en einddatum** staan samen op één regel.\n- **Status**: één klik op *lopend*, *on hold*, *afgerond* of *gearchiveerd*.\n- **Prioriteit**: *hoog*, *midden* of *laag*.\n- **Tags**: eerder gebruikte tags staan als knoppen, de meest gebruikte eerst en groter. Eén klik voegt een tag toe. Een nieuwe tag maak je via **+ Nieuwe of andere tag**.\n- **Omschrijving**: vrije tekst.\n\n# Acties\nConcrete to-do's bij de activiteit, met een optionele deadline. Afgevinkte acties verhuizen naar een ingeklapt archief op de kaart. Alle acties samen zie je in het scherm **Acties**.\n\n# Contactpersonen\n- Koppel mensen uit je contactenregister. Typ een naam en kies een suggestie.\n- Je vindt hier ook managers, collegeleden en control-personen die nog niet in Contacten staan; die worden dan automatisch toegevoegd.\n- De **rol** stel je per activiteit in, omdat iemands rol per verband kan verschillen. Naam, e-mail en telefoon komen uit het centrale contact.\n\n# Links\nHandige webadressen bij de activiteit, zoals een SharePoint-map, een Topdesk-melding of een document.\n\n# Logboek\nJe verslag van wat er is gebeurd: notities, mails en gesprekken. Zie **Logboek, opmaak en Snel vastleggen**.\n\n# Bijlagen\n- Sleep bestanden naar het vak, of klik om te bladeren. Ze worden opgeslagen in een eigen submap van je gekoppelde map; klik op een bijlage om hem te openen.\n- Bestanden die je zelf buiten de app in die map zet, worden automatisch herkend als je de activiteit opent. Bestanden die je uit die map hebt verwijderd (of verplaatst of hernoemd), verdwijnen dan ook uit de lijst. Met **Vernieuwen** laat je de map op elk moment opnieuw uitlezen; de knop meldt kort hoeveel bestanden er zijn toegevoegd en verwijderd.\n- Een bestand met dezelfde naam als een bestaande bijlage krijgt automatisch een unieke naam, bijvoorbeeld *rapport (2).pdf*.\n\n# Processen\nStart vanuit de activiteit een proces met werkinstructies, bijvoorbeeld *Aanschaf nieuwe software*. Het onderwerp wordt de titel van de activiteit. Gekoppelde processen staan op de kaart met hun voortgang; klik erop om het stappenplan te openen. Rond je het proces af, dan komt er automatisch een samenvatting in het logboek. Zie **Weekstart & processen**.\n\n# Verplaatsen, verwijderen en volgorde\n- **↔** verplaatst de activiteit naar een andere afdeling of een congres.\n- **×** verwijdert de activiteit.\n- Activiteiten staan in een vaste logische volgorde: eerst op status (lopend, on hold, afgerond, gearchiveerd), dan op prioriteit, dan op de eerstvolgende deadline en tot slot op titel.\n- Je kunt slepen om de volgorde aan te passen, binnen dezelfde status en prioriteit. **Standaardvolgorde** zet die handmatige volgorde weer terug.\n- Met de knoppen **Lopend / On hold / Afgerond / Gearchiveerd / Alle** kies je welke activiteiten je ziet. Afgeronde en gearchiveerde activiteiten zijn standaard verborgen.\n\n# Financiën\nIn een activiteit staat het blok **Financiën** met de begrotingsregels die aan de activiteit gekoppeld zijn, met begroot, uitgegeven en restant. Klik op een regel om hem te openen. Met **+ Begrotingsregel** maak je direct een regel aan voor deze activiteit. Zie **Begroting**."
  },
  {
   "id": "logboek",
@@ -17924,7 +17936,7 @@ ${isStd ? `
     <div class="section">
       <h4>
         <span>${isStd ? "Documenten" : "Bestanden"} <span class="count" data-role="att-count" style="font-size:12px;color:var(--muted);font-weight:400;margin-left:6px"></span></span>
-        ${folderHandle ? `<button class="ghost-btn" data-action="refresh-atts" title="Map opnieuw uitlezen — voegt bestanden toe die je zelf (buiten de app om) in de map hebt gezet">🔄 Vernieuwen</button>` : ``}
+        ${folderHandle ? `<button class="ghost-btn" data-action="refresh-atts" title="Map opnieuw uitlezen — voegt bestanden toe die je zelf (buiten de app om) in de map hebt gezet en haalt bestanden uit de lijst die uit de map zijn verwijderd">🔄 Vernieuwen</button>` : ``}
         ${folderHandle ? `<button class="ghost-btn" data-action="open-folder" title="Toon het pad naar de map met bijlagen">📂 Open map</button>` : ``}
       </h4>
       <div class="dropzone" data-role="dropzone">
@@ -18440,28 +18452,35 @@ ${isStd ? `
   // Wordt automatisch aangeroepen bij het openen van deze activiteit, en handmatig via 'Vernieuwen'.
   let attScanBusy = false;
   async function syncAttachmentsFromDisk(){
-    if (!folderHandle || attScanBusy) return;
+    const resultaat = { toegevoegd: 0, verwijderd: 0 };
+    if (!folderHandle || attScanBusy) return resultaat;
     attScanBusy = true;
     try{
       const dir = await getActivityDir(afdNaam, activityFolderName(p));
-      const nieuw = await scanDirForNewFiles(dir, p.attachments);
+      const { nieuw, ontbrekend } = await scanDirForChanges(dir, p.attachments);
+      if (ontbrekend.length){
+        p.attachments = (p.attachments || []).filter(a => !ontbrekend.includes(a.id));
+        resultaat.verwijderd = ontbrekend.length;
+      }
       if (nieuw.length){
         p.attachments = (p.attachments || []).concat(nieuw);
+        resultaat.toegevoegd = nieuw.length;
+      }
+      if (nieuw.length || ontbrekend.length){
         p.gewijzigd = new Date().toISOString();
         markDirty(); renderAttachments();
       }
     } finally { attScanBusy = false; }
+    return resultaat;
   }
   syncAttachmentsFromDisk();
 
   const refreshAttsBtn = body.querySelector('[data-action="refresh-atts"]');
   if (refreshAttsBtn) refreshAttsBtn.onclick = async ()=>{
     refreshAttsBtn.disabled = true;
-    const before = (p.attachments||[]).length;
-    await syncAttachmentsFromDisk();
-    const added = (p.attachments||[]).length - before;
+    const { toegevoegd, verwijderd } = await syncAttachmentsFromDisk();
     refreshAttsBtn.disabled = false;
-    if (!added) refreshAttsBtn.textContent = "🔄 Geen nieuwe bestanden";
+    refreshAttsBtn.textContent = syncKnopTekst(toegevoegd, verwijderd);
     setTimeout(()=>{ if (refreshAttsBtn.isConnected) refreshAttsBtn.textContent = "🔄 Vernieuwen"; }, 1800);
   };
 
@@ -18690,23 +18709,34 @@ function activityFolderName(p){
   return p.folderName || p.id;
 }
 
-/* Leest een bijlagenmap opnieuw uit en geeft metadata terug voor bestanden die er wél op schijf
-   staan maar nog niet in de bijgehouden bijlagenlijst voorkomen — bijvoorbeeld omdat iemand een
-   bestand rechtstreeks in Verkenner/Finder/SharePoint in de map heeft gezet in plaats van via de
-   app te uploaden. De browser kan een gekoppelde map niet live in de gaten houden, dus dit is een
+/* Leest een bijlagenmap opnieuw uit en vergelijkt de inhoud met de bijgehouden bijlagenlijst.
+   Geeft twee dingen terug:
+   - `nieuw`: metadata voor bestanden die er wél op schijf staan maar nog niet in de lijst voorkomen,
+     bijvoorbeeld omdat iemand een bestand rechtstreeks in Verkenner/Finder/SharePoint in de map heeft
+     gezet in plaats van via de app te uploaden;
+   - `ontbrekend`: id's van bijlagen in de lijst waarvan het bestand niet meer in de map staat,
+     bijvoorbeeld omdat het buiten de app om is verwijderd, verplaatst of hernoemd.
+   Is de map niet beschikbaar of lukt het uitlezen niet helemaal, dan blijft `ontbrekend` leeg: een
+   onbereikbare map (OneDrive offline, toestemming verlopen) mag nooit leiden tot het weggooien van
+   de lijst. De browser kan een gekoppelde map niet live in de gaten houden, dus dit is een
    momentopname op het moment dat het wordt aangeroepen (bij het openen van een activiteit/registratie
-   en via de 'Vernieuwen'-knop). Muteert niets zelf — de aanroeper voegt het resultaat toe aan de lijst. */
-async function scanDirForNewFiles(dir, attachments){
-  if (!dir) return [];
-  const known = new Set((attachments||[]).map(a => a.filename));
-  const found = [];
+   en via de 'Vernieuwen'-knop). Muteert niets zelf — de aanroeper verwerkt het resultaat. */
+async function scanDirForChanges(dir, attachments){
+  const leeg = { nieuw: [], ontbrekend: [] };
+  if (!dir) return leeg;
+  const norm = (n)=> String(n||"").normalize("NFC");
+  const lijst = attachments || [];
+  const known = new Set(lijst.map(a => norm(a.filename)));
+  const opSchijf = new Set();
+  const nieuw = [];
   try{
     for await (const [name, handle] of dir.entries()){
       if (handle.kind !== "file") continue;
-      if (known.has(name)) continue;
+      opSchijf.add(norm(name));
+      if (known.has(norm(name))) continue;
       try{
         const file = await handle.getFile();
-        found.push({
+        nieuw.push({
           id: uid(),
           filename: name,
           size: file.size,
@@ -18715,8 +18745,19 @@ async function scanDirForNewFiles(dir, attachments){
         });
       }catch(e){ console.warn("Kon bestand niet lezen tijdens scannen van bijlagenmap:", name, e); }
     }
-  }catch(e){ console.warn("Kon bijlagenmap niet scannen:", e); }
-  return found;
+  }catch(e){
+    console.warn("Kon bijlagenmap niet scannen:", e);
+    return leeg;
+  }
+  const ontbrekend = lijst.filter(a => !opSchijf.has(norm(a.filename))).map(a => a.id);
+  return { nieuw, ontbrekend };
+}
+/* Korte tekst voor op de Vernieuwen-knop na een synchronisatie van de bijlagenlijst. */
+function syncKnopTekst(toegevoegd, verwijderd){
+  const delen = [];
+  if (toegevoegd) delen.push(`${toegevoegd} toegevoegd`);
+  if (verwijderd) delen.push(`${verwijderd} verwijderd`);
+  return delen.length ? `🔄 ${delen.join(", ")}` : "🔄 Geen wijzigingen";
 }
 
 async function getActivityDir(afdNaam, activityId, opts){
