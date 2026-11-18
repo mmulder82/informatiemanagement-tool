@@ -42,7 +42,9 @@ wachtwoord verlaat je Mac nooit.
   programma dus niet aansturen of uitlezen. De koppelcode staat in
   `config.json` en in de browser waarin je hem hebt geplakt.
 - Het wachtwoord staat alleen in de macOS-sleutelhanger, nooit in
-  `tracker-data.json` of in de tracker zelf.
+  `tracker-data.json` of in de tracker zelf. Bij het opslaan gaat het via een
+  interne invoerstroom naar de sleutelhanger en niet als argument van een
+  commando, zodat andere programma's op je Mac het niet kunnen meelezen.
 - Er komen geen contactgegevens in het logbestand.
 - Werkt in Chrome en Edge (de browsers waarin de tracker een map kan koppelen).
 - Het script raakt uitsluitend de contacten aan die het zelf heeft

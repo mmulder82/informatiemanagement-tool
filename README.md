@@ -58,6 +58,7 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
 - In één blik zie je **budget − gereserveerd = vrije ruimte**, wat er daadwerkelijk is uitgegeven en wat er nog gefactureerd moet worden.
 - **Uitgaven importeren.** Je leest een rapport met crediteurtransacties uit het financiële systeem in (Excel of CSV). De app koppelt de transacties via het IO-nummer aan de juiste begrotingsregels.
 - Externe inhuur kan rechtstreeks ten laste van de begroting komen. De kosten worden dan per jaar berekend.
+- Begrotingsregels die aan een activiteit gekoppeld zijn, zie je terug in die activiteit en bij de afdeling. Vanuit een activiteit voeg je direct een regel toe en kies je bij welk programma die hoort.
 - Je kunt het overzicht exporteren naar Excel of PDF.
 
 ![De begroting: totaal budget, gereserveerd, vrije ruimte en nog te factureren](screenshots/begroting.png)
@@ -133,7 +134,7 @@ De ingebouwde **Help & handleiding** (de knop **?** rechtsboven, of F1) legt elk
 
 > **Als app installeren.** In Edge en Chrome kun je de tool installeren als app, met het installatie-icoon in de adresbalk. In Edge kan het ook via het menu, onder **Apps**. De tool opent dan in een eigen venster en krijgt een eigen icoon in de Dock of de taakbalk. Je gegevens blijven dezelfde als in het tabblad. Dit werkt met de online versie, niet met een gedownload bestand.
 
-> **Liever lokaal?** Download `index.html` en open het bestand in Chrome of Edge. Ook dat werkt volledig. De browser bewaart gegevens per adres. Wissel je tussen de online versie en een lokaal bestand, koppel dan in beide dezelfde map. Dan werk je steeds met hetzelfde `tracker-data.json`.
+> **Liever lokaal?** Download de hele repository (op GitHub: **Code**, dan **Download ZIP**) en open `index.html` in Chrome of Edge. Ook dat werkt volledig. Laat de map `vendor` naast `index.html` staan, want die heeft de tool nodig voor Excel. De browser bewaart gegevens per adres. Wissel je tussen de online versie en een lokaal bestand, koppel dan in beide dezelfde map. Dan werk je steeds met hetzelfde `tracker-data.json`.
 
 ---
 
@@ -144,7 +145,6 @@ De ingebouwde **Help & handleiding** (de knop **?** rechtsboven, of F1) legt elk
 - Zonder gekoppelde map staat alles alleen in je browser. Wis je de browsergegevens, dan ben je het kwijt. Het dashboard waarschuwt je daarvoor met een melding, totdat je een map koppelt.
 - Werk je op twee computers of in twee vensters tegelijk, dan herkent de app dat en voegt hij de wijzigingen samen.
 - De app maakt maar een paar verbindingen met internet:
-  - Bij importeren of exporteren naar Excel laadt hij de bibliotheek [SheetJS](https://sheetjs.com) van cdnjs.
   - Voor de tegels in **Apps** haalt hij het icoon van een website op, van de website zelf of via de icoondienst van Google. Interne adressen, zoals intranet en SharePoint, worden nooit naar buiten gestuurd.
   - De LinkedIn-knoppen bij contacten openen LinkedIn in een nieuw tabblad.
 
@@ -154,7 +154,7 @@ De ingebouwde **Help & handleiding** (de knop **?** rechtsboven, of F1) legt elk
 
 Wil je de contacten met een telefoonnummer ook op je telefoon hebben? In de map [`contacten-sync`](contacten-sync/) staat een klein achtergrondprogramma voor macOS. Het zet die contacten automatisch in een aparte groep in Contacten op je Mac en iPhone, via iCloud.
 
-- Het programma draait alleen op je eigen Mac. Je app-specifieke Apple-wachtwoord staat alleen in de macOS-sleutelhanger.
+- Het programma draait alleen op je eigen Mac. Je app-specifieke Apple-wachtwoord staat alleen in de macOS-sleutelhanger. Bij het opslaan gaat het niet als argument van een commando mee, zodat andere programma's op je Mac het niet kunnen zien.
 - De tool en het programma worden aan elkaar gekoppeld met een **koppelcode**. Andere websites kunnen het programma daardoor niet aansturen of uitlezen.
 - Het programma raakt alleen de contacten aan die het zelf heeft aangemaakt.
 
@@ -179,7 +179,7 @@ Map koppelen gebruikt de *File System Access API*, die alleen Chrome en Edge ond
 ## Techniek
 
 - **Eén bestand** (`index.html`) met HTML, CSS en JavaScript. Er is geen build-stap, geen framework en geen installatie.
-- De enige externe bibliotheek is [SheetJS](https://sheetjs.com) voor Excel. Die wordt pas geladen als je hem nodig hebt.
+- De enige externe bibliotheek is [SheetJS](https://sheetjs.com) voor Excel (Apache-licentie 2.0). Die staat in de map `vendor` en wordt pas geladen als je hem nodig hebt. Er is geen internetverbinding voor nodig.
 - Iconen: [Font Awesome Free](https://fontawesome.com) (CC BY 4.0), inline opgenomen als SVG.
 - Gegevens worden opgeslagen als JSON. Oudere gegevensbestanden blijven altijd inlaadbaar.
 - De contacten-sync gebruikt alleen Python 3 uit macOS zelf, zonder extra pakketten.

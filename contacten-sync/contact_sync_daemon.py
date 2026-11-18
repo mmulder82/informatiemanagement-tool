@@ -150,12 +150,28 @@ def save_state(st):
 
 # ---------- macOS-sleutelhanger via het ingebouwde `security`-commando ----------
 
+def _security_quote(waarde):
+    """Zet een waarde tussen dubbele aanhalingstekens voor `security -i`."""
+    return '"' + waarde.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
 def keychain_set(account, password):
-    subprocess.run(
-        ["security", "add-generic-password", "-a", account, "-s", KEYCHAIN_SERVICE,
-         "-w", password, "-U"],
-        check=True, capture_output=True, text=True,
-    )
+    # Het wachtwoord gaat via stdin naar `security -i` en niet als argument mee:
+    # argumenten zijn voor andere processen op de Mac te zien (ps). Een regeleinde
+    # of nulteken zou een tweede opdracht kunnen inleiden, dus die weigeren we.
+    if any(c in (account + password) for c in "\n\r\0"):
+        raise RuntimeError("Apple ID of wachtwoord bevat een ongeldig teken.")
+    opdracht = "add-generic-password -a {} -s {} -w {} -U\n".format(
+        _security_quote(account), _security_quote(KEYCHAIN_SERVICE), _security_quote(password))
+    try:
+        subprocess.run(["security", "-i"], input=opdracht, check=True,
+                       capture_output=True, text=True)
+    except subprocess.CalledProcessError:
+        raise RuntimeError("het commando `security` gaf een fout") from None
+    # `security -i` meldt een mislukte opdracht niet altijd via de afsluitcode,
+    # dus controleren we of het wachtwoord er echt staat zoals bedoeld.
+    if keychain_get(account) != password:
+        raise RuntimeError("het wachtwoord is niet goed opgeslagen")
 
 
 def keychain_get(account):
