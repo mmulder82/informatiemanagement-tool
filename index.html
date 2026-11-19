@@ -683,6 +683,10 @@
   .std-tagfilter{margin:0 0 12px}
   .std-tagfilter .tq-chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   .std-head-sub{font-size:11.5px;color:var(--muted);white-space:nowrap}
+  .eis-filter-sel{padding:6px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--panel);font:inherit;font-size:13px;color:var(--text);max-width:240px}
+  .eis-alles{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin:2px 0 8px;cursor:pointer;width:fit-content}
+  .eis-sel{flex-shrink:0;margin:0 2px 0 0;cursor:pointer}
+  .eis-voorbeeld{font-size:12px;color:var(--muted);margin-top:4px}
   .std-chips{display:inline-flex;flex-wrap:wrap;gap:4px;margin-left:2px}
   .sw-name .std-chips{display:flex;margin:4px 0 0}
   .std-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);cursor:pointer;white-space:nowrap}
@@ -1947,8 +1951,14 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.43.1";
+const APP_VERSION = "4.44.0";
 const CHANGELOG = [
+  { version: "4.44.0", datum: "2026-11-19", items: [
+    "Nieuw onder Kennis: Eisen (PvE). Leg standaardeisen voor een Programma van Eisen vast, elke eis apart, met titel, eis, toelichting, soort, categorie en prioriteit (MoSCoW).",
+    "Koppel elke eis aan één standaard uit Standaarden, zodat duidelijk is waar de eis vandaan komt. Koppelen aan software en activiteiten kan ook.",
+    "Vink eisen aan en exporteer ze naar Excel, Word of CSV. De eisnummers worden bij het exporteren automatisch toegekend.",
+    "Op de kaart van een standaard zie je hoeveel eisen eruit komen en maak je er direct een nieuwe eis bij.",
+  ]},
   { version: "4.43.1", datum: "2026-11-18", items: [
     "Importeren en exporteren naar Excel gebruikt nu een nieuwere versie van de Excel-bibliotheek. Die wordt met de tool meegeleverd (map vendor) en niet meer van internet gehaald. Gebruik je een gedownload exemplaar, bewaar dan de hele map en niet alleen index.html.",
     "Contacten synchroniseren: het Apple-wachtwoord is tijdens het opslaan niet meer zichtbaar voor andere programma's op je Mac. Draai installeer-contactsync.command opnieuw om dit te activeren.",
@@ -3969,6 +3979,12 @@ function mergeSoftwareInto(canonicalName, duplicateName){
     p.software = p.software.filter(x => normName(x) !== normName(duplicateName));
     if (!p.software.some(x => normName(x) === normName(canonicalName))) p.software.push(canonicalName);
   }
+  // 2c) Eisen: koppeling verleggen naar de canonieke naam
+  for (const e of (state.eisen||[])){
+    if (!(e.software||[]).some(x => normName(x) === normName(duplicateName))) continue;
+    e.software = e.software.filter(x => normName(x) !== normName(duplicateName));
+    if (!e.software.some(x => normName(x) === normName(canonicalName))) e.software.push(canonicalName);
+  }
 
   // 3) Duplicate uit globale pool halen
   const gp = getGlobalSoftware();
@@ -4012,6 +4028,9 @@ function deleteSoftwareEverywhere(softwareName){
   }
   for (const p of (state.standaarden||[])){
     if (Array.isArray(p.software)) p.software = p.software.filter(s => normName(s) !== k);
+  }
+  for (const e of (state.eisen||[])){
+    if (Array.isArray(e.software)) e.software = e.software.filter(s => normName(s) !== k);
   }
   return removed;
 }
@@ -5887,6 +5906,7 @@ const NAV_CATS = [
     { view: "processen", label: "Processen", icon: "processen", alias: ["overlap"] },
     { view: "wetten", label: "Wet- en regelgeving", icon: "wetten" },
     { view: "standaarden", label: "Standaarden", icon: "standaarden" },
+    { view: "eisen", label: "Eisen (PvE)", icon: "acties" },
   ]},
   { key: "instellingen", label: "Instellingen", icon: "settings", def: "instellingen", hidden: true, items: [
     { view: "instellingen", label: "Algemeen", icon: "sliders" },
@@ -6492,6 +6512,14 @@ function runGlobalSearch(q){
       bron: ["Standaard", p.status, p.forumStatus && p.forumStatus !== "geen" ? `Forum: ${p.forumStatus}` : "", (p.tags||[]).slice(0,3).join(", ")].filter(Boolean).join(" · "),
       go: ()=> gaNaarProject(p.id) })));
 
+  // Eisen (PvE)
+  add("eisen", "Eisen (PvE)", "acties", getEisen()
+    .filter(e => zoekMatch(terms, e.titel, e.tekst, e.toelichting, e.categorie, eisBron(e), e.software))
+    .sort(eisSorteer)
+    .map(e => ({ titel: e.titel || "(naamloze eis)", icon: "acties",
+      bron: ["Eis", eisSoortLabel(e.soort), e.categorie, eisBron(e)].filter(Boolean).join(" · "),
+      go: ()=> eisGaNaar(e.id) })));
+
   // Apps
   add("apps", "Apps", "apps", getAppLinks()
     .filter(l => zoekMatch(terms, l.naam, l.url, l.categorie))
@@ -6603,6 +6631,10 @@ function renderMain(){
   }
   if (activeView === "standaarden"){
     renderStandaardenView(main);
+    return;
+  }
+  if (activeView === "eisen"){
+    renderEisenView(main);
     return;
   }
   if (activeView === "software"){
@@ -9468,6 +9500,461 @@ function renderStandaardenView(main){
   renderLijst();
   const zoekInp = main.querySelector("#stdSearch");
   zoekInp.addEventListener("input", ()=>{ stdSearch = zoekInp.value; renderLijst(); });
+}
+
+/* ---------- Eisen (PvE) ----------
+   Bibliotheek met standaardeisen voor een Programma van Eisen. Per eis: titel, eistekst, toelichting,
+   soort, categorie, prioriteit (MoSCoW) en één bron: een standaard uit Kennis → Standaarden
+   (standaardId). Optioneel zijn er gekoppelde software (namen) en activiteiten (id's).
+   Het eisnummer wordt niet bewaard: dat wordt bij het exporteren automatisch toegekend, in de
+   volgorde van de geselecteerde eisen. */
+const EIS_SOORTEN = [["functioneel","Functioneel"],["niet-functioneel","Niet-functioneel"],["randvoorwaarde","Randvoorwaarde"]];
+const EIS_PRIOS = [["must","Must","prio-hoog"],["should","Should","prio-midden"],["could","Could","prio-laag"],["won't","Won't","gearchiveerd"]];
+const EIS_CATEGORIE_VOORSTELLEN = ["Archivering","Beheer","Gebruiksvriendelijkheid","Informatiebeveiliging","Interoperabiliteit","Juridisch","Migratie","Prestaties","Privacy","Support en onderhoud","Toegankelijkheid"];
+let eisSearch = "";
+let eisFilterSoort = "";
+let eisFilterCat = "";
+let eisFilterStd = "";          // "" = alle, "_geen" = zonder standaard, anders het id van een standaard
+let eisPrefix = "EIS";
+const eisSel = new Set();       // id's van geselecteerde eisen (blijft staan bij filteren)
+
+function getEisen(){ return state.eisen || (state.eisen = []); }
+function newEis(){
+  const t = new Date().toISOString();
+  return { id: uid(), titel: "", tekst: "", toelichting: "", soort: "functioneel", categorie: "",
+    prioriteit: "must", standaardId: "", software: [], projecten: [], aangemaakt: t, gewijzigd: t };
+}
+function eisStandaard(e){ return e.standaardId ? ((state.standaarden||[]).find(p => p.id === e.standaardId) || null) : null; }
+/* Leesbare bron van een eis: naam en versie van de standaard */
+function eisBron(e){
+  if (!e.standaardId) return "";
+  const s = eisStandaard(e);
+  if (!s) return "(standaard verwijderd)";
+  const v = s.versie ? " v" + String(s.versie).replace(/^v/i, "") : "";
+  return (s.titel || "(naamloze standaard)") + v;
+}
+function eisSoortLabel(v){ return (EIS_SOORTEN.find(x => x[0] === v) || [])[1] || ""; }
+function eisPrioLabel(v){ return (EIS_PRIOS.find(x => x[0] === v) || [])[1] || ""; }
+function eisCategorieen(){
+  const set = new Map();
+  for (const c of [...EIS_CATEGORIE_VOORSTELLEN, ...getEisen().map(e => (e.categorie||"").trim())])
+    if (c && !set.has(normName(c))) set.set(normName(c), c);
+  return [...set.values()].sort((a,b)=> a.localeCompare(b, "nl"));
+}
+function eisGebruikteCategorieen(){
+  const set = new Map();
+  for (const e of getEisen()){ const c = (e.categorie||"").trim(); if (c && !set.has(normName(c))) set.set(normName(c), c); }
+  return [...set.values()].sort((a,b)=> a.localeCompare(b, "nl"));
+}
+/* Vaste volgorde: soort, categorie, titel */
+function eisSorteer(a, b){
+  const si = x => { const i = EIS_SOORTEN.findIndex(s => s[0] === x.soort); return i < 0 ? 99 : i; };
+  return si(a) - si(b)
+    || (a.categorie||"").localeCompare(b.categorie||"", "nl")
+    || (a.titel||"").localeCompare(b.titel||"", "nl");
+}
+function eisActiviteiten(e){
+  return (e.projecten||[]).map(id => { const hit = findProjectAnywhere(id); return hit && !hit.standaard ? { id, titel: hit.p.titel || "(zonder titel)" } : null; }).filter(Boolean);
+}
+
+/* Tabel voor de export: het eisnummer wordt hier toegekend (voorvoegsel + volgnummer) */
+function eisenExportTabel(lijst, prefix){
+  const breedte = Math.max(3, String(lijst.length).length);
+  const pre = (prefix || "").trim().replace(/-+$/, "");
+  const rows = lijst.map((e, i) => [
+    (pre ? pre + "-" : "") + String(i + 1).padStart(breedte, "0"),
+    e.titel || "", e.tekst || "", e.toelichting || "",
+    eisSoortLabel(e.soort), e.categorie || "", eisPrioLabel(e.prioriteit), eisBron(e)
+  ]);
+  return {
+    titel: "Programma van Eisen",
+    headers: ["Nr.", "Titel", "Eis", "Toelichting", "Soort", "Categorie", "Prioriteit (MoSCoW)", "Bron"],
+    types: ["text","text","text","text","text","text","text","text"],
+    rows
+  };
+}
+/* Word zonder extra bibliotheek: een HTML-tabel die Word direct opent (liggend) */
+function exportEisenWord(t){
+  const cel = v => escapeHTML(v).replace(/\n/g, "<br>");
+  const titel = (state.appTitle || "").trim();
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${escapeHTML(t.titel)}</title>
+<style>
+body{font-family:Calibri,Arial,sans-serif;font-size:10.5pt;color:#1d1d1f}
+h1{font-size:18pt;margin:0 0 4pt}
+p.sub{color:#6e6e73;margin:0 0 12pt}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #b8bec8;padding:4pt 6pt;vertical-align:top;text-align:left;font-size:10pt}
+th{background:#e6eef8}
+@page WordSection1{size:29.7cm 21cm;mso-page-orientation:landscape;margin:1.5cm}
+div.WordSection1{page:WordSection1}
+</style></head><body><div class="WordSection1">
+<h1>${escapeHTML(t.titel)}</h1>
+<p class="sub">${titel ? escapeHTML(titel) + " · " : ""}${escapeHTML(formatDatumNL(todayISO()))} · ${t.rows.length} eis${t.rows.length === 1 ? "" : "en"}</p>
+<table><thead><tr>${t.headers.map(h => `<th>${escapeHTML(h)}</th>`).join("")}</tr></thead>
+<tbody>${t.rows.map(r => `<tr>${r.map(v => `<td>${cel(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>
+</div></body></html>`;
+  downloadBlob(new Blob(["﻿", html], { type: "application/msword" }), exportBestandsnaam(t, {}, "doc"));
+}
+function openEisenExport(lijst){
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal" style="max-width:480px">
+      <h3>Eisen exporteren</h3>
+      <p style="margin:0 0 14px;color:var(--muted);font-size:13px">${lijst.length} eis${lijst.length === 1 ? "" : "en"} geselecteerd. De eisnummers worden bij het exporteren automatisch toegekend, in de volgorde van de lijst (soort, categorie, titel).</p>
+      <div class="row">
+        <label>Voorvoegsel eisnummer</label>
+        <input id="eisPrefix" value="${escapeHTML(eisPrefix)}" placeholder="Bijv. EIS">
+        <div class="eis-voorbeeld" id="eisVoorbeeld"></div>
+      </div>
+      <div class="row">
+        <label>Bestandsvorm</label>
+        <select id="eisFormaat">
+          <option value="xlsx">Excel (.xlsx)</option>
+          <option value="doc">Word (.doc)</option>
+          <option value="csv">CSV (.csv)</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="secondary" id="eisCancel">Annuleren</button>
+        <button class="primary" id="eisGo">Exporteren</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  const close = ()=> backdrop.remove();
+  backdrop.onclick = (ev)=>{ if (ev.target === backdrop) close(); };
+  backdrop.querySelector("#eisCancel").onclick = close;
+  const prefInp = backdrop.querySelector("#eisPrefix");
+  const voorbeeld = ()=>{
+    const t = eisenExportTabel(lijst, prefInp.value);
+    backdrop.querySelector("#eisVoorbeeld").textContent = `Eerste eis: ${t.rows[0][0]}${lijst.length > 1 ? " · laatste: " + t.rows[lijst.length - 1][0] : ""}`;
+  };
+  prefInp.addEventListener("input", voorbeeld);
+  voorbeeld();
+  backdrop.querySelector("#eisGo").onclick = async ()=>{
+    eisPrefix = prefInp.value.trim();
+    const vorm = backdrop.querySelector("#eisFormaat").value;
+    const t = eisenExportTabel(lijst, eisPrefix);
+    close();
+    if (vorm === "xlsx") await exportTabelXLSX(t, {});
+    else if (vorm === "csv") exportTabelCSV(t, {});
+    else exportEisenWord(t);
+  };
+  setTimeout(()=> prefInp.select(), 50);
+}
+
+/* Koppel-pickers voor software en activiteiten */
+function openEisKoppelPicker(e, soort, onChange){
+  const naam = e.titel || "deze eis";
+  if (soort === "software"){
+    const map = new Map();
+    for (const n of allSoftwareGlobal()) if (!map.has(normName(n))) map.set(normName(n), n);
+    for (const n of (e.software||[])) if (!map.has(normName(n))) map.set(normName(n), n);
+    const list = [...map.values()].sort((a,b)=> a.localeCompare(b, "nl"));
+    const heeft = n => (e.software||[]).some(x => normName(x) === normName(n));
+    openLinkEntityPicker({
+      titel: `Software koppelen aan ${naam}`,
+      lijstLabel: "Software uit de catalogus",
+      list, zoeken: true,
+      getId: n => normName(n),
+      rowLabel: n => escapeHTML(n),
+      legeMelding: "Er staat nog geen software in de catalogus. Vul hieronder een naam in.",
+      isLinked: heeft,
+      setLinked: (n, checked)=>{
+        e.software = e.software || [];
+        if (checked && !heeft(n)) e.software.push(n);
+        if (!checked) e.software = e.software.filter(x => normName(x) !== normName(n));
+      },
+      nieuw: {
+        type: "inline",
+        label: "Andere software koppelen (komt ook in de softwarecatalogus)",
+        placeholder: "Bijv. Zaaksysteem",
+        maakAan: (nieuw)=>{
+          if (!allSoftwareGlobal().some(n => normName(n) === normName(nieuw))) getGlobalSoftware().push({ name: nieuw });
+          e.software = e.software || [];
+          if (!heeft(nieuw)) e.software.push(nieuw);
+        }
+      }
+    }, ()=>{ e.gewijzigd = new Date().toISOString(); if (onChange) onChange(); });
+    return;
+  }
+  const list = collectActivities().map(x => ({
+    id: x.p.id, titel: x.p.titel || "(zonder titel)",
+    waar: x.kind === "congres" ? `${x.isOverleg ? "Overleg" : "Congres"} · ${x.congresNaam}` : x.afdNaam
+  })).sort((a,b)=> a.titel.localeCompare(b.titel, "nl"));
+  openLinkEntityPicker({
+    titel: `Activiteiten koppelen aan ${naam}`,
+    lijstLabel: "Activiteiten bij afdelingen, overleggen en congressen",
+    list, zoeken: true,
+    getId: a => a.id,
+    rowLabel: a => `${escapeHTML(a.titel)} <span style="color:var(--muted);font-size:12px">· ${escapeHTML(a.waar)}</span>`,
+    legeMelding: "Er zijn nog geen activiteiten vastgelegd.",
+    isLinked: a => (e.projecten||[]).includes(a.id),
+    setLinked: (a, checked)=>{
+      e.projecten = e.projecten || [];
+      if (checked && !e.projecten.includes(a.id)) e.projecten.push(a.id);
+      if (!checked) e.projecten = e.projecten.filter(x => x !== a.id);
+    },
+    nieuw: { type: "geen" }
+  }, ()=>{ e.gewijzigd = new Date().toISOString(); if (onChange) onChange(); });
+}
+
+function eisGaNaar(id, opts = {}){
+  const e = getEisen().find(x => x.id === id);
+  if (!e) return false;
+  e._open = true;
+  eisSearch = ""; eisFilterSoort = ""; eisFilterCat = ""; eisFilterStd = opts.standaardId || "";
+  activeView = "eisen";
+  renderSidebar(); renderMain();
+  scrollToProject(id);
+  return true;
+}
+
+function renderEisCard(e, cb = {}){
+  const el = document.createElement("div");
+  el.className = "project eis-card" + (e._open ? " open" : "");
+  el.dataset.projId = e.id;
+  const prio = EIS_PRIOS.find(x => x[0] === e.prioriteit) || EIS_PRIOS[0];
+  const bron = eisBron(e);
+  el.innerHTML = `
+    <div class="project-head">
+      <input type="checkbox" class="eis-sel" aria-label="Eis selecteren voor export" title="Selecteer voor export" ${eisSel.has(e.id) ? "checked" : ""}>
+      <span class="chev">▸</span>
+      <span class="title">${escapeHTML(e.titel || "(naamloze eis)")}</span>
+      ${bron ? `<span class="std-head-sub" title="Bron: ${escapeHTML(bron)}">${escapeHTML(bron)}</span>` : ``}
+      <span class="pill ${prio[2]}" title="MoSCoW: ${escapeHTML(prio[1])} have">${escapeHTML(prio[1])}</span>
+      <span class="pill">${escapeHTML(eisSoortLabel(e.soort))}</span>
+      ${e.categorie ? `<span class="team-chip" style="font-size:11px;padding:2px 9px">${escapeHTML(e.categorie)}</span>` : ``}
+      <button class="danger-btn" title="Verwijder eis">×</button>
+    </div>
+    <div class="project-body"></div>`;
+  const herteken = ()=>{ const nieuw = renderEisCard(e, cb); el.replaceWith(nieuw); if (cb.onMeta) cb.onMeta(); };
+  const chk = el.querySelector(".eis-sel");
+  chk.addEventListener("click", ev => ev.stopPropagation());
+  chk.addEventListener("change", ()=>{
+    if (chk.checked) eisSel.add(e.id); else eisSel.delete(e.id);
+    if (cb.onSelect) cb.onSelect();
+  });
+  el.querySelector(".project-head").onclick = (ev)=>{
+    if (ev.target.classList.contains("danger-btn") || ev.target.classList.contains("eis-sel")) return;
+    e._open = !e._open;
+    const nieuw = renderEisCard(e, cb);
+    el.replaceWith(nieuw);
+  };
+  el.querySelector(".danger-btn").onclick = (ev)=>{
+    ev.stopPropagation();
+    if (!confirm(`Eis '${e.titel || "(naamloze eis)"}' verwijderen?`)) return;
+    const arr = getEisen();
+    const i = arr.findIndex(x => x.id === e.id);
+    if (i >= 0) arr.splice(i, 1);
+    eisSel.delete(e.id);
+    markDirty();
+    if (cb.onDelete) cb.onDelete();
+  };
+  if (!e._open) return el;
+
+  const body = el.querySelector(".project-body");
+  const stds = (state.standaarden||[]).slice().sort((a,b)=> (a.titel||"").localeCompare(b.titel||"", "nl"));
+  const stdOpties = [`<option value="">(geen standaard)</option>`,
+    ...stds.map(s => `<option value="${escapeHTML(s.id)}" ${s.id === e.standaardId ? "selected" : ""}>${escapeHTML((s.titel || "(naamloze standaard)") + (s.versie ? " v" + String(s.versie).replace(/^v/i, "") : ""))}</option>`),
+    ...(e.standaardId && !eisStandaard(e) ? [`<option value="${escapeHTML(e.standaardId)}" selected>(standaard verwijderd)</option>`] : [])
+  ].join("");
+  body.innerHTML = `
+    <div class="field-grid fg-main">
+      ${field("Titel", `<input data-k="titel" value="${escapeHTML(e.titel)}" placeholder="Korte naam van de eis">`)}
+      ${field("Soort", `<select data-k="soort">${EIS_SOORTEN.map(([v, l]) => `<option value="${v}" ${e.soort === v ? "selected" : ""}>${l}</option>`).join("")}</select>`)}
+      ${field("Categorie", `<input data-k="categorie" list="eisCatLijst" value="${escapeHTML(e.categorie || "")}" placeholder="Bijv. Informatiebeveiliging">`)}
+    </div>
+    <div class="pick-row">
+      <div>
+        <label class="lbl">Prioriteit (MoSCoW)</label>
+        <div class="pick" role="radiogroup" aria-label="Prioriteit">${EIS_PRIOS.map(([v, l, cls]) =>
+          `<button type="button" role="radio" data-pick="prioriteit" data-val="${escapeHTML(v)}" class="${cls} ${e.prioriteit === v ? "on" : ""}" aria-checked="${e.prioriteit === v}"><span class="dot"></span>${l}</button>`).join("")}</div>
+      </div>
+    </div>
+    <div class="field-grid">
+      ${field("Bron: standaard", `<select data-k="standaardId">${stdOpties}</select>`)}
+      <div style="align-self:end;font-size:12px;color:var(--muted);padding-bottom:6px">
+        ${eisStandaard(e) ? `<button type="button" class="ghost-btn" data-action="eis-naar-standaard">Naar deze standaard</button>` : `Staat de standaard er niet tussen? Leg hem eerst vast onder Kennis → Standaarden.`}
+      </div>
+    </div>
+    <div>
+      <label class="lbl">Eis</label>
+      <textarea class="full" data-k="tekst" rows="3" placeholder="De formulering zoals die in het PvE komt, bijv. 'De oplossing ondersteunt …'">${escapeHTML(e.tekst)}</textarea>
+    </div>
+    <div>
+      <label class="lbl">Toelichting</label>
+      <textarea class="full" data-k="toelichting" rows="2" placeholder="Waarom is deze eis nodig? Waar komt hij vandaan?">${escapeHTML(e.toelichting)}</textarea>
+    </div>
+    <div class="section std-koppel">
+      <div>
+        <h4>Software <button class="ghost-btn" data-action="eis-koppel" data-soort="software">+ Koppel software</button></h4>
+        <div class="teams-list" data-role="eis-software"></div>
+      </div>
+      <div>
+        <h4>Activiteiten <button class="ghost-btn" data-action="eis-koppel" data-soort="projecten">+ Koppel activiteit</button></h4>
+        <div class="teams-list" data-role="eis-projecten"></div>
+      </div>
+    </div>`;
+
+  const nu = ()=>{ e.gewijzigd = new Date().toISOString(); markDirty(); };
+  body.querySelectorAll("[data-k]").forEach(inp => {
+    const k = inp.dataset.k;
+    if (k === "titel" || k === "tekst" || k === "toelichting"){
+      inp.addEventListener("input", ()=>{
+        e[k] = inp.value; nu();
+        if (k === "titel") el.querySelector(".project-head .title").textContent = inp.value || "(naamloze eis)";
+      });
+    } else {
+      inp.addEventListener("change", ()=>{ e[k] = inp.value; nu(); herteken(); });
+    }
+  });
+  body.querySelectorAll('[data-pick="prioriteit"]').forEach(b => b.onclick = ()=>{ e.prioriteit = b.dataset.val; nu(); herteken(); });
+  body.querySelector('[data-action="eis-naar-standaard"]')?.addEventListener("click", ()=>{ const s = eisStandaard(e); if (s) gaNaarProject(s.id); });
+
+  const renderKoppel = (soort)=>{
+    const host = body.querySelector(`[data-role="eis-${soort}"]`);
+    host.innerHTML = "";
+    const items = soort === "software"
+      ? (e.software||[]).map(n => ({ label: n, key: n }))
+      : eisActiviteiten(e).map(a => ({ label: a.titel, key: a.id }));
+    if (!items.length){
+      host.innerHTML = `<span style="font-size:12px;color:var(--muted)">${soort === "software" ? "Nog geen software gekoppeld." : "Nog geen activiteit gekoppeld."}</span>`;
+      return;
+    }
+    for (const it of items){
+      const chip = document.createElement("span");
+      chip.className = "team-chip";
+      chip.innerHTML = `<span class="std-goto" style="cursor:pointer" title="${soort === "software" ? "Naar Software" : "Naar de activiteit"}">${escapeHTML(it.label)}</span><span class="x" title="Ontkoppelen">×</span>`;
+      chip.querySelector(".std-goto").onclick = ()=>{
+        if (soort === "software"){ activeView = "software"; renderSidebar(); renderMain(); }
+        else gaNaarProject(it.key);
+      };
+      chip.querySelector(".x").onclick = ()=>{
+        if (soort === "software") e.software = (e.software||[]).filter(x => x !== it.key);
+        else e.projecten = (e.projecten||[]).filter(x => x !== it.key);
+        nu(); renderKoppel(soort);
+      };
+      host.appendChild(chip);
+    }
+  };
+  renderKoppel("software"); renderKoppel("projecten");
+  body.querySelectorAll('[data-action="eis-koppel"]').forEach(btn => btn.onclick = ()=>{
+    const soort = btn.dataset.soort;
+    openEisKoppelPicker(e, soort, ()=> renderKoppel(soort));
+  });
+  return el;
+}
+
+function renderEisenView(main){
+  const alle = getEisen();
+  for (const id of [...eisSel]) if (!alle.some(e => e.id === id)) eisSel.delete(id);
+  main.innerHTML = `
+    <div class="afd-header">
+      <div>
+        <h2>Eisen (PvE)</h2>
+        <div class="sub" id="eisSub"></div>
+      </div>
+      <div class="toolbar">
+        <button class="ghost-btn" id="eisExport">Exporteer selectie…</button>
+        <button id="addEis">+ Nieuwe eis</button>
+      </div>
+    </div>
+    <div class="std-filters">
+      <div class="sw-search-field" style="max-width:340px;flex:1 1 220px">
+        <span class="icon">${faIcon("search")}</span>
+        <input id="eisSearch" placeholder="Zoek op titel, eis, categorie of bron…" value="${escapeHTML(eisSearch)}">
+      </div>
+      <div class="pick" role="radiogroup" aria-label="Filter op soort">
+        <button type="button" data-eis-soort="" class="${!eisFilterSoort ? "on lopend" : ""}">alle</button>
+        ${EIS_SOORTEN.map(([v, l]) => `<button type="button" data-eis-soort="${v}" class="lopend ${eisFilterSoort === v ? "on" : ""}"><span class="dot"></span>${l}</button>`).join("")}
+      </div>
+      <select id="eisFilterCat" class="eis-filter-sel" aria-label="Filter op categorie"></select>
+      <select id="eisFilterStd" class="eis-filter-sel" aria-label="Filter op bron"></select>
+    </div>
+    <datalist id="eisCatLijst">${eisCategorieen().map(c => `<option value="${escapeHTML(c)}"></option>`).join("")}</datalist>
+    <label class="eis-alles"><input type="checkbox" id="eisAlles"><span id="eisAllesTekst"></span></label>
+    <div class="projects" id="eisLijst"></div>`;
+
+  const lijstEl = main.querySelector("#eisLijst");
+  const catSel = main.querySelector("#eisFilterCat");
+  const stdSel = main.querySelector("#eisFilterStd");
+  const alles = main.querySelector("#eisAlles");
+  let zicht = [];
+
+  const vulFilters = ()=>{
+    const cats = eisGebruikteCategorieen();
+    if (eisFilterCat && !cats.some(c => normName(c) === normName(eisFilterCat))) eisFilterCat = "";
+    catSel.innerHTML = `<option value="">Alle categorieën</option>` + cats.map(c => `<option value="${escapeHTML(c)}" ${normName(c) === normName(eisFilterCat) ? "selected" : ""}>${escapeHTML(c)}</option>`).join("");
+    const ids = new Set(alle.map(e => e.standaardId).filter(Boolean));
+    const stds = (state.standaarden||[]).filter(s => ids.has(s.id)).sort((a,b)=> (a.titel||"").localeCompare(b.titel||"", "nl"));
+    if (eisFilterStd && eisFilterStd !== "_geen" && !stds.some(s => s.id === eisFilterStd)) eisFilterStd = "";
+    stdSel.innerHTML = `<option value="">Alle bronnen</option>`
+      + (alle.some(e => !e.standaardId) ? `<option value="_geen" ${eisFilterStd === "_geen" ? "selected" : ""}>Zonder standaard</option>` : "")
+      + stds.map(s => `<option value="${escapeHTML(s.id)}" ${eisFilterStd === s.id ? "selected" : ""}>${escapeHTML(s.titel || "(naamloze standaard)")}</option>`).join("");
+    const dl = main.querySelector("#eisCatLijst");
+    if (dl) dl.innerHTML = eisCategorieen().map(c => `<option value="${escapeHTML(c)}"></option>`).join("");
+  };
+  const updateSel = ()=>{
+    const n = eisSel.size;
+    main.querySelector("#eisSub").textContent = `${alle.length} eis${alle.length === 1 ? "" : "en"} vastgelegd${n ? ` · ${n} geselecteerd` : ""}`;
+    const knop = main.querySelector("#eisExport");
+    knop.disabled = !n;
+    knop.textContent = n ? `Exporteer selectie (${n})…` : "Exporteer selectie…";
+    const geselZicht = zicht.filter(e => eisSel.has(e.id)).length;
+    alles.checked = zicht.length > 0 && geselZicht === zicht.length;
+    alles.indeterminate = geselZicht > 0 && geselZicht < zicht.length;
+    alles.disabled = !zicht.length;
+    main.querySelector("#eisAllesTekst").textContent = zicht.length
+      ? `Selecteer alle ${zicht.length} zichtbare eis${zicht.length === 1 ? "" : "en"}` : "Niets om te selecteren";
+  };
+  const cb = { onSelect: updateSel, onMeta: vulFilters, onDelete: ()=>{ renderLijst(); vulFilters(); } };
+
+  function renderLijst(){
+    lijstEl.innerHTML = "";
+    const terms = eisSearch.toLowerCase().split(/\s+/).filter(Boolean);
+    zicht = alle
+      .filter(e => !eisFilterSoort || e.soort === eisFilterSoort)
+      .filter(e => !eisFilterCat || normName(e.categorie) === normName(eisFilterCat))
+      .filter(e => !eisFilterStd || (eisFilterStd === "_geen" ? !e.standaardId : e.standaardId === eisFilterStd))
+      .filter(e => !terms.length || zoekMatch(terms, e.titel, e.tekst, e.toelichting, e.categorie, eisBron(e), eisSoortLabel(e.soort), e.software))
+      .sort((a,b)=> (!!a.titel === !!b.titel) ? eisSorteer(a, b) : (a.titel ? 1 : -1));
+    if (!alle.length){
+      lijstEl.innerHTML = `<div class="empty" style="border:1px dashed #d1d5db;border-radius:10px;margin-top:8px"><h3 style="margin:0 0 6px">Nog geen eisen</h3><p style="margin:0">Klik op <b>+ Nieuwe eis</b> om een standaardeis vast te leggen. Koppel er een standaard aan, zodat duidelijk is waar de eis vandaan komt. Vink daarna eisen aan en exporteer ze als startpunt voor een Programma van Eisen.</p></div>`;
+    } else if (!zicht.length){
+      lijstEl.innerHTML = `<div class="cat-empty" style="padding:14px 4px">Geen eisen gevonden met deze zoekterm of filters.</div>`;
+    }
+    for (const e of zicht) lijstEl.appendChild(renderEisCard(e, cb));
+    updateSel();
+  }
+
+  main.querySelector("#addEis").onclick = ()=>{
+    const e = newEis();
+    e._open = true;
+    if (eisFilterSoort) e.soort = eisFilterSoort;
+    if (eisFilterCat) e.categorie = eisFilterCat;
+    if (eisFilterStd && eisFilterStd !== "_geen") e.standaardId = eisFilterStd;
+    alle.push(e);
+    eisSearch = "";
+    markDirty(); renderEisenView(main);
+    scrollToProject(e.id);
+    setTimeout(()=>{ main.querySelector(`.project[data-proj-id="${CSS.escape(e.id)}"] [data-k="titel"]`)?.focus(); }, 100);
+  };
+  main.querySelector("#eisExport").onclick = ()=>{
+    const lijst = alle.filter(e => eisSel.has(e.id)).sort(eisSorteer);
+    if (lijst.length) openEisenExport(lijst);
+  };
+  main.querySelectorAll("[data-eis-soort]").forEach(b => b.onclick = ()=>{ eisFilterSoort = b.dataset.eisSoort; renderEisenView(main); });
+  catSel.onchange = ()=>{ eisFilterCat = catSel.value; renderLijst(); };
+  stdSel.onchange = ()=>{ eisFilterStd = stdSel.value; renderLijst(); };
+  alles.onchange = ()=>{
+    for (const e of zicht){ if (alles.checked) eisSel.add(e.id); else eisSel.delete(e.id); }
+    renderLijst();
+  };
+  const zoekInp = main.querySelector("#eisSearch");
+  zoekInp.addEventListener("input", ()=>{ eisSearch = zoekInp.value; renderLijst(); });
+  vulFilters();
+  renderLijst();
 }
 
 function renderWettenView(main){
@@ -14650,7 +15137,7 @@ const HELP_SECTIES = [
    "wetten"
   ],
   "nav": "processen",
-  "tekst": "Onder **Kennis** vind je twee overzichten over alle afdelingen heen (daarnaast staat er **Standaarden**, met een eigen uitleg):\n- **Processen**: alle hoofdprocessen. Bovenaan staan de **overlappende processen**, die bij meerdere afdelingen voorkomen, met de afdelingen erbij. Daaronder staan de processen die bij één afdeling horen. Klik op een afdeling om ernaartoe te gaan.\n- **Wet- en regelgeving**: hetzelfde voor wetten en regelingen, zodat je ziet welke wetten voor meerdere afdelingen relevant zijn.\n\nProcessen en wetten zelf voeg je toe bij de afdeling, op het tabblad **Processen & wetten**. Overlap wordt herkend op naam: gebruik dus overal dezelfde schrijfwijze."
+  "tekst": "Onder **Kennis** vind je twee overzichten over alle afdelingen heen (daarnaast staan er **Standaarden** en **Eisen (PvE)**, met een eigen uitleg):\n- **Processen**: alle hoofdprocessen. Bovenaan staan de **overlappende processen**, die bij meerdere afdelingen voorkomen, met de afdelingen erbij. Daaronder staan de processen die bij één afdeling horen. Klik op een afdeling om ernaartoe te gaan.\n- **Wet- en regelgeving**: hetzelfde voor wetten en regelingen, zodat je ziet welke wetten voor meerdere afdelingen relevant zijn.\n\nProcessen en wetten zelf voeg je toe bij de afdeling, op het tabblad **Processen & wetten**. Overlap wordt herkend op naam: gebruik dus overal dezelfde schrijfwijze."
  },
  {
   "id": "standaarden",
@@ -14662,6 +15149,17 @@ const HELP_SECTIES = [
   ],
   "nav": "standaarden",
   "tekst": "Onder **Kennis → Standaarden** leg je de open- en informatiestandaarden vast waar de gemeente mee werkt, zoals ZGW API's, NEN 2082, StUF of DigiD.\n\nKlik op **+ Nieuwe standaard**. Elke standaard is een kaart in dezelfde stijl als een activiteit. Klik op de kop om hem open en dicht te klappen.\n\n# Wat leg je vast?\n- **Naam**, **versie** en **beheerorganisatie** (bijvoorbeeld VNG Realisatie of Logius).\n- **Gebruik bij ons**: *in gebruik*, *in invoering*, *gepland* of *n.v.t.*\n- **Forum Standaardisatie**: *verplicht* (pas toe of leg uit), *aanbevolen* of *geen*. Verplicht en aanbevolen zie je ook in de kop van de kaart.\n- **Korte uitleg**: waar de standaard over gaat en waarom hij voor ons van belang is.\n- **Tags**: standaarden hebben hun eigen tags, los van de activiteiten. Beheer ze onder Instellingen → **Tags & statussen**.\n- **Software** en **Wet- en regelgeving**: koppel software uit de catalogus en wetten die bij afdelingen zijn vastgelegd. Staat iets er nog niet tussen, typ dan onderin een naam. Nieuwe software komt dan ook in de catalogus. Andersom zie je in het **Software**-overzicht en bij **Wet- en regelgeving** blauwe labels met de gekoppelde standaarden.\n- **Wie weet hier meer van?**: koppel collega's of externe experts uit je contacten en noteer hun rol of expertise. Zoek je op iemands naam, dan zie je de standaarden waar die persoon meer van weet.\n- **Links en documentatie**: verwijzingen naar de officiële pagina, specificaties of SharePoint.\n- **Documenten**: sleep bestanden op de kaart. Ze komen in je gekoppelde map onder *Bijlagen/Standaarden/*.\n- **Acties** en **Logboek** werken net als bij een activiteit. Acties verschijnen ook in het Acties-overzicht en op het dashboard.\n\n# Zoeken en filteren\nMet het zoekveld zoek je op naam, uitleg, versie, beheerorganisatie, tag, software, wet of persoon. Met de knoppen filter je op gebruik, en met de tags daaronder op één of meer tags. De zoekbalk bovenin de app vindt standaarden ook."
+ },
+ {
+  "id": "eisen",
+  "groep": "ICT en kennis",
+  "titel": "Eisen (PvE)",
+  "icon": "acties",
+  "views": [
+   "eisen"
+  ],
+  "nav": "eisen",
+  "tekst": "Onder **Kennis → Eisen (PvE)** bouw je een bibliotheek met standaardeisen voor een Programma van Eisen (PvE). Elke eis staat op een eigen kaart.\n\n# Wat leg je vast?\n- **Titel**, **Eis** (de formulering zoals die in het PvE komt) en **Toelichting**.\n- **Soort**: functioneel, niet-functioneel of randvoorwaarde.\n- **Categorie**: bijvoorbeeld informatiebeveiliging, privacy of beheer. Kies uit de voorstellen of typ een eigen categorie.\n- **Prioriteit** volgens MoSCoW: must, should, could of won't.\n- **Bron**: één standaard uit *Kennis → Standaarden*. Zo is duidelijk uit welke standaard de eis komt. Een eis zonder bron kan ook. Op de kaart van de standaard zie je hoeveel eisen eruit komen en maak je er direct een nieuwe aan.\n- **Software** en **Activiteiten**: koppel de eis aan software uit de catalogus en aan activiteiten waarvoor je hem gebruikt hebt.\n\n# Zoeken en filteren\nZoek op titel, eis, toelichting, categorie, bron of software. Filter op soort, categorie en bron.\n\n# Exporteren naar een PvE\n1. Vink de eisen aan die je wilt gebruiken. Met het vakje boven de lijst selecteer je alles wat nu zichtbaar is. Je selectie blijft staan als je filtert of zoekt.\n2. Kies **Exporteer selectie…**.\n3. Vul een voorvoegsel in (bijvoorbeeld *EIS*) en kies Excel, Word of CSV.\n\nDe eisnummers (EIS-001, EIS-002, …) worden bij het exporteren automatisch toegekend, in de volgorde van de lijst: eerst per soort, dan per categorie, dan op titel. Ze worden niet in de tool bewaard, zodat de nummering altijd klopt met de eisen die je kiest. Het Word-bestand bevat een tabel in liggend formaat."
  },
  {
   "id": "apps",
@@ -17848,7 +18346,9 @@ function renderProject(afdNaam, p, srcArr, opts={}){
     const msg = hasAtts
       ? `${soort} '${p.titel||""}' verwijderen?\n\nDit verwijdert ook ${p.attachments.length} bijlage${p.attachments.length===1?"":"s"} uit de gekoppelde map.`
       : `${soort} '${p.titel||""}' verwijderen?`;
-    if (!confirm(msg)) return;
+    const eisN = isStd ? getEisen().filter(x => x.standaardId === p.id).length : 0;
+    const eisTxt = eisN ? `\n\n${eisN} eis${eisN === 1 ? "" : "en"} met deze standaard als bron blijf${eisN === 1 ? "t" : "en"} staan, zonder bron.` : "";
+    if (!confirm(msg + eisTxt)) return;
     if (hasAtts && folderHandle){
       try{ await deleteActivityAttachments(afdNaam, activityFolderName(p)); }catch(e){ console.warn(e); }
     }
@@ -17858,6 +18358,7 @@ function renderProject(afdNaam, p, srcArr, opts={}){
     const arr = srcArr || state.afdelingen[afdNaam].projects;
     const idx = arr.findIndex(x=>x.id===p.id);
     if (idx>=0) arr.splice(idx,1);
+    if (isStd) for (const e of getEisen()) if (e.standaardId === p.id) e.standaardId = "";
     markDirty(); renderMain(); renderSidebar();
   };
   if (p._open) el.querySelector(".project-body").appendChild(renderProjectBody(afdNaam, p, opts));
@@ -17928,6 +18429,10 @@ ${isStd ? `
         <h4>Wet- en regelgeving <button class="ghost-btn" data-action="std-koppel" data-soort="wetten">+ Koppel wet</button></h4>
         <div class="teams-list" data-role="std-wetten"></div>
       </div>
+    </div>
+    <div class="section">
+      <h4>Eisen uit deze standaard <button class="ghost-btn" data-action="std-eisen-bekijk">Bekijk eisen</button> <button class="ghost-btn" data-action="std-eisen-nieuw">+ Nieuwe eis</button></h4>
+      <div data-role="std-eisen" style="font-size:12px;color:var(--muted)"></div>
     </div>` : ""}
 
     <div class="section">
@@ -18123,6 +18628,20 @@ ${isStd ? `
       }
     };
     renderKoppel("software"); renderKoppel("wetten");
+    const eisN = getEisen().filter(x => x.standaardId === p.id).length;
+    body.querySelector('[data-role="std-eisen"]').textContent = eisN
+      ? `${eisN} eis${eisN === 1 ? "" : "en"} met deze standaard als bron.` : "Nog geen eisen met deze standaard als bron.";
+    const eisBekijk = body.querySelector('[data-action="std-eisen-bekijk"]');
+    eisBekijk.style.display = eisN ? "" : "none";
+    eisBekijk.onclick = ()=>{
+      eisSearch = ""; eisFilterSoort = ""; eisFilterCat = ""; eisFilterStd = p.id;
+      activeView = "eisen"; renderSidebar(); renderMain();
+    };
+    body.querySelector('[data-action="std-eisen-nieuw"]').onclick = ()=>{
+      const e = newEis(); e.standaardId = p.id; e._open = true;
+      getEisen().push(e); markDirty();
+      eisGaNaar(e.id, { standaardId: p.id });
+    };
     body.querySelectorAll('[data-action="std-koppel"]').forEach(btn => btn.onclick = ()=>{
       const soort = btn.dataset.soort;
       openStdKoppelPicker(p, soort, ()=> renderKoppel(soort));
@@ -19756,6 +20275,7 @@ function applyLoadedState(data){
   if (!Array.isArray(state.externeInhuur)) state.externeInhuur = [];
   if (!Array.isArray(state.contacten)) state.contacten = [];
   if (!Array.isArray(state.standaarden)) state.standaarden = [];
+  if (!Array.isArray(state.eisen)) state.eisen = [];
   ensureOrgState();
   migreerContactenEenmalig();
 }

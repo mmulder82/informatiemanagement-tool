@@ -39,7 +39,7 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
   - Een bestaande werkinstructie uit Word of Markdown zet je met één import om in een sjabloon.
 - **Congressen, opleidingen en landelijke overleggen.** Per congres, opleiding of overleg houd je activiteiten, acties en verslagen bij.
 - **Meldingen.** Het belletje waarschuwt voor acties die te laat zijn, aflopende contracten en komende bijeenkomsten. Desgewenst krijg je ook een systeemmelding.
-- **Zoeken.** Eén zoekveld doorzoekt activiteiten, acties, mensen, software, processen, standaarden en meer.
+- **Zoeken.** Eén zoekveld doorzoekt activiteiten, acties, mensen, software, processen, standaarden, eisen en meer.
 
 ![Een afdeling met een opengeklapte activiteit: status, prioriteit, tags en acties](screenshots/afdeling.png)
 
@@ -104,9 +104,13 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
   - Je kunt importeren uit een Topdesk-export (Excel), dubbele applicaties opsporen en samenvoegen, en een deelbaar applicatie-overzicht maken.
 - **Processen en wet- en regelgeving.** Je ziet welke processen en wetten bij meerdere afdelingen terugkomen.
 - **Standaarden.** Leg vast met welke open standaarden je werkt (zoals ZGW API's, NEN 2082, StUF en DigiD). Je ziet de status bij de gemeente en of de standaard volgens Forum Standaardisatie verplicht of aanbevolen is.
+- **Eisen (PvE).** Leg standaardeisen voor een Programma van Eisen vast, elke eis apart. Per eis noteer je de eistekst, een toelichting, het soort, de categorie en de prioriteit (MoSCoW). Koppel elke eis aan één standaard uit je lijst met standaarden, zodat duidelijk is waar de eis vandaan komt. Ook koppelen aan software en activiteiten kan.
+  - Vink eisen aan en exporteer ze naar Excel, Word of CSV als startpunt voor een PvE. De eisnummers worden bij het exporteren automatisch toegekend.
 - **Apps.** Je eigen bibliotheek met links naar applicaties en portalen, gegroepeerd per categorie.
 
 ![De software-catalogus met Middel-ID, BIV, afdelingen en functioneel beheerders](screenshots/software.png)
+
+![De eisenbibliotheek voor een Programma van Eisen: per eis de bron-standaard, prioriteit en categorie, met een aangevinkte selectie klaar voor export](screenshots/eisen.png)
 
 ### Importeren en exporteren
 
