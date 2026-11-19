@@ -103,7 +103,7 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
   - Filters tonen bijvoorbeeld applicaties zonder Middel-ID, zonder beheerder of met een hoge BIV.
   - Je kunt importeren uit een Topdesk-export (Excel), dubbele applicaties opsporen en samenvoegen, en een deelbaar applicatie-overzicht maken.
 - **Processen en wet- en regelgeving.** Je ziet welke processen en wetten bij meerdere afdelingen terugkomen.
-- **Standaarden.** Leg vast met welke open standaarden je werkt (zoals ZGW API's, NEN 2082, StUF en DigiD). Je ziet de status bij de gemeente en of de standaard volgens Forum Standaardisatie verplicht of aanbevolen is.
+- **Standaarden.** Leg vast met welke open standaarden je werkt (zoals ZGW API's, NEN 2082, StUF en DigiD). Je ziet de status bij de gemeente en of de standaard volgens Forum Standaardisatie verplicht of aanbevolen is. Op de kaart van een standaard zie je ook welke eisen (PvE) eruit komen.
 - **Eisen (PvE).** Leg standaardeisen voor een Programma van Eisen vast, elke eis apart. Per eis noteer je de eistekst, een toelichting, het soort, de categorie en de prioriteit (MoSCoW). Koppel elke eis aan één standaard uit je lijst met standaarden, zodat duidelijk is waar de eis vandaan komt. Ook koppelen aan software en activiteiten kan.
   - Vink eisen aan en exporteer ze naar Excel, Word of CSV als startpunt voor een PvE. De eisnummers worden bij het exporteren automatisch toegekend.
 - **Apps.** Je eigen bibliotheek met links naar applicaties en portalen, gegroepeerd per categorie.

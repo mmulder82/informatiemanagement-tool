@@ -1951,8 +1951,11 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.44.0";
+const APP_VERSION = "4.44.1";
 const CHANGELOG = [
+  { version: "4.44.1", datum: "2026-11-19", items: [
+    "Op de kaart van een standaard zie je nu welke eisen (PvE) eraan gekoppeld zijn. Klik op een eis om hem te openen.",
+  ]},
   { version: "4.44.0", datum: "2026-11-19", items: [
     "Nieuw onder Kennis: Eisen (PvE). Leg standaardeisen voor een Programma van Eisen vast, elke eis apart, met titel, eis, toelichting, soort, categorie en prioriteit (MoSCoW).",
     "Koppel elke eis aan één standaard uit Standaarden, zodat duidelijk is waar de eis vandaan komt. Koppelen aan software en activiteiten kan ook.",
@@ -15148,7 +15151,7 @@ const HELP_SECTIES = [
    "standaarden"
   ],
   "nav": "standaarden",
-  "tekst": "Onder **Kennis → Standaarden** leg je de open- en informatiestandaarden vast waar de gemeente mee werkt, zoals ZGW API's, NEN 2082, StUF of DigiD.\n\nKlik op **+ Nieuwe standaard**. Elke standaard is een kaart in dezelfde stijl als een activiteit. Klik op de kop om hem open en dicht te klappen.\n\n# Wat leg je vast?\n- **Naam**, **versie** en **beheerorganisatie** (bijvoorbeeld VNG Realisatie of Logius).\n- **Gebruik bij ons**: *in gebruik*, *in invoering*, *gepland* of *n.v.t.*\n- **Forum Standaardisatie**: *verplicht* (pas toe of leg uit), *aanbevolen* of *geen*. Verplicht en aanbevolen zie je ook in de kop van de kaart.\n- **Korte uitleg**: waar de standaard over gaat en waarom hij voor ons van belang is.\n- **Tags**: standaarden hebben hun eigen tags, los van de activiteiten. Beheer ze onder Instellingen → **Tags & statussen**.\n- **Software** en **Wet- en regelgeving**: koppel software uit de catalogus en wetten die bij afdelingen zijn vastgelegd. Staat iets er nog niet tussen, typ dan onderin een naam. Nieuwe software komt dan ook in de catalogus. Andersom zie je in het **Software**-overzicht en bij **Wet- en regelgeving** blauwe labels met de gekoppelde standaarden.\n- **Wie weet hier meer van?**: koppel collega's of externe experts uit je contacten en noteer hun rol of expertise. Zoek je op iemands naam, dan zie je de standaarden waar die persoon meer van weet.\n- **Links en documentatie**: verwijzingen naar de officiële pagina, specificaties of SharePoint.\n- **Documenten**: sleep bestanden op de kaart. Ze komen in je gekoppelde map onder *Bijlagen/Standaarden/*.\n- **Acties** en **Logboek** werken net als bij een activiteit. Acties verschijnen ook in het Acties-overzicht en op het dashboard.\n\n# Zoeken en filteren\nMet het zoekveld zoek je op naam, uitleg, versie, beheerorganisatie, tag, software, wet of persoon. Met de knoppen filter je op gebruik, en met de tags daaronder op één of meer tags. De zoekbalk bovenin de app vindt standaarden ook."
+  "tekst": "Onder **Kennis → Standaarden** leg je de open- en informatiestandaarden vast waar de gemeente mee werkt, zoals ZGW API's, NEN 2082, StUF of DigiD.\n\nKlik op **+ Nieuwe standaard**. Elke standaard is een kaart in dezelfde stijl als een activiteit. Klik op de kop om hem open en dicht te klappen.\n\n# Wat leg je vast?\n- **Naam**, **versie** en **beheerorganisatie** (bijvoorbeeld VNG Realisatie of Logius).\n- **Gebruik bij ons**: *in gebruik*, *in invoering*, *gepland* of *n.v.t.*\n- **Forum Standaardisatie**: *verplicht* (pas toe of leg uit), *aanbevolen* of *geen*. Verplicht en aanbevolen zie je ook in de kop van de kaart.\n- **Korte uitleg**: waar de standaard over gaat en waarom hij voor ons van belang is.\n- **Tags**: standaarden hebben hun eigen tags, los van de activiteiten. Beheer ze onder Instellingen → **Tags & statussen**.\n- **Software** en **Wet- en regelgeving**: koppel software uit de catalogus en wetten die bij afdelingen zijn vastgelegd. Staat iets er nog niet tussen, typ dan onderin een naam. Nieuwe software komt dan ook in de catalogus. Andersom zie je in het **Software**-overzicht en bij **Wet- en regelgeving** blauwe labels met de gekoppelde standaarden.\n- **Wie weet hier meer van?**: koppel collega's of externe experts uit je contacten en noteer hun rol of expertise. Zoek je op iemands naam, dan zie je de standaarden waar die persoon meer van weet.\n- **Eisen (PvE)**: onderaan de kaart zie je welke eisen uit deze standaard komen. Klik op een eis om hem te openen, of maak er direct een nieuwe aan. Eisen leg je vast onder **Kennis → Eisen (PvE)**.\n- **Links en documentatie**: verwijzingen naar de officiële pagina, specificaties of SharePoint.\n- **Documenten**: sleep bestanden op de kaart. Ze komen in je gekoppelde map onder *Bijlagen/Standaarden/*.\n- **Acties** en **Logboek** werken net als bij een activiteit. Acties verschijnen ook in het Acties-overzicht en op het dashboard.\n\n# Zoeken en filteren\nMet het zoekveld zoek je op naam, uitleg, versie, beheerorganisatie, tag, software, wet of persoon. Met de knoppen filter je op gebruik, en met de tags daaronder op één of meer tags. De zoekbalk bovenin de app vindt standaarden ook."
  },
  {
   "id": "eisen",
@@ -18431,8 +18434,8 @@ ${isStd ? `
       </div>
     </div>
     <div class="section">
-      <h4>Eisen uit deze standaard <button class="ghost-btn" data-action="std-eisen-bekijk">Bekijk eisen</button> <button class="ghost-btn" data-action="std-eisen-nieuw">+ Nieuwe eis</button></h4>
-      <div data-role="std-eisen" style="font-size:12px;color:var(--muted)"></div>
+      <h4><span>Eisen (PvE) uit deze standaard <span class="count" data-role="std-eisen-n" style="font-size:12px;color:var(--muted);font-weight:400;margin-left:6px"></span></span> <button class="ghost-btn" data-action="std-eisen-nieuw">+ Nieuwe eis</button></h4>
+      <div data-role="std-eisen"></div>
     </div>` : ""}
 
     <div class="section">
@@ -18628,15 +18631,30 @@ ${isStd ? `
       }
     };
     renderKoppel("software"); renderKoppel("wetten");
-    const eisN = getEisen().filter(x => x.standaardId === p.id).length;
-    body.querySelector('[data-role="std-eisen"]').textContent = eisN
-      ? `${eisN} eis${eisN === 1 ? "" : "en"} met deze standaard als bron.` : "Nog geen eisen met deze standaard als bron.";
-    const eisBekijk = body.querySelector('[data-action="std-eisen-bekijk"]');
-    eisBekijk.style.display = eisN ? "" : "none";
-    eisBekijk.onclick = ()=>{
-      eisSearch = ""; eisFilterSoort = ""; eisFilterCat = ""; eisFilterStd = p.id;
-      activeView = "eisen"; renderSidebar(); renderMain();
+    const renderStdEisen = ()=>{
+      const host = body.querySelector('[data-role="std-eisen"]');
+      const lijst = getEisen().filter(x => x.standaardId === p.id).sort(eisSorteer);
+      body.querySelector('[data-role="std-eisen-n"]').textContent = lijst.length ? `(${lijst.length})` : "";
+      host.innerHTML = "";
+      if (!lijst.length){
+        host.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:2px 0">Nog geen eisen met deze standaard als bron.</div>`;
+        return;
+      }
+      for (const e of lijst){
+        const prio = EIS_PRIOS.find(x => x[0] === e.prioriteit) || EIS_PRIOS[0];
+        const rij = document.createElement("div");
+        rij.style.cssText = "display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:13px";
+        rij.title = "Eis openen";
+        rij.innerHTML = `
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(e.titel || "(naamloze eis)")}</span>
+          ${e.categorie ? `<span style="font-size:11.5px;color:var(--muted);flex-shrink:0">${escapeHTML(e.categorie)}</span>` : ``}
+          <span class="pill" style="font-size:10px;padding:1px 6px;flex-shrink:0">${escapeHTML(eisSoortLabel(e.soort))}</span>
+          <span class="pill ${prio[2]}" style="font-size:10px;padding:1px 6px;flex-shrink:0">${escapeHTML(prio[1])}</span>`;
+        rij.onclick = ()=> eisGaNaar(e.id);
+        host.appendChild(rij);
+      }
     };
+    renderStdEisen();
     body.querySelector('[data-action="std-eisen-nieuw"]').onclick = ()=>{
       const e = newEis(); e.standaardId = p.id; e._open = true;
       getEisen().push(e); markDirty();
