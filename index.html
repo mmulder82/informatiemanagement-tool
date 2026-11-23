@@ -530,7 +530,7 @@
   .dropzone.disabled:hover{border-color:var(--border-strong);color:#c0c0c4;background:transparent}
   .att-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
   .att-row{
-    display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;
+    display:grid;grid-template-columns:auto 1fr auto auto auto;gap:10px;align-items:center;
     padding:7px 10px;border-radius:8px;background:var(--panel-soft);font-size:12.5px;
   }
   .att-row .ic{font-size:14px;color:var(--muted)}
@@ -539,6 +539,10 @@
   .att-row .meta{font-size:11px;color:var(--muted);white-space:nowrap}
   .att-row .del{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 5px;border-radius:4px}
   .att-row .del:hover{color:var(--danger);background:rgba(215,0,21,.08)}
+.att-row .pdfbtn{background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:11px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+  .att-row .pdfbtn:hover{color:var(--accent);border-color:var(--accent)}
+  .att-row.nieuw{animation:attNieuw 2.4s ease-out}
+  @keyframes attNieuw{from{background:var(--accent-soft)}to{background:var(--panel-soft)}}
 
   /* ---- Acties checklist ---- */
   .act-list{display:flex;flex-direction:column;gap:5px}
@@ -1951,8 +1955,13 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.44.1";
+const APP_VERSION = "4.45.0";
 const CHANGELOG = [
+  { version: "4.45.0", datum: "2026-11-23", items: [
+    "PDF-bijlagen bij een activiteit hebben nu een knop PDF-tool. Daarmee open je de PDF direct in de PDF-tool om te ondertekenen, in te vullen of te bewerken.",
+    "Heeft een activiteit twee of meer PDF's, dan voeg je ze met PDF's samenvoegen in één keer samen.",
+    "Met Terugzetten in de PDF-tool komt het resultaat als nieuwe bijlage terug bij de activiteit. Het origineel blijft bewaard.",
+  ]},
   { version: "4.44.1", datum: "2026-11-19", items: [
     "Op de kaart van een standaard zie je nu welke eisen (PvE) eraan gekoppeld zijn. Klik op een eis om hem te openen.",
   ]},
@@ -14951,7 +14960,7 @@ const HELP_SECTIES = [
   "icon": "activiteiten",
   "views": [],
   "nav": "",
-  "tekst": "Een activiteit is alles waar je mee bezig bent bij een afdeling, een congres of het College B&W: een project, een vraag, een traject. Een activiteit maak je aan met **+ Nieuwe activiteit** op het tabblad Activiteiten van een afdeling. Klik op een activiteitskaart om hem open of dicht te klappen.\n\n# Basisgegevens\n- **Titel, startdatum en einddatum** staan samen op één regel.\n- **Status**: één klik op *lopend*, *on hold*, *afgerond* of *gearchiveerd*.\n- **Prioriteit**: *hoog*, *midden* of *laag*.\n- **Tags**: eerder gebruikte tags staan als knoppen, de meest gebruikte eerst en groter. Eén klik voegt een tag toe. Een nieuwe tag maak je via **+ Nieuwe of andere tag**.\n- **Omschrijving**: vrije tekst.\n\n# Acties\nConcrete to-do's bij de activiteit, met een optionele deadline. Afgevinkte acties verhuizen naar een ingeklapt archief op de kaart. Alle acties samen zie je in het scherm **Acties**.\n\n# Contactpersonen\n- Koppel mensen uit je contactenregister. Typ een naam en kies een suggestie.\n- Je vindt hier ook managers, collegeleden en control-personen die nog niet in Contacten staan; die worden dan automatisch toegevoegd.\n- De **rol** stel je per activiteit in, omdat iemands rol per verband kan verschillen. Naam, e-mail en telefoon komen uit het centrale contact.\n\n# Links\nHandige webadressen bij de activiteit, zoals een SharePoint-map, een Topdesk-melding of een document.\n\n# Logboek\nJe verslag van wat er is gebeurd: notities, mails en gesprekken. Zie **Logboek, opmaak en Snel vastleggen**.\n\n# Bijlagen\n- Sleep bestanden naar het vak, of klik om te bladeren. Ze worden opgeslagen in een eigen submap van je gekoppelde map; klik op een bijlage om hem te openen.\n- Bestanden die je zelf buiten de app in die map zet, worden automatisch herkend als je de activiteit opent. Bestanden die je uit die map hebt verwijderd (of verplaatst of hernoemd), verdwijnen dan ook uit de lijst. Met **Vernieuwen** laat je de map op elk moment opnieuw uitlezen; de knop meldt kort hoeveel bestanden er zijn toegevoegd en verwijderd.\n- Een bestand met dezelfde naam als een bestaande bijlage krijgt automatisch een unieke naam, bijvoorbeeld *rapport (2).pdf*.\n\n# Processen\nStart vanuit de activiteit een proces met werkinstructies, bijvoorbeeld *Aanschaf nieuwe software*. Het onderwerp wordt de titel van de activiteit. Gekoppelde processen staan op de kaart met hun voortgang; klik erop om het stappenplan te openen. Rond je het proces af, dan komt er automatisch een samenvatting in het logboek. Zie **Weekstart & processen**.\n\n# Verplaatsen, verwijderen en volgorde\n- **↔** verplaatst de activiteit naar een andere afdeling of een congres.\n- **×** verwijdert de activiteit.\n- Activiteiten staan in een vaste logische volgorde: eerst op status (lopend, on hold, afgerond, gearchiveerd), dan op prioriteit, dan op de eerstvolgende deadline en tot slot op titel.\n- Je kunt slepen om de volgorde aan te passen, binnen dezelfde status en prioriteit. **Standaardvolgorde** zet die handmatige volgorde weer terug.\n- Met de knoppen **Lopend / On hold / Afgerond / Gearchiveerd / Alle** kies je welke activiteiten je ziet. Afgeronde en gearchiveerde activiteiten zijn standaard verborgen.\n\n# Financiën\nIn een activiteit staat het blok **Financiën** met de begrotingsregels die aan de activiteit gekoppeld zijn, met begroot, uitgegeven en restant. Klik op een regel om hem te openen. Met **+ Begrotingsregel** maak je direct een regel aan voor deze activiteit. Heb je meer programma's, dan kies je in het venster bij welk programma (welke begroting) de regel hoort; standaard staat het programma klaar waar de activiteit al regels in heeft. Zie **Begroting**."
+  "tekst": "Een activiteit is alles waar je mee bezig bent bij een afdeling, een congres of het College B&W: een project, een vraag, een traject. Een activiteit maak je aan met **+ Nieuwe activiteit** op het tabblad Activiteiten van een afdeling. Klik op een activiteitskaart om hem open of dicht te klappen.\n\n# Basisgegevens\n- **Titel, startdatum en einddatum** staan samen op één regel.\n- **Status**: één klik op *lopend*, *on hold*, *afgerond* of *gearchiveerd*.\n- **Prioriteit**: *hoog*, *midden* of *laag*.\n- **Tags**: eerder gebruikte tags staan als knoppen, de meest gebruikte eerst en groter. Eén klik voegt een tag toe. Een nieuwe tag maak je via **+ Nieuwe of andere tag**.\n- **Omschrijving**: vrije tekst.\n\n# Acties\nConcrete to-do's bij de activiteit, met een optionele deadline. Afgevinkte acties verhuizen naar een ingeklapt archief op de kaart. Alle acties samen zie je in het scherm **Acties**.\n\n# Contactpersonen\n- Koppel mensen uit je contactenregister. Typ een naam en kies een suggestie.\n- Je vindt hier ook managers, collegeleden en control-personen die nog niet in Contacten staan; die worden dan automatisch toegevoegd.\n- De **rol** stel je per activiteit in, omdat iemands rol per verband kan verschillen. Naam, e-mail en telefoon komen uit het centrale contact.\n\n# Links\nHandige webadressen bij de activiteit, zoals een SharePoint-map, een Topdesk-melding of een document.\n\n# Logboek\nJe verslag van wat er is gebeurd: notities, mails en gesprekken. Zie **Logboek, opmaak en Snel vastleggen**.\n\n# Bijlagen\n- Sleep bestanden naar het vak, of klik om te bladeren. Ze worden opgeslagen in een eigen submap van je gekoppelde map; klik op een bijlage om hem te openen.\n- Bestanden die je zelf buiten de app in die map zet, worden automatisch herkend als je de activiteit opent. Bestanden die je uit die map hebt verwijderd (of verplaatst of hernoemd), verdwijnen dan ook uit de lijst. Met **Vernieuwen** laat je de map op elk moment opnieuw uitlezen; de knop meldt kort hoeveel bestanden er zijn toegevoegd en verwijderd.\n- Een bestand met dezelfde naam als een bestaande bijlage krijgt automatisch een unieke naam, bijvoorbeeld *rapport (2).pdf*.\n\n# PDF's ondertekenen, invullen en samenvoegen\n- Achter elke PDF-bijlage staat de knop **PDF-tool**. Die opent de PDF in de PDF-tool, in een nieuw tabblad. Daar kun je ondertekenen, tekst toevoegen, formulieren invullen, pagina's draaien of verwijderen en andere PDF's toevoegen.\n- Heeft een activiteit twee of meer PDF's, dan opent **PDF's samenvoegen** ze allemaal tegelijk.\n- Klaar? Klik in de PDF-tool op **Terugzetten**. Het resultaat komt als **nieuwe bijlage** bij de activiteit. Het origineel blijft ongewijzigd.\n- Alles blijft in je browser; er wordt niets geüpload.\n- De koppeling werkt alleen als je de tool via de website opent en de PDF-tool op hetzelfde websiteadres staat, in de map *pdf-tool*.\n\n# Processen\nStart vanuit de activiteit een proces met werkinstructies, bijvoorbeeld *Aanschaf nieuwe software*. Het onderwerp wordt de titel van de activiteit. Gekoppelde processen staan op de kaart met hun voortgang; klik erop om het stappenplan te openen. Rond je het proces af, dan komt er automatisch een samenvatting in het logboek. Zie **Weekstart & processen**.\n\n# Verplaatsen, verwijderen en volgorde\n- **↔** verplaatst de activiteit naar een andere afdeling of een congres.\n- **×** verwijdert de activiteit.\n- Activiteiten staan in een vaste logische volgorde: eerst op status (lopend, on hold, afgerond, gearchiveerd), dan op prioriteit, dan op de eerstvolgende deadline en tot slot op titel.\n- Je kunt slepen om de volgorde aan te passen, binnen dezelfde status en prioriteit. **Standaardvolgorde** zet die handmatige volgorde weer terug.\n- Met de knoppen **Lopend / On hold / Afgerond / Gearchiveerd / Alle** kies je welke activiteiten je ziet. Afgeronde en gearchiveerde activiteiten zijn standaard verborgen.\n\n# Financiën\nIn een activiteit staat het blok **Financiën** met de begrotingsregels die aan de activiteit gekoppeld zijn, met begroot, uitgegeven en restant. Klik op een regel om hem te openen. Met **+ Begrotingsregel** maak je direct een regel aan voor deze activiteit. Heb je meer programma's, dan kies je in het venster bij welk programma (welke begroting) de regel hoort; standaard staat het programma klaar waar de activiteit al regels in heeft. Zie **Begroting**."
  },
  {
   "id": "logboek",
@@ -18472,6 +18481,7 @@ ${isStd ? `
         <span>${isStd ? "Documenten" : "Bestanden"} <span class="count" data-role="att-count" style="font-size:12px;color:var(--muted);font-weight:400;margin-left:6px"></span></span>
         ${folderHandle ? `<button class="ghost-btn" data-action="refresh-atts" title="Map opnieuw uitlezen — voegt bestanden toe die je zelf (buiten de app om) in de map hebt gezet en haalt bestanden uit de lijst die uit de map zijn verwijderd">🔄 Vernieuwen</button>` : ``}
         ${folderHandle ? `<button class="ghost-btn" data-action="open-folder" title="Toon het pad naar de map met bijlagen">📂 Open map</button>` : ``}
+        ${folderHandle ? `<button class="ghost-btn" data-action="pdf-merge" hidden title="Open alle PDF-bijlagen samen in de PDF-tool. Het resultaat komt terug als nieuwe bijlage.">PDF's samenvoegen</button>` : ``}
       </h4>
       <div class="dropzone" data-role="dropzone">
         ${folderHandle
@@ -18981,9 +18991,14 @@ ${isStd ? `
   const attsEl = body.querySelector('[data-role="atts"]');
   const attCountEl = body.querySelector('[data-role="att-count"]');
 
+  const pdfMergeBtn = body.querySelector('[data-action="pdf-merge"]');
+  if (pdfMergeBtn) pdfMergeBtn.onclick = ()=> openInPdfTool({
+    afdNaam, p, filenames: (p.attachments||[]).filter(isPdfBijlage).map(a => a.filename), onDone: renderAttachments,
+  });
   function renderAttachments(){
     p.attachments = p.attachments || [];
     attCountEl.textContent = p.attachments.length ? `${p.attachments.length} bestand${p.attachments.length===1?"":"en"}` : "";
+    if (pdfMergeBtn) pdfMergeBtn.hidden = p.attachments.filter(isPdfBijlage).length < 2;
     attsEl.innerHTML = "";
     if (!p.attachments.length) return;
     for (const at of p.attachments){
@@ -18993,8 +19008,12 @@ ${isStd ? `
         <span class="ic">📄</span>
         <a class="name" data-filename="${escapeHTML(at.filename)}">${escapeHTML(at.filename)}</a>
         <span class="meta">${formatFileSize(at.size)} · ${new Date(at.addedAt).toLocaleDateString("nl-NL")}</span>
+        ${isPdfBijlage(at) && folderHandle ? `<button class="pdfbtn" title="Openen in de PDF-tool om te ondertekenen, in te vullen of samen te voegen. Het resultaat komt terug als nieuwe bijlage.">PDF-tool</button>` : `<span></span>`}
         <button class="del" title="Verwijder">×</button>
       `;
+      if (at.id === laatstToegevoegdeBijlage) row.classList.add("nieuw");
+      const pdfBtn = row.querySelector(".pdfbtn");
+      if (pdfBtn) pdfBtn.onclick = ()=> openInPdfTool({ afdNaam, p, filenames: [at.filename], onDone: renderAttachments });
       row.querySelector(".name").onclick = async ()=>{
         try{ await openAttachment(afdNaam, activityFolderName(p), at.filename); }
         catch(e){ alert("Kon bestand niet openen: " + e.message + "\n(Koppel de map opnieuw met de knop rechtsboven)"); }
@@ -19362,6 +19381,86 @@ async function uniqueFileNameInDir(dir, desiredName){
   }
   return candidate;
 }
+/* ---- Koppeling met de PDF-tool ----
+   De PDF-tool (samenvoegen, invullen, ondertekenen) staat als losse tool naast deze tool op
+   hetzelfde websiteadres, in de map pdf-tool/. Deze tool opent hem in een nieuw tabblad en stuurt
+   de PDF('s) mee; met Terugzetten komt het resultaat terug als nieuwe bijlage. Berichten gaan
+   alleen tussen vensters op precies hetzelfde websiteadres; al het andere wordt genegeerd.
+   Bestanden gaan nergens anders heen: alles blijft in de browser. */
+const pdfToolSessies = new Map();   // sessie-id -> { id, w, afdNaam, pId, p, label, bestanden, verstuurd, timer, onDone }
+let laatstToegevoegdeBijlage = null;
+function isPdfBijlage(at){ return /\.pdf$/i.test((at && at.filename) || "") || (at && at.type) === "application/pdf"; }
+function pdfToolUrl(){
+  if (location.protocol !== "https:" && location.protocol !== "http:") return null;
+  return new URL("../pdf-tool/", location.href).href;
+}
+function pdfToolActiviteit(s){
+  const afd = state.afdelingen && state.afdelingen[s.afdNaam];
+  return (afd && (afd.projects||[]).find(x => x.id === s.pId)) || s.p;
+}
+// Let op: synchroon het venster openen (vóór de eerste await), anders blokkeert de browser de pop-up.
+function openInPdfTool({ afdNaam, p, filenames, onDone }){
+  const url = pdfToolUrl();
+  if (!url){
+    alert("De koppeling met de PDF-tool werkt alleen als je deze tool via de website opent, niet als los bestand op je computer.");
+    return;
+  }
+  const w = window.open(url + "#koppeling", "_blank");
+  if (!w){ alert("De browser heeft het nieuwe tabblad tegengehouden. Sta pop-ups voor deze site toe en probeer het opnieuw."); return; }
+  const sessie = { id: uid(), w, afdNaam, pId: p.id, p, label: p.titel || "deze activiteit", verstuurd: false, onDone };
+  sessie.bestanden = (async ()=>{
+    const dir = await getActivityDir(afdNaam, activityFolderName(p));
+    if (!dir) throw new Error("De gekoppelde map is niet beschikbaar.");
+    const lijst = [];
+    for (const fn of filenames){
+      const f = await (await dir.getFileHandle(fn)).getFile();
+      lijst.push({ naam: fn, bytes: await f.arrayBuffer() });
+    }
+    return lijst;
+  })();
+  sessie.bestanden.catch(()=>{});   // fout wordt hieronder bij 'klaar' gemeld
+  sessie.timer = setTimeout(()=>{
+    if (sessie.verstuurd) return;
+    pdfToolSessies.delete(sessie.id);
+    alert("De PDF-tool reageert niet.\n\nDe koppeling werkt alleen als de PDF-tool op hetzelfde websiteadres staat, in de map pdf-tool/ (" + url + ").");
+  }, 20000);
+  pdfToolSessies.set(sessie.id, sessie);
+}
+window.addEventListener("message", async (ev)=>{
+  if (ev.origin !== location.origin) return;
+  const d = ev.data;
+  if (!d || typeof d !== "object" || d.versie !== 1) return;
+  if (d.type === "pdftool:klaar"){
+    const s = [...pdfToolSessies.values()].find(x => x.w === ev.source && !x.verstuurd);
+    if (!s) return;
+    s.verstuurd = true; clearTimeout(s.timer);
+    let bestanden;
+    try{ bestanden = await s.bestanden; }
+    catch(e){ pdfToolSessies.delete(s.id); alert("Kon de bijlage niet lezen: " + e.message + "\n(Koppel de map opnieuw met de knop rechtsboven)"); return; }
+    ev.source.postMessage({ type: "im:open", versie: 1, sessie: s.id, label: s.label, bestanden },
+      location.origin, bestanden.map(b => b.bytes));
+  } else if (d.type === "pdftool:resultaat"){
+    const s = pdfToolSessies.get(d.sessie);
+    if (!s || s.w !== ev.source) return;
+    const antwoord = (extra)=> { try{ ev.source.postMessage(Object.assign({ type: "im:ontvangen", versie: 1, sessie: s.id }, extra), location.origin); }catch(_){} };
+    if (!(d.bytes instanceof ArrayBuffer) || typeof d.naam !== "string"){ antwoord({ ok:false, fout:"Ongeldig bestand ontvangen." }); return; }
+    const naam = /\.pdf$/i.test(d.naam) ? d.naam : d.naam + ".pdf";
+    try{
+      const act = pdfToolActiviteit(s);
+      const file = new File([d.bytes], naam, { type: "application/pdf" });
+      const meta = await writeAttachmentFile(s.afdNaam, ensureActivityFolderName(act), file);
+      act.attachments = act.attachments || [];
+      act.attachments.push(meta);
+      act.gewijzigd = new Date().toISOString();
+      laatstToegevoegdeBijlage = meta.id;
+      markDirty();
+      try{ if (s.onDone) s.onDone(meta); }catch(_){}
+      antwoord({ ok:true, bestandsnaam: meta.filename });
+    }catch(e){
+      antwoord({ ok:false, fout: e.message || String(e) });
+    }
+  }
+});
 async function writeAttachmentFile(afdNaam, activityId, file){
   const dir = await getActivityDir(afdNaam, activityId, { create:true });
   if (!dir) throw new Error("Map niet beschikbaar");

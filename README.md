@@ -29,6 +29,7 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
   - acties met deadlines;
   - contactpersonen, links en bijlagen;
   - een logboek.
+- **PDF's ondertekenen en samenvoegen.** Open een PDF-bijlage met één klik in de [PDF-tool](https://mmulder82.github.io/pdf-tool/). Onderteken, vul in of voeg samen. Met **Terugzetten** komt het resultaat als nieuwe bijlage terug bij de activiteit. Alles blijft in je browser.
 - **Logboek en Snel vastleggen.** Leg notities en gespreksverslagen vast met eenvoudige opmaak (Markdown).
   - Plakken uit Outlook, Word, OneNote of Excel behoudt koppen, lijsten, links en tabellen.
   - Een doorgestuurde mail krijgt automatisch Van, Onderwerp en Datum bovenaan.
@@ -174,6 +175,7 @@ Installatie en uitleg vind je in [`contacten-sync/LEES-MIJ.md`](contacten-sync/L
 | Installeren als app, met eigen venster en icoon | ✓ | alleen Safari |
 | Map koppelen, back-ups en bijlagen | ✓ | – |
 | Markdown-bestanden per activiteit | ✓ | – |
+| PDF-bijlagen openen in de PDF-tool | ✓ | – |
 | Contacten synchroniseren met iPhone/Mac | ✓ | – |
 
 Map koppelen gebruikt de *File System Access API*, die alleen Chrome en Edge ondersteunen.
