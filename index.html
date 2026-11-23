@@ -1420,7 +1420,8 @@
   .ci-ind{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 2px}
   .modal .ci-ind label{margin:0;font-size:12px;color:var(--muted);font-weight:500}
   .modal .ci-ind select{width:auto;min-width:200px;max-width:320px;padding:4px 8px;font-size:12.5px}
-  .modal .ci-ind button{padding:4px 12px;font-size:12.5px}
+  .modal .ci-ind button{padding:5px 12px;font-size:12.5px;font-weight:500;border:0;border-radius:7px;background:var(--panel-soft);color:var(--text);cursor:pointer}
+  .modal .ci-ind button:hover{background:#e8e8ed}
   .ci-ind-info{margin:4px 0 10px}
   .ci-ind-info:empty{display:none}
   .ci-scroll{border:1px solid var(--border);border-radius:8px;overflow:auto}
@@ -1961,8 +1962,11 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.46.0";
+const APP_VERSION = "4.46.1";
 const CHANGELOG = [
+  { version: "4.46.1", datum: "2026-11-23", items: [
+    "Contacten importeren: de knoppen bij Indeling hebben dezelfde rustige stijl als de andere knoppen",
+  ]},
   { version: "4.46.0", datum: "2026-11-23", items: [
     "Contacten importeren: sla de kolomkoppeling op als indeling, bijvoorbeeld per applicatie waar je een export uit haalt",
     "Bij een volgend bestand met dezelfde kolommen herkent de app de indeling en past hij die vanzelf toe, inclusief bedrijf, gekoppelde afdelingen en het omdraaien van namen",

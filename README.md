@@ -97,7 +97,7 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
 - **Bedrijven** leg je één keer vast en koppel je aan contacten, managers en collegeleden.
 - Optioneel synchroniseer je contacten met een telefoonnummer naar **Contacten op je iPhone en Mac**. Zie [hieronder](#contacten-synchroniseren-met-iphone-en-mac-optioneel).
 
-![Contacten importeren: per kolom kies je het veld, en de afdelingen uit het bestand koppel je aan de afdelingen in je organogram](screenshots/contactimport.png)
+![Contacten importeren: een opgeslagen indeling wordt herkend en toegepast, per kolom zie je het veld, en de afdelingen uit het bestand koppel je aan de afdelingen in je organogram](screenshots/contactimport.png)
 
 ### ICT en kennis
 
