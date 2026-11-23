@@ -89,6 +89,7 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
 - **Afdeling bij een contact.** Hoort iemand bij je eigen organisatie, dan koppel je hem aan een afdeling uit het organogram, of aan Raad, Griffie, College B&W, Control of Directie. Bij elke afdeling zie je zo wie erbij hoort, en in Contacten filter je op afdeling.
 - **Contacten importeren** uit een CSV- of Excel-bestand met elke indeling, bijvoorbeeld een export uit Outlook of Google of een eigen lijst.
   - Je kiest per kolom of hij wordt ingelezen en bij welk veld hij hoort. Meerdere kolommen kunnen samen één veld vormen, zoals voornaam en achternaam.
+  - Importeer je vaker een bestand uit dezelfde applicatie? Sla de koppeling dan op als indeling. De volgende keer herkent de app de kolommen en past hij de indeling vanzelf toe.
   - Met één vinkje koppel je alle contacten aan hetzelfde bedrijf, bijvoorbeeld je eigen organisatie. Staan er meerdere telefoonnummers in het bestand, dan wordt het mobiele nummer gekozen.
   - Staat er een kolom met de afdeling in het bestand? Dan koppel je elke afdeling in één overzicht aan een afdeling uit je organogram. De app doet zelf een voorstel.
   - Staat iemand al in je contacten, of komt iemand twee keer voor in het bestand? Dan worden de gegevens aangevuld in plaats van dubbel aangemaakt.

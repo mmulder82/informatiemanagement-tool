@@ -1417,6 +1417,12 @@
   .ci-bron{font-size:12px;color:var(--muted);margin:-8px 0 12px}
   .ci-instel{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
   .ci-instel > div{flex:1 1 220px;min-width:200px}
+  .ci-ind{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 2px}
+  .modal .ci-ind label{margin:0;font-size:12px;color:var(--muted);font-weight:500}
+  .modal .ci-ind select{width:auto;min-width:200px;max-width:320px;padding:4px 8px;font-size:12.5px}
+  .modal .ci-ind button{padding:4px 12px;font-size:12.5px}
+  .ci-ind-info{margin:4px 0 10px}
+  .ci-ind-info:empty{display:none}
   .ci-scroll{border:1px solid var(--border);border-radius:8px;overflow:auto}
   .ci-map{width:100%;border-collapse:collapse;font-size:12.5px}
   .ci-map th{text-align:left;font-size:11px;color:var(--muted);font-weight:500;padding:7px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:1;white-space:nowrap}
@@ -1955,8 +1961,13 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.45.0";
+const APP_VERSION = "4.46.0";
 const CHANGELOG = [
+  { version: "4.46.0", datum: "2026-11-23", items: [
+    "Contacten importeren: sla de kolomkoppeling op als indeling, bijvoorbeeld per applicatie waar je een export uit haalt",
+    "Bij een volgend bestand met dezelfde kolommen herkent de app de indeling en past hij die vanzelf toe, inclusief bedrijf, gekoppelde afdelingen en het omdraaien van namen",
+    "Een opgeslagen indeling kies je ook zelf bij Indeling, en je kunt hem bijwerken of verwijderen",
+  ]},
   { version: "4.45.0", datum: "2026-11-23", items: [
     "PDF-bijlagen bij een activiteit hebben nu een knop PDF-tool. Daarmee open je de PDF direct in de PDF-tool om te ondertekenen, in te vullen of te bewerken.",
     "Heeft een activiteit twee of meer PDF's, dan voeg je ze met PDF's samenvoegen in één keer samen.",
@@ -10728,6 +10739,38 @@ function ciBeoordeel(groepen, overschrijven){
   }
 }
 
+/* Opgeslagen kolomindelingen (state.contactImportIndelingen): per bron, bijvoorbeeld een applicatie,
+   welke kolom bij welk veld hoort, plus omdraaien, "alle contacten aan één bedrijf" en de gekoppelde afdelingen.
+   Kolommen worden herkend aan hun naam (ciSleutel; een dubbele naam krijgt #2, #3…), bij een bestand
+   zonder kolomnamen aan hun nummer (#0, #1…). Alleen gekoppelde kolommen staan erin. */
+function getCiIndelingen(){
+  if (!Array.isArray(state.contactImportIndelingen)) state.contactImportIndelingen = [];
+  return state.contactImportIndelingen;
+}
+function ciKolomSleutels(kop, breed, metKop){
+  const gezien = {};
+  return Array.from({ length: breed }, (_, i) => {
+    const k = metKop ? ciSleutel(kop[i]) : "";
+    if (!k) return "#" + i;
+    gezien[k] = (gezien[k] || 0) + 1;
+    return gezien[k] > 1 ? `${k}#${gezien[k]}` : k;
+  });
+}
+/* De opgeslagen indeling die bij deze kolommen past: al haar kolommen staan in het bestand
+   (zonder kolomnamen: precies even breed). Passen er meer, dan de indeling met de meeste kolommen. */
+function ciZoekIndeling(sleutels, metKop){
+  const set = new Set(sleutels);
+  let beste = null, n = 0;
+  for (const ind of getCiIndelingen()){
+    if (!!ind.metKop !== metKop) continue;
+    if (!metKop && ind.breed !== sleutels.length) continue;
+    const ks = Object.keys(ind.kolommen || {});
+    if (!ks.length || !ks.every(k => set.has(k))) continue;
+    if (ks.length > n){ beste = ind; n = ks.length; }
+  }
+  return beste;
+}
+
 let ciOnthoud = { alleBedrijf: false, bedrijfId: null, afdKeuze: {} };   // keuzes die de app onthoudt zolang hij open is: "alle contacten aan één bedrijf" en de gekoppelde afdelingen (sleutel → afdelingsnaam, "" = niet koppelen)
 function openContactenImport(){
   const backdrop = document.createElement("div");
@@ -10743,7 +10786,7 @@ function openContactenImport(){
   const st = { data: null, blad: 0, kopRij: 0, koppeling: [], omdraaien: null, omdraaiAuto: false,
                alleBedrijf: ciOnthoud.alleBedrijf,
                bedrijfId: getBedrijf(ciOnthoud.bedrijfId) ? ciOnthoud.bedrijfId : (standaardBedrijfId() || bedrijvenGesorteerd()[0]?.id || null),
-               overschrijven: false, groep: null, keuze: {}, filter: "alle" };
+               overschrijven: false, groep: null, keuze: {}, filter: "alle", indelingId: null, indelingAuto: false };
 
   const dataRijen = ()=>{ const r = st.data.bladen[st.blad].rijen; return st.kopRij >= 0 ? r.slice(st.kopRij + 1) : r; };
   const omdraaienAan = ()=> st.omdraaien === null ? st.omdraaiAuto : st.omdraaien;
@@ -10769,15 +10812,88 @@ function openContactenImport(){
     if (!afdAuto.has(k)) afdAuto.set(k, ciMatchAfdeling(raw));
     return afdAuto.get(k);
   }
-  function zetAutoKoppeling(){
+  /* Voorstel van de app op basis van de kolomnamen, zonder opgeslagen indeling. */
+  function zetVoorstel(){
     const rijen = st.data.bladen[st.blad].rijen;
     const kop = st.kopRij >= 0 ? rijen[st.kopRij] : [];
     st.koppeling = Array.from({ length: rijen[0]?.length || 0 }, (_, i) => ciRaadVeld(kop[i]));
     st.omdraaien = null;
+    st.indelingId = null; st.indelingAuto = false;
+  }
+  /* Past een opgeslagen indeling bij de kolommen? Dan die, anders het voorstel. */
+  function zetAutoKoppeling(){
+    zetVoorstel();
+    const ind = indelingVoorRij(st.kopRij);
+    if (ind){ pasIndelingToe(ind); st.indelingAuto = true; }
+  }
+  const kolomSleutels = (kopRij = st.kopRij)=>{
+    const rijen = st.data.bladen[st.blad].rijen;
+    return ciKolomSleutels(kopRij >= 0 ? rijen[kopRij] : [], rijen[0]?.length || 0, kopRij >= 0);
+  };
+  const indelingVoorRij = kopRij => ciZoekIndeling(kolomSleutels(kopRij), kopRij >= 0);
+  const huidigeIndeling = ()=> getCiIndelingen().find(x => x.id === st.indelingId) || null;
+  function pasIndelingToe(ind){
+    const sl = kolomSleutels();
+    st.koppeling = sl.map(k => (ind.kolommen || {})[k] || "");
+    st.omdraaien = typeof ind.omdraaien === "boolean" ? ind.omdraaien : null;
+    if (ind.alleBedrijf && getBedrijf(ind.bedrijfId)){ st.alleBedrijf = true; st.bedrijfId = ind.bedrijfId; }
+    else if (!ind.alleBedrijf) st.alleBedrijf = false;
+    Object.assign(ciOnthoud.afdKeuze, ind.afdKeuze || {});
+    st.indelingId = ind.id; st.indelingAuto = false;
+  }
+  /* Wijkt de koppeling nu af van de gekozen indeling? (kolommen die niet in het bestand staan tellen niet) */
+  function indelingGewijzigd(ind){
+    const sl = kolomSleutels(), nu = {}, oud = ind.kolommen || {};
+    st.koppeling.forEach((v, i) => { if (v) nu[sl[i]] = v; });
+    for (const k of new Set([...Object.keys(nu), ...Object.keys(oud).filter(k => sl.includes(k))]))
+      if ((nu[k] || "") !== (oud[k] || "")) return true;
+    if ((typeof ind.omdraaien === "boolean" ? ind.omdraaien : null) !== st.omdraaien) return true;
+    if (getBedrijven().length && (!!ind.alleBedrijf !== !!st.alleBedrijf || (st.alleBedrijf && ind.bedrijfId !== st.bedrijfId))) return true;
+    return false;
+  }
+  function slaIndelingOp(){
+    const huidig = huidigeIndeling();
+    const voorstel = huidig ? huidig.naam : (st.data.bron === "Geplakte tekst" ? "" : st.data.bron.replace(/\.[^.]+$/, ""));
+    const naam = (prompt("Naam van de indeling, bijvoorbeeld de applicatie waar het bestand uit komt:", voorstel) || "").trim();
+    if (!naam) return;
+    const lijst = getCiIndelingen();
+    let ind = lijst.find(x => (x.naam || "").trim().toLowerCase() === naam.toLowerCase()) || null;
+    if (ind && ind !== huidig && !confirm(`Er is al een indeling "${ind.naam}". Wil je die overschrijven?`)) return;
+    if (!ind){ ind = { id: uid(), aangemaakt: new Date().toISOString() }; lijst.push(ind); }
+    const rijen = st.data.bladen[st.blad].rijen;
+    const kop = st.kopRij >= 0 ? rijen[st.kopRij] : [];
+    const sl = kolomSleutels();
+    // kolommen uit de indeling die niet in dit bestand staan, blijven bewaard
+    const kolommen = {}, kolomNamen = {};
+    for (const [k, v] of Object.entries(ind.kolommen || {})) if (!sl.includes(k)){ kolommen[k] = v; kolomNamen[k] = (ind.kolomNamen || {})[k] || k; }
+    st.koppeling.forEach((v, i) => { if (v){ kolommen[sl[i]] = v; kolomNamen[sl[i]] = kop[i] || `Kolom ${ciKolomLetter(i)}`; } });
+    const afdKeuze = { ...(ind.afdKeuze || {}) };
+    modal.querySelectorAll("select[data-afd]").forEach(s => { afdKeuze[s.dataset.afd] = s.value; });
+    const metBedrijf = getBedrijven().length > 0 && !!st.alleBedrijf;
+    Object.assign(ind, { naam, metKop: st.kopRij >= 0, breed: sl.length, kolommen, kolomNamen, omdraaien: st.omdraaien,
+                         alleBedrijf: metBedrijf, bedrijfId: metBedrijf ? st.bedrijfId : null, afdKeuze, gewijzigd: new Date().toISOString() });
+    st.indelingId = ind.id; st.indelingAuto = false;
+    markDirty();
+    stapKoppelen();
+    const info = $("#ciIndInfo");
+    if (info) info.textContent = `Indeling "${naam}" opgeslagen. Bij een volgend bestand met dezelfde kolommen past de app hem vanzelf toe.`;
+  }
+  function verwijderIndeling(){
+    const ind = huidigeIndeling();
+    if (!ind || !confirm(`Indeling "${ind.naam}" verwijderen? De koppeling hieronder blijft staan.`)) return;
+    state.contactImportIndelingen = getCiIndelingen().filter(x => x !== ind);
+    st.indelingId = null; st.indelingAuto = false;
+    markDirty();
+    stapKoppelen();
   }
   function kiesBlad(i){
     st.blad = i;
-    st.kopRij = ciRaadKopRij(st.data.bladen[i].rijen);
+    const rijen = st.data.bladen[i].rijen;
+    st.kopRij = ciRaadKopRij(rijen);
+    // staan de kolomnamen van een opgeslagen indeling op een andere rij? Dan die rij.
+    if (st.kopRij >= 0 && !indelingVoorRij(st.kopRij)){
+      for (let r = 0; r < Math.min(10, rijen.length); r++) if (r !== st.kopRij && indelingVoorRij(r)){ st.kopRij = r; break; }
+    }
     zetAutoKoppeling();
   }
 
@@ -10854,6 +10970,15 @@ function openContactenImport(){
           <option value="-1" ${st.kopRij === -1 ? "selected" : ""}>Geen kolomnamen, elke rij is een contact</option>
         </select></div>
       </div>
+      <div class="ci-ind">
+        <label for="ciInd">Indeling</label>
+        <select id="ciInd"><option value="">Voorstel van de app</option>${getCiIndelingen().slice()
+          .sort((a, b) => (a.naam || "").localeCompare(b.naam || "", "nl"))
+          .map(x => `<option value="${escapeHTML(x.id)}" ${x.id === st.indelingId ? "selected" : ""}>${escapeHTML(x.naam || "(naamloos)")}</option>`).join("")}</select>
+        <button type="button" class="secondary" id="ciIndOpslaan" title="Bewaar deze koppeling, zodat je hem bij een volgend bestand uit dezelfde bron opnieuw kunt gebruiken">${st.indelingId ? "Opslaan…" : "Opslaan als indeling…"}</button>
+        ${st.indelingId ? `<button type="button" class="secondary" id="ciIndWeg">Verwijderen</button>` : ""}
+      </div>
+      <div class="ci-klein ci-ind-info" id="ciIndInfo"></div>
       <div class="ci-scroll" style="max-height:min(40vh,340px)">
         <table class="ci-map"><thead><tr><th>Kolom in het bestand</th><th>Voorbeeld</th><th style="width:210px">Importeren als</th></tr></thead>
         <tbody>${kolommen.map(k => `<tr class="${st.koppeling[k.i] ? "is-on" : ""}">
@@ -10891,6 +11016,27 @@ function openContactenImport(){
       toonVoorbeeld();
     });
     $("#ciOmdraai").onchange = e => { st.omdraaien = e.target.checked; toonVoorbeeld(); };
+    $("#ciInd").onchange = e => {
+      const ind = getCiIndelingen().find(x => x.id === e.target.value);
+      if (ind) pasIndelingToe(ind); else zetVoorstel();
+      stapKoppelen();
+    };
+    $("#ciIndOpslaan").onclick = slaIndelingOp;
+    $("#ciIndWeg") && ($("#ciIndWeg").onclick = verwijderIndeling);
+    function toonIndelingInfo(){
+      const el = $("#ciIndInfo"), ind = huidigeIndeling();
+      if (!ind){
+        el.textContent = getCiIndelingen().length ? ""
+          : "Importeer je vaker bestanden uit dezelfde bron? Sla de koppeling op als indeling. De volgende keer herkent de app de kolommen en past hij de indeling vanzelf toe.";
+        return;
+      }
+      const sl = kolomSleutels();
+      const mist = Object.keys(ind.kolommen || {}).filter(k => !sl.includes(k)).map(k => (ind.kolomNamen || {})[k] || k);
+      const zinnen = [st.indelingAuto ? `De opgeslagen indeling "${ind.naam}" is herkend en toegepast.` : `Indeling "${ind.naam}" toegepast.`];
+      if (mist.length) zinnen.push(`${mist.length === 1 ? "Deze kolom uit de indeling staat" : "Deze kolommen uit de indeling staan"} niet in het bestand: ${mist.join(", ")}.`);
+      if (indelingGewijzigd(ind)) zinnen.push("Je hebt de koppeling aangepast; klik op Opslaan om de indeling bij te werken.");
+      el.textContent = zinnen.join(" ");
+    }
     if ($("#ciHb")){
       $("#ciHb").onchange = e => { st.alleBedrijf = ciOnthoud.alleBedrijf = e.target.checked; toonVoorbeeld(); };
       $("#ciHbKies").onchange = e => {
@@ -10966,6 +11112,7 @@ function openContactenImport(){
 
     function toonVoorbeeld(){
       tekenAfdPaneel();
+      toonIndelingInfo();
       const heeft = new Set(st.koppeling.filter(Boolean));
       const naamOk = heeft.has("naam") || heeft.has("voornaam") || heeft.has("achter");
       // namen in de vorm "Achternaam, Voornaam"? Dan het omdraaien aanbieden (en voorstellen als het de meeste zijn)
@@ -15237,7 +15384,7 @@ const HELP_SECTIES = [
    "import-export"
   ],
   "nav": "import-export",
-  "tekst": "Alle import- en exportfuncties staan onder Instellingen → **Importeren & exporteren**, in het menu onder Algemeen. Ze zijn ingedeeld in *Back-up*, *Exporteren* en *Importeren*.\n\n# Exporteren\n- **JSON exporteren (volledige back-up)**: al je gegevens in één bestand, inclusief activiteiten, acties, logboeken en notities.\n- **Basisdata exporteren (delen)**: alleen de organisatiestructuur, managers, teams, processen, wetten, software, functioneel beheerders en collegeleden, zonder activiteiten en notities. Bedoeld om met een collega te delen.\n- **Gegevens exporteren (Excel, CSV of PDF)**: kies een onderwerp (afdelingen, activiteiten, functioneel beheerders, applicaties, externe inhuur, begroting of contacten) en vink de kolommen aan. Bij afdelingen kan ook de directeur van de sector mee, bij contacten de afdeling en het LinkedIn-profiel. Met **Alles**, **Standaard** en **Geen** zet je ze snel goed. Filter eventueel op één sector. PDF opent een afdrukweergave; kies daar *Opslaan als PDF*.\n- **Organogram exporteren**: het organogram als afbeelding of PDF. Zie **Organogram exporteren** hieronder.\n- **Applicatie-overzicht exporteren**: een losse HTML-pagina per sector en afdeling, met applicaties en functioneel beheerders, die iedereen in de browser kan openen, doorzoeken en afdrukken. Kies één sector of alle sectoren, en of e-mail/telefoon en Middel-ID's erin moeten.\n- **Werkinstructie exporteren**: bij een processjabloon (zie **Processjablonen en werkinstructies**).\n\n# Importeren\n- **Contacten importeren (CSV of Excel)**: zie **Contacten importeren** hieronder.\n- **Basisdata importeren (samenvoegen)**: voegt structuur, managers, teams, processen, wetten, software, beheerders en collegeleden uit een basisdata-bestand toe aan je eigen gegevens. Bestaande gegevens en activiteiten worden nooit overschreven.\n- **Software assets importeren vanuit Topdesk**: een Excel-export met Middel-ID, applicatienaam en BIV-classificatie. Eerst zie je een voorvertoning.\n- **JSON importeren (volledig)**: vervangt **al** je gegevens door de inhoud van het bestand. Maak eerst een back-up.\n\n# Organogram exporteren\nOpen het via **Exporteren…** rechtsboven in het organogram, of via Instellingen → Importeren & exporteren. Rechts zie je meteen een voorbeeld.\n- **Titel**: komt bovenaan, met daaronder de datum.\n- **Sector**: alle sectoren, of één sector. Bij één sector worden de kolommen breder.\n- **Wat staat erin?**: de bestuurslaag (raad, burgemeester, griffie, college, control en gemeentesecretaris), de namen van managers, directeuren en bestuurders, foto's bij die namen, en de teams per afdeling.\n- **Formaat**:\n  - **Afbeelding (PNG)**: een scherpe afbeelding voor PowerPoint, Word of een mail.\n  - **PDF**: opent een afdrukweergave waarin het organogram op één A4- of A3-pagina past. Kies daar *Opslaan als PDF*.\n  - **SVG**: een afbeelding die scherp blijft bij vergroten en die je in bijvoorbeeld PowerPoint of Visio verder kunt bewerken.\n- **Kopiëren als afbeelding** zet het organogram op het klembord, zodat je het direct plakt in PowerPoint, Word, Teams of een mail.\n- Liever een lijst? Via de link onderin exporteer je de afdelingen met managers en teams naar Excel, CSV of PDF.\n\nDe app onthoudt je keuzes zolang hij openstaat.\n\n# Contacten importeren\nOpen het via **Importeren…** in Relaties → Contacten, of via Instellingen → Importeren & exporteren. Het werkt met elk CSV- of Excel-bestand, bijvoorbeeld een export uit Outlook of Google of een eigen lijst.\n1. **Kies een bestand** (CSV, TXT, XLSX, XLS of ODS), sleep het in het venster, of plak rijen die je uit Excel of een tabel hebt gekopieerd. Het scheidingsteken (komma, puntkomma of tab) en de tekenset worden vanzelf herkend.\n2. **Koppel de kolommen.** Per kolom zie je een voorbeeld en kies je **Niet importeren** of een veld: naam, voornaam, tussenvoegsel, achternaam, rol / functie, e-mail, telefoon, bedrijf, afdeling of LinkedIn. De app doet een voorstel op basis van de kolomnamen.\n   - Meerdere kolommen bij hetzelfde veld mag. Voornaam, tussenvoegsel en achternaam worden samen de naam. Meerdere kolommen bij rol / functie worden met een komma samengevoegd. Bij e-mail, bedrijf, afdeling en LinkedIn telt de eerste kolom met een waarde.\n   - Koppel je een kolom aan **Afdeling**, dan verschijnt **Afdelingen koppelen**: elke afdeling uit het bestand staat er één keer, met een voorstel uit je organogram. De app herkent ook schrijfwijzen als *Afdeling Burgerzaken*, *P en O* voor *P&O*, of *Sector / Afdeling / Team*. Niet herkend? Kies zelf een afdeling, of laat het op **Niet koppelen** staan. De app onthoudt je keuzes zolang hij openstaat.\n   - Alleen contacten van je standaardbedrijf krijgen een afdeling. Heeft een contact geen bedrijf, dan krijgt het met de afdeling ook het standaardbedrijf. Bij een contact van een ander bedrijf wordt de afdeling niet overgenomen; dat zie je bij het controleren. Zonder standaardbedrijf wordt er geen afdeling geïmporteerd.\n   - Bij meerdere telefoonkolommen gaat het **mobiele nummer** voor. De app herkent dat aan de kolomnaam (zoals *Mobiel* of *GSM*) of aan het nummer zelf (06 of +31 6). Is er geen mobiel nummer, dan telt de eerste kolom met een waarde.\n   - Met **Alle contacten koppelen aan** geef je alle contacten in één keer hetzelfde bedrijf, bijvoorbeeld je eigen organisatie. Het standaardbedrijf staat al voorgeselecteerd. Een kolom met bedrijfsnamen wordt dan niet gebruikt. Contacten die al een ander bedrijf hebben, houden dat, tenzij je bij het controleren kiest voor overschrijven.\n   - Staan de kolomnamen niet op de eerste rij, of zijn er geen kolomnamen? Kies dat bij **Kolomnamen**. Heeft het bestand meerdere tabbladen, dan kies je het tabblad.\n   - Staan namen er als *Jansen, Jan*? Vink dan aan dat ze worden omgedraaid naar *Jan Jansen*.\n   - Onderin zie je hoe de eerste contacten worden ingelezen.\n3. **Controleer.** Per persoon zie je wat er gebeurt:\n   - **Nieuw**: het contact komt erbij.\n   - **Aanvullen**: de persoon staat al in je contacten (zelfde e-mailadres, of anders dezelfde naam). Alleen lege velden worden aangevuld; je ziet welke.\n   - **Staat er al in**: er is niets nieuws.\n   - **Geen naam**: de rij heeft geen naam en hoort niet bij een bestaand contact; die wordt overgeslagen.\n   - Komt iemand meer dan eens voor in het bestand, dan worden die rijen eerst samengevoegd.\n   - Per persoon kun je kiezen voor **Overslaan**, of bij een bestaand contact voor **Als nieuw contact**. Een oranje melding waarschuwt als het e-mailadres afwijkt van wat er in je contacten staat.\n   - Wil je bestaande gegevens vervangen door wat in het bestand staat, vink dan **Bestaande gegevens overschrijven** aan.\n   - Een bedrijf dat nog niet bestaat, wordt aangemaakt bij Relaties → Bedrijven.\n4. Klik op **Importeren**. Klopt er iets niet, dan zet **Ongedaan maken** de contacten en bedrijven terug zoals ze vóór de import waren.\n\nGebruik je **Contacten synchroniseren met iPhone/Mac**, dan komen geïmporteerde contacten met een telefoonnummer daar ook in.\n\n# Excel en de map vendor\nExcel-bestanden lezen en maken gaat met een bibliotheek die in de map `vendor` naast `index.html` staat. Gebruik je een gedownload exemplaar van de tool, bewaar dan de hele map. Alleen `index.html` is niet genoeg voor Excel. CSV werkt altijd."
+  "tekst": "Alle import- en exportfuncties staan onder Instellingen → **Importeren & exporteren**, in het menu onder Algemeen. Ze zijn ingedeeld in *Back-up*, *Exporteren* en *Importeren*.\n\n# Exporteren\n- **JSON exporteren (volledige back-up)**: al je gegevens in één bestand, inclusief activiteiten, acties, logboeken en notities.\n- **Basisdata exporteren (delen)**: alleen de organisatiestructuur, managers, teams, processen, wetten, software, functioneel beheerders en collegeleden, zonder activiteiten en notities. Bedoeld om met een collega te delen.\n- **Gegevens exporteren (Excel, CSV of PDF)**: kies een onderwerp (afdelingen, activiteiten, functioneel beheerders, applicaties, externe inhuur, begroting of contacten) en vink de kolommen aan. Bij afdelingen kan ook de directeur van de sector mee, bij contacten de afdeling en het LinkedIn-profiel. Met **Alles**, **Standaard** en **Geen** zet je ze snel goed. Filter eventueel op één sector. PDF opent een afdrukweergave; kies daar *Opslaan als PDF*.\n- **Organogram exporteren**: het organogram als afbeelding of PDF. Zie **Organogram exporteren** hieronder.\n- **Applicatie-overzicht exporteren**: een losse HTML-pagina per sector en afdeling, met applicaties en functioneel beheerders, die iedereen in de browser kan openen, doorzoeken en afdrukken. Kies één sector of alle sectoren, en of e-mail/telefoon en Middel-ID's erin moeten.\n- **Werkinstructie exporteren**: bij een processjabloon (zie **Processjablonen en werkinstructies**).\n\n# Importeren\n- **Contacten importeren (CSV of Excel)**: zie **Contacten importeren** hieronder.\n- **Basisdata importeren (samenvoegen)**: voegt structuur, managers, teams, processen, wetten, software, beheerders en collegeleden uit een basisdata-bestand toe aan je eigen gegevens. Bestaande gegevens en activiteiten worden nooit overschreven.\n- **Software assets importeren vanuit Topdesk**: een Excel-export met Middel-ID, applicatienaam en BIV-classificatie. Eerst zie je een voorvertoning.\n- **JSON importeren (volledig)**: vervangt **al** je gegevens door de inhoud van het bestand. Maak eerst een back-up.\n\n# Organogram exporteren\nOpen het via **Exporteren…** rechtsboven in het organogram, of via Instellingen → Importeren & exporteren. Rechts zie je meteen een voorbeeld.\n- **Titel**: komt bovenaan, met daaronder de datum.\n- **Sector**: alle sectoren, of één sector. Bij één sector worden de kolommen breder.\n- **Wat staat erin?**: de bestuurslaag (raad, burgemeester, griffie, college, control en gemeentesecretaris), de namen van managers, directeuren en bestuurders, foto's bij die namen, en de teams per afdeling.\n- **Formaat**:\n  - **Afbeelding (PNG)**: een scherpe afbeelding voor PowerPoint, Word of een mail.\n  - **PDF**: opent een afdrukweergave waarin het organogram op één A4- of A3-pagina past. Kies daar *Opslaan als PDF*.\n  - **SVG**: een afbeelding die scherp blijft bij vergroten en die je in bijvoorbeeld PowerPoint of Visio verder kunt bewerken.\n- **Kopiëren als afbeelding** zet het organogram op het klembord, zodat je het direct plakt in PowerPoint, Word, Teams of een mail.\n- Liever een lijst? Via de link onderin exporteer je de afdelingen met managers en teams naar Excel, CSV of PDF.\n\nDe app onthoudt je keuzes zolang hij openstaat.\n\n# Contacten importeren\nOpen het via **Importeren…** in Relaties → Contacten, of via Instellingen → Importeren & exporteren. Het werkt met elk CSV- of Excel-bestand, bijvoorbeeld een export uit Outlook of Google of een eigen lijst.\n1. **Kies een bestand** (CSV, TXT, XLSX, XLS of ODS), sleep het in het venster, of plak rijen die je uit Excel of een tabel hebt gekopieerd. Het scheidingsteken (komma, puntkomma of tab) en de tekenset worden vanzelf herkend.\n2. **Koppel de kolommen.** Per kolom zie je een voorbeeld en kies je **Niet importeren** of een veld: naam, voornaam, tussenvoegsel, achternaam, rol / functie, e-mail, telefoon, bedrijf, afdeling of LinkedIn. De app doet een voorstel op basis van de kolomnamen.\n   - Meerdere kolommen bij hetzelfde veld mag. Voornaam, tussenvoegsel en achternaam worden samen de naam. Meerdere kolommen bij rol / functie worden met een komma samengevoegd. Bij e-mail, bedrijf, afdeling en LinkedIn telt de eerste kolom met een waarde.\n   - Koppel je een kolom aan **Afdeling**, dan verschijnt **Afdelingen koppelen**: elke afdeling uit het bestand staat er één keer, met een voorstel uit je organogram. De app herkent ook schrijfwijzen als *Afdeling Burgerzaken*, *P en O* voor *P&O*, of *Sector / Afdeling / Team*. Niet herkend? Kies zelf een afdeling, of laat het op **Niet koppelen** staan. De app onthoudt je keuzes zolang hij openstaat.\n   - Alleen contacten van je standaardbedrijf krijgen een afdeling. Heeft een contact geen bedrijf, dan krijgt het met de afdeling ook het standaardbedrijf. Bij een contact van een ander bedrijf wordt de afdeling niet overgenomen; dat zie je bij het controleren. Zonder standaardbedrijf wordt er geen afdeling geïmporteerd.\n   - Bij meerdere telefoonkolommen gaat het **mobiele nummer** voor. De app herkent dat aan de kolomnaam (zoals *Mobiel* of *GSM*) of aan het nummer zelf (06 of +31 6). Is er geen mobiel nummer, dan telt de eerste kolom met een waarde.\n   - Met **Alle contacten koppelen aan** geef je alle contacten in één keer hetzelfde bedrijf, bijvoorbeeld je eigen organisatie. Het standaardbedrijf staat al voorgeselecteerd. Een kolom met bedrijfsnamen wordt dan niet gebruikt. Contacten die al een ander bedrijf hebben, houden dat, tenzij je bij het controleren kiest voor overschrijven.\n   - Staan de kolomnamen niet op de eerste rij, of zijn er geen kolomnamen? Kies dat bij **Kolomnamen**. Heeft het bestand meerdere tabbladen, dan kies je het tabblad.\n   - Staan namen er als *Jansen, Jan*? Vink dan aan dat ze worden omgedraaid naar *Jan Jansen*.\n   - Onderin zie je hoe de eerste contacten worden ingelezen.\n   - **Indeling opslaan**: importeer je vaker een bestand uit dezelfde bron, bijvoorbeeld een export uit een applicatie? Klik dan op **Opslaan als indeling…** en geef de indeling een naam. De koppeling van de kolommen wordt bewaard, net als het omdraaien van namen, *Alle contacten koppelen aan* en de gekoppelde afdelingen. Bij een volgend bestand met dezelfde kolomnamen herkent de app de indeling en past hij hem vanzelf toe; dat zie je in de melding onder **Indeling**. Je kunt een indeling ook zelf kiezen. Pas je de koppeling aan, klik dan op **Opslaan…** om de indeling bij te werken, of geef een nieuwe naam om een extra indeling te maken. Met **Verwijderen** gooi je een indeling weg. Indelingen worden bewaard bij je gegevens, ook in de gekoppelde map.\n3. **Controleer.** Per persoon zie je wat er gebeurt:\n   - **Nieuw**: het contact komt erbij.\n   - **Aanvullen**: de persoon staat al in je contacten (zelfde e-mailadres, of anders dezelfde naam). Alleen lege velden worden aangevuld; je ziet welke.\n   - **Staat er al in**: er is niets nieuws.\n   - **Geen naam**: de rij heeft geen naam en hoort niet bij een bestaand contact; die wordt overgeslagen.\n   - Komt iemand meer dan eens voor in het bestand, dan worden die rijen eerst samengevoegd.\n   - Per persoon kun je kiezen voor **Overslaan**, of bij een bestaand contact voor **Als nieuw contact**. Een oranje melding waarschuwt als het e-mailadres afwijkt van wat er in je contacten staat.\n   - Wil je bestaande gegevens vervangen door wat in het bestand staat, vink dan **Bestaande gegevens overschrijven** aan.\n   - Een bedrijf dat nog niet bestaat, wordt aangemaakt bij Relaties → Bedrijven.\n4. Klik op **Importeren**. Klopt er iets niet, dan zet **Ongedaan maken** de contacten en bedrijven terug zoals ze vóór de import waren.\n\nGebruik je **Contacten synchroniseren met iPhone/Mac**, dan komen geïmporteerde contacten met een telefoonnummer daar ook in.\n\n# Excel en de map vendor\nExcel-bestanden lezen en maken gaat met een bibliotheek die in de map `vendor` naast `index.html` staat. Gebruik je een gedownload exemplaar van de tool, bewaar dan de hele map. Alleen `index.html` is niet genoeg voor Excel. CSV werkt altijd."
  },
  {
   "id": "tips",
