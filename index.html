@@ -545,6 +545,7 @@
   .att-row .att-sub .ic{font-size:12px}
   .att-row .att-sub .del{margin-left:auto;font-size:12px;padding:0 4px}
   .att-row .att-sub.nieuw{animation:attNieuw 2.4s ease-out}
+  .att-row .editbtn,.att-row .wordbtn{min-width:0}
   .att-more{align-self:flex-start;background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:6px}
   .att-more:hover{color:var(--accent);background:var(--accent-soft)}
   .att-row.nieuw{animation:attNieuw 2.4s ease-out}
@@ -1968,8 +1969,15 @@
    Single-file HTML tool — data wordt opgeslagen als JSON.
    ============================================================ */
 
-const APP_VERSION = "4.47.0";
+const APP_VERSION = "4.48.0";
 const CHANGELOG = [
+  { version: "4.48.0", datum: "2026-11-24", items: [
+    "Een Word-bijlage waar al een Markdown-bestand van is gemaakt, opent bij een klik op de naam dat .md-bestand in Markdown Studio. Het Word-document zelf open je met de knop Word.",
+    "Wijzigingen in Markdown Studio schrijf je met Opslaan en terug naar hetzelfde .md-bestand, dus niet meer als nieuwe kopie. Is het bestand intussen elders gewijzigd, dan wordt er niets overschreven.",
+    "Na Opslaan en terug sluit Markdown Studio zichzelf en ga je terug naar deze tool, voor zover de browser dat toestaat.",
+    "Los .md-bestanden bij een activiteit hebben een knop Bewerken en openen ook in Markdown Studio.",
+    "Nieuw bij Instellingen: het SharePoint-adres van de gekoppelde map. Met dat adres openen Word-bijlagen in Word Online.",
+  ]},
   { version: "4.47.0", datum: "2026-11-24", items: [
     "Word-bijlagen (.docx) bij een activiteit hebben nu een knop Naar Markdown. Daarmee open je het document in Markdown Studio, dat het omzet naar Markdown, bijvoorbeeld om aan een AI-chat te geven.",
     "Met Terugzetten in Markdown Studio komt het .md-bestand als nieuwe bijlage terug bij de activiteit. Het Word-document blijft ongewijzigd.",
@@ -15123,7 +15131,7 @@ const HELP_SECTIES = [
   "icon": "activiteiten",
   "views": [],
   "nav": "",
-  "tekst": "Een activiteit is alles waar je mee bezig bent bij een afdeling, een congres of het College B&W: een project, een vraag, een traject. Een activiteit maak je aan met **+ Nieuwe activiteit** op het tabblad Activiteiten van een afdeling. Klik op een activiteitskaart om hem open of dicht te klappen.\n\n# Basisgegevens\n- **Titel, startdatum en einddatum** staan samen op één regel.\n- **Status**: één klik op *lopend*, *on hold*, *afgerond* of *gearchiveerd*.\n- **Prioriteit**: *hoog*, *midden* of *laag*.\n- **Tags**: eerder gebruikte tags staan als knoppen, de meest gebruikte eerst en groter. Eén klik voegt een tag toe. Een nieuwe tag maak je via **+ Nieuwe of andere tag**.\n- **Omschrijving**: vrije tekst.\n\n# Acties\nConcrete to-do's bij de activiteit, met een optionele deadline. Afgevinkte acties verhuizen naar een ingeklapt archief op de kaart. Alle acties samen zie je in het scherm **Acties**.\n\n# Contactpersonen\n- Koppel mensen uit je contactenregister. Typ een naam en kies een suggestie.\n- Je vindt hier ook managers, collegeleden en control-personen die nog niet in Contacten staan; die worden dan automatisch toegevoegd.\n- De **rol** stel je per activiteit in, omdat iemands rol per verband kan verschillen. Naam, e-mail en telefoon komen uit het centrale contact.\n\n# Links\nHandige webadressen bij de activiteit, zoals een SharePoint-map, een Topdesk-melding of een document.\n\n# Logboek\nJe verslag van wat er is gebeurd: notities, mails en gesprekken. Zie **Logboek, opmaak en Snel vastleggen**.\n\n# Bijlagen\n- Sleep bestanden naar het vak, of klik om te bladeren. Ze worden opgeslagen in een eigen submap van je gekoppelde map; klik op een bijlage om hem te openen.\n- Bestanden die je zelf buiten de app in die map zet, worden automatisch herkend als je de activiteit opent. Bestanden die je uit die map hebt verwijderd (of verplaatst of hernoemd), verdwijnen dan ook uit de lijst. Met **Vernieuwen** laat je de map op elk moment opnieuw uitlezen; de knop meldt kort hoeveel bestanden er zijn toegevoegd en verwijderd.\n- Een bestand met dezelfde naam als een bestaande bijlage krijgt automatisch een unieke naam, bijvoorbeeld *rapport (2).pdf*.\n\n# PDF's ondertekenen, invullen en samenvoegen\n- Achter elke PDF-bijlage staat de knop **PDF-tool**. Die opent de PDF in de PDF-tool, in een nieuw tabblad. Daar kun je ondertekenen, tekst toevoegen, formulieren invullen, pagina's draaien of verwijderen en andere PDF's toevoegen.\n- Heeft een activiteit twee of meer PDF's, dan opent **PDF's samenvoegen** ze allemaal tegelijk.\n- Klaar? Klik in de PDF-tool op **Terugzetten**. Het resultaat komt als **nieuwe bijlage** bij de activiteit. Het origineel blijft ongewijzigd.\n- Alles blijft in je browser; er wordt niets geüpload.\n- De koppeling werkt alleen als je de tool via de website opent en de PDF-tool op hetzelfde websiteadres staat, in de map *pdf-tool*.\n\n# Word omzetten naar Markdown\n- Achter elke Word-bijlage (.docx) staat de knop **Naar Markdown**. Die opent het document in Markdown Studio, in een nieuw tabblad. Daar wordt het omgezet naar Markdown, handig om het aan een AI-chat te geven. Oude .doc-bestanden sla je eerst in Word op als .docx.\n- Klaar? Klik in Markdown Studio op **Terugzetten**. Het .md-bestand komt als **nieuwe bijlage** bij de activiteit, als klein regeltje onder het Word-document. Het origineel blijft ongewijzigd.\n- Alles blijft in je browser; er wordt niets geüpload.\n- De koppeling werkt alleen als je de tool via de website opent en Markdown Studio op hetzelfde websiteadres staat, in de map *markdown-studio*.\n\n# Bijlagen overzichtelijk houden\nHeeft een activiteit meer dan drie bijlagen, dan zie je standaard alleen de laatste drie. Met **Toon oudere bijlagen** klap je de rest open, met **Toon alleen de laatste 3** klap je de lijst weer in.\n\n# Processen\nStart vanuit de activiteit een proces met werkinstructies, bijvoorbeeld *Aanschaf nieuwe software*. Het onderwerp wordt de titel van de activiteit. Gekoppelde processen staan op de kaart met hun voortgang; klik erop om het stappenplan te openen. Rond je het proces af, dan komt er automatisch een samenvatting in het logboek. Zie **Weekstart & processen**.\n\n# Verplaatsen, verwijderen en volgorde\n- **↔** verplaatst de activiteit naar een andere afdeling of een congres.\n- **×** verwijdert de activiteit.\n- Activiteiten staan in een vaste logische volgorde: eerst op status (lopend, on hold, afgerond, gearchiveerd), dan op prioriteit, dan op de eerstvolgende deadline en tot slot op titel.\n- Je kunt slepen om de volgorde aan te passen, binnen dezelfde status en prioriteit. **Standaardvolgorde** zet die handmatige volgorde weer terug.\n- Met de knoppen **Lopend / On hold / Afgerond / Gearchiveerd / Alle** kies je welke activiteiten je ziet. Afgeronde en gearchiveerde activiteiten zijn standaard verborgen.\n\n# Financiën\nIn een activiteit staat het blok **Financiën** met de begrotingsregels die aan de activiteit gekoppeld zijn, met begroot, uitgegeven en restant. Klik op een regel om hem te openen. Met **+ Begrotingsregel** maak je direct een regel aan voor deze activiteit. Heb je meer programma's, dan kies je in het venster bij welk programma (welke begroting) de regel hoort; standaard staat het programma klaar waar de activiteit al regels in heeft. Zie **Begroting**."
+  "tekst": "Een activiteit is alles waar je mee bezig bent bij een afdeling, een congres of het College B&W: een project, een vraag, een traject. Een activiteit maak je aan met **+ Nieuwe activiteit** op het tabblad Activiteiten van een afdeling. Klik op een activiteitskaart om hem open of dicht te klappen.\n\n# Basisgegevens\n- **Titel, startdatum en einddatum** staan samen op één regel.\n- **Status**: één klik op *lopend*, *on hold*, *afgerond* of *gearchiveerd*.\n- **Prioriteit**: *hoog*, *midden* of *laag*.\n- **Tags**: eerder gebruikte tags staan als knoppen, de meest gebruikte eerst en groter. Eén klik voegt een tag toe. Een nieuwe tag maak je via **+ Nieuwe of andere tag**.\n- **Omschrijving**: vrije tekst.\n\n# Acties\nConcrete to-do's bij de activiteit, met een optionele deadline. Afgevinkte acties verhuizen naar een ingeklapt archief op de kaart. Alle acties samen zie je in het scherm **Acties**.\n\n# Contactpersonen\n- Koppel mensen uit je contactenregister. Typ een naam en kies een suggestie.\n- Je vindt hier ook managers, collegeleden en control-personen die nog niet in Contacten staan; die worden dan automatisch toegevoegd.\n- De **rol** stel je per activiteit in, omdat iemands rol per verband kan verschillen. Naam, e-mail en telefoon komen uit het centrale contact.\n\n# Links\nHandige webadressen bij de activiteit, zoals een SharePoint-map, een Topdesk-melding of een document.\n\n# Logboek\nJe verslag van wat er is gebeurd: notities, mails en gesprekken. Zie **Logboek, opmaak en Snel vastleggen**.\n\n# Bijlagen\n- Sleep bestanden naar het vak, of klik om te bladeren. Ze worden opgeslagen in een eigen submap van je gekoppelde map; klik op een bijlage om hem te openen.\n- Bestanden die je zelf buiten de app in die map zet, worden automatisch herkend als je de activiteit opent. Bestanden die je uit die map hebt verwijderd (of verplaatst of hernoemd), verdwijnen dan ook uit de lijst. Met **Vernieuwen** laat je de map op elk moment opnieuw uitlezen; de knop meldt kort hoeveel bestanden er zijn toegevoegd en verwijderd.\n- Een bestand met dezelfde naam als een bestaande bijlage krijgt automatisch een unieke naam, bijvoorbeeld *rapport (2).pdf*.\n\n# PDF's ondertekenen, invullen en samenvoegen\n- Achter elke PDF-bijlage staat de knop **PDF-tool**. Die opent de PDF in de PDF-tool, in een nieuw tabblad. Daar kun je ondertekenen, tekst toevoegen, formulieren invullen, pagina's draaien of verwijderen en andere PDF's toevoegen.\n- Heeft een activiteit twee of meer PDF's, dan opent **PDF's samenvoegen** ze allemaal tegelijk.\n- Klaar? Klik in de PDF-tool op **Terugzetten**. Het resultaat komt als **nieuwe bijlage** bij de activiteit. Het origineel blijft ongewijzigd.\n- Alles blijft in je browser; er wordt niets geüpload.\n- De koppeling werkt alleen als je de tool via de website opent en de PDF-tool op hetzelfde websiteadres staat, in de map *pdf-tool*.\n\n# Word omzetten naar Markdown\n- Achter elke Word-bijlage (.docx) staat de knop **Naar Markdown**. Die opent het document in Markdown Studio, in een nieuw tabblad. Daar wordt het omgezet naar Markdown, handig om het aan een AI-chat te geven. Oude .doc-bestanden sla je eerst in Word op als .docx.\n- Klaar? Klik in Markdown Studio op **Terugzetten**. Het .md-bestand komt als **nieuwe bijlage** bij de activiteit, als klein regeltje onder het Word-document. Het origineel blijft ongewijzigd.\n- Is er een .md van het document gemaakt, dan opent een klik op de naam van het Word-document voortaan dat **.md-bestand** in Markdown Studio. Pas het aan en klik op **Opslaan en terug**: de wijzigingen gaan naar hetzelfde .md-bestand, er komt geen kopie bij. Is het bestand intussen op een andere plek gewijzigd, bijvoorbeeld door OneDrive, dan overschrijft de tool niets en krijg je een melding. Daarna sluit Markdown Studio zichzelf en kom je terug in deze tool.\n- Het Word-document zelf open je met de knop **Word**. Heb je bij Instellingen het **SharePoint-adres** van de gekoppelde map ingevuld, dan opent het in Word Online; anders op je computer.\n- Ook los .md-bestanden bij een activiteit hebben de knop **Bewerken** en openen in Markdown Studio.\n- Alles blijft in je browser; er wordt niets geüpload.\n- De koppeling werkt alleen als je de tool via de website opent en Markdown Studio op hetzelfde websiteadres staat, in de map *markdown-studio*.\n\n# Bijlagen overzichtelijk houden\nHeeft een activiteit meer dan drie bijlagen, dan zie je standaard alleen de laatste drie. Met **Toon oudere bijlagen** klap je de rest open, met **Toon alleen de laatste 3** klap je de lijst weer in.\n\n# Processen\nStart vanuit de activiteit een proces met werkinstructies, bijvoorbeeld *Aanschaf nieuwe software*. Het onderwerp wordt de titel van de activiteit. Gekoppelde processen staan op de kaart met hun voortgang; klik erop om het stappenplan te openen. Rond je het proces af, dan komt er automatisch een samenvatting in het logboek. Zie **Weekstart & processen**.\n\n# Verplaatsen, verwijderen en volgorde\n- **↔** verplaatst de activiteit naar een andere afdeling of een congres.\n- **×** verwijdert de activiteit.\n- Activiteiten staan in een vaste logische volgorde: eerst op status (lopend, on hold, afgerond, gearchiveerd), dan op prioriteit, dan op de eerstvolgende deadline en tot slot op titel.\n- Je kunt slepen om de volgorde aan te passen, binnen dezelfde status en prioriteit. **Standaardvolgorde** zet die handmatige volgorde weer terug.\n- Met de knoppen **Lopend / On hold / Afgerond / Gearchiveerd / Alle** kies je welke activiteiten je ziet. Afgeronde en gearchiveerde activiteiten zijn standaard verborgen.\n\n# Financiën\nIn een activiteit staat het blok **Financiën** met de begrotingsregels die aan de activiteit gekoppeld zijn, met begroot, uitgegeven en restant. Klik op een regel om hem te openen. Met **+ Begrotingsregel** maak je direct een regel aan voor deze activiteit. Heb je meer programma's, dan kies je in het venster bij welk programma (welke begroting) de regel hoort; standaard staat het programma klaar waar de activiteit al regels in heeft. Zie **Begroting**."
  },
  {
   "id": "logboek",
@@ -17574,6 +17582,10 @@ function renderInstellingenView(main){
         desc:"Koppel een lokale map (bijv. SharePoint/OneDrive-gesynchroniseerd). De app slaat alles automatisch op in tracker-data.json, met backup en conflictbewaking. Werkt in Chrome en Edge." },
       { ic:"sync", btn:"btnReloadFolder", tit:"Vernieuwen uit map",
         desc:"Lees het JSON-bestand opnieuw in vanuit de gekoppelde map — handig als er op een ander apparaat is gewerkt." },
+      { ic:"link", run: ()=> stelWordOnlineIn(), tit:"SharePoint-adres voor Word Online",
+        desc: state.wordOnlineBasis
+          ? `Nu ingesteld: ${state.wordOnlineBasis}. Word-bijlagen openen daarmee in Word Online. Klik om te wijzigen of leeg te maken.`
+          : "Vul het SharePoint-adres van de gekoppelde map in, dan openen Word-bijlagen in Word Online in plaats van op je computer." },
       { ic:"link", btn:"btnContactSync", tit:"Contacten synchroniseren met iPhone/Mac",
         desc:"Houd een aparte groep in Contacten op je Mac en iPhone automatisch bij met de contacten (mét telefoonnummer) uit deze tracker, via een eenmalig te installeren lokaal achtergrondprogramma." },
       { ic:"markdown", btn:"btnGenMd", tit:"Markdown-bestanden bijwerken",
@@ -19173,6 +19185,15 @@ ${isStd ? `
     p.gewijzigd = new Date().toISOString();
     markDirty(); renderAttachments();
   }
+  function openMdBewerk(at){
+    if (!bijlageToolUrl("md")) return openBijlage(at);   // los bestand: de koppeling werkt niet, open gewoon
+    openInMarkdownStudio({ afdNaam, p, filenames: [at.filename], modus: "bewerk", onDone: ()=> renderAttachments() });
+  }
+  function openInWord(at){
+    const url = wordOnlineUrl(afdNaam, activityFolderName(p), at.filename);
+    if (url) window.open(url, "_blank", "noopener");
+    else openBijlage(at);
+  }
   function renderAttachments(){
     p.attachments = p.attachments || [];
     attCountEl.textContent = p.attachments.length ? `${p.attachments.length} bestand${p.attachments.length===1?"":"en"}` : "";
@@ -19190,9 +19211,7 @@ ${isStd ? `
       } else hoofd.push(at);
     }
     let zichtbaar = hoofd;
-    if (!attAlles && hoofd.length > ATT_ZICHTBAAR){
-      zichtbaar = hoofd.slice(-ATT_ZICHTBAAR);
-    }
+    if (!attAlles && hoofd.length > ATT_ZICHTBAAR) zichtbaar = hoofd.slice(-ATT_ZICHTBAAR);
     const verborgen = hoofd.length - zichtbaar.length;
     if (verborgen > 0 || (attAlles && hoofd.length > ATT_ZICHTBAAR)){
       const meer = document.createElement("button");
@@ -19207,32 +19226,48 @@ ${isStd ? `
     for (const at of zichtbaar){
       const row = document.createElement("div");
       row.className = "att-row";
+      const kinderen = (afgeleid.get(at.filename) || []).filter(isMdBijlage);
+      const heeftMd = kinderen.length > 0;
       const kanPdf = isPdfBijlage(at) && folderHandle;
-      const kanMd = isWordBijlage(at) && folderHandle;
-      const kinderen = afgeleid.get(at.filename) || [];
+      const kanNaarMd = isWordBijlage(at) && !heeftMd && folderHandle;   // nog geen .md: eerst omzetten
+      const kanWord = isWordBijlage(at) && heeftMd;                       // .md bestaat: Word zelf blijft bereikbaar
+      const kanBewerken = isMdBijlage(at) && folderHandle;
+      const naamTitel = heeftMd ? "Opent het Markdown-bestand in Markdown Studio" : (kanBewerken ? "Opent in Markdown Studio" : "");
       row.innerHTML = `
         <span class="ic">📄</span>
-        <a class="name" data-filename="${escapeHTML(at.filename)}">${escapeHTML(at.filename)}</a>
+        <a class="name" data-filename="${escapeHTML(at.filename)}"${naamTitel ? ` title="${naamTitel}"` : ""}>${escapeHTML(at.filename)}</a>
         <span class="meta">${formatFileSize(at.size)} · ${new Date(at.addedAt).toLocaleDateString("nl-NL")}</span>
         ${kanPdf ? `<button class="pdfbtn" title="Openen in de PDF-tool om te ondertekenen, in te vullen of samen te voegen. Het resultaat komt terug als nieuwe bijlage.">PDF-tool</button>`
-          : kanMd ? `<button class="pdfbtn mdbtn" title="Openen in Markdown Studio en omzetten naar Markdown, bijvoorbeeld voor een AI-chat. Met Terugzetten komt het .md-bestand als nieuwe bijlage terug.">Naar Markdown</button>`
+          : kanNaarMd ? `<button class="pdfbtn mdbtn" title="Openen in Markdown Studio en omzetten naar Markdown, bijvoorbeeld voor een AI-chat. Met Terugzetten komt het .md-bestand als nieuwe bijlage terug.">Naar Markdown</button>`
+          : kanWord ? `<button class="pdfbtn wordbtn" title="${state.wordOnlineBasis ? "Het Word-document openen in Word Online" : "Het Word-document openen op je computer"}">Word</button>`
+          : kanBewerken ? `<button class="pdfbtn editbtn" title="Openen in Markdown Studio. Wijzigingen worden teruggeschreven naar dit bestand.">Bewerken</button>`
           : `<span></span>`}
         <button class="del" title="Verwijder">×</button>
       `;
       if (at.id === laatstToegevoegdeBijlage) row.classList.add("nieuw");
       const toolBtn = row.querySelector(".pdfbtn");
-      if (toolBtn) toolBtn.onclick = ()=> (kanMd ? openInMarkdownStudio : openInPdfTool)({
-        afdNaam, p, filenames: [at.filename],
-        // een net teruggezet .md hoort bij een mogelijk ingeklapt Word-document: klap de lijst dan open
-        onDone: (meta)=>{ if (meta && meta.bron) attAlles = true; renderAttachments(); },
-      });
-      row.querySelector(".name").onclick = ()=> openBijlage(at);
+      if (toolBtn){
+        if (kanPdf) toolBtn.onclick = ()=> openInPdfTool({ afdNaam, p, filenames: [at.filename], onDone: renderAttachments });
+        else if (kanNaarMd) toolBtn.onclick = ()=> openInMarkdownStudio({
+          afdNaam, p, filenames: [at.filename],
+          // een net teruggezet .md hoort bij een mogelijk ingeklapt Word-document: klap de lijst dan open
+          onDone: (meta)=>{ if (meta && meta.bron) attAlles = true; renderAttachments(); },
+        });
+        else if (kanWord) toolBtn.onclick = ()=> openInWord(at);
+        else if (kanBewerken) toolBtn.onclick = ()=> openMdBewerk(at);
+      }
+      // Een Word-document met een .md erbij opent zijn .md; los .md-bestanden openen in Markdown Studio.
+      row.querySelector(".name").onclick = ()=>{
+        if (heeftMd) openMdBewerk(kinderen[kinderen.length - 1]);
+        else if (kanBewerken) openMdBewerk(at);
+        else openBijlage(at);
+      };
       row.querySelector(".del").onclick = ()=> verwijderBijlage(at);
       for (const k of kinderen){
         const sub = document.createElement("div");
         sub.className = "att-sub" + (k.id === laatstToegevoegdeBijlage ? " nieuw" : "");
-        sub.innerHTML = `<span class="ic">↳</span><a class="name" data-filename="${escapeHTML(k.filename)}">${escapeHTML(k.filename)}</a><span class="meta">${formatFileSize(k.size)}</span><button class="del" title="Verwijder">×</button>`;
-        sub.querySelector(".name").onclick = ()=> openBijlage(k);
+        sub.innerHTML = `<span class="ic">↳</span><a class="name" data-filename="${escapeHTML(k.filename)}" title="Opent in Markdown Studio. Wijzigingen worden teruggeschreven naar dit bestand.">${escapeHTML(k.filename)}</a><span class="meta">${formatFileSize(k.size)}</span><button class="del" title="Verwijder">×</button>`;
+        sub.querySelector(".name").onclick = ()=> openMdBewerk(k);
         sub.querySelector(".del").onclick = ()=> verwijderBijlage(k);
         row.appendChild(sub);
       }
@@ -19606,6 +19641,34 @@ const BIJLAGE_TOOLS = {
 const pdfToolSessies = new Map();   // sessie-id -> { id, tool, w, afdNaam, pId, p, label, bron, bestanden, verstuurd, timer, onDone }
 let laatstToegevoegdeBijlage = null;
 function isPdfBijlage(at){ return /\.pdf$/i.test((at && at.filename) || "") || (at && at.type) === "application/pdf"; }
+function isMdBijlage(at){ return /\.md$/i.test((at && at.filename) || ""); }
+// Adres waarmee het Word-document in Word Online opent: het SharePoint-adres van de gekoppelde map
+// (Instellingen) plus het pad van de bijlage. Zonder ingesteld adres: null.
+function wordOnlineUrl(afdNaam, activiteitMap, filename){
+  const basis = (state.wordOnlineBasis || "").trim().replace(/\/+$/, "");
+  if (!/^https:\/\//i.test(basis)) return null;
+  const enc = encodeURIComponent;
+  return basis + "/Bijlagen/" + enc(sanitizePath(afdNaam)) + "/" + enc(activiteitMap) + "/" + enc(filename) + "?web=1";
+}
+function stelWordOnlineIn(){
+  const huidig = state.wordOnlineBasis || "";
+  const antwoord = prompt(
+    "Het adres van de gekoppelde map in SharePoint, bijvoorbeeld:\nhttps://jouwgemeente.sharepoint.com/sites/Team/Gedeelde documenten/Informatiemanagement\n\n" +
+    "Tip: open in SharePoint een bijlage uit de map Bijlagen en plak hier het adres van die pagina; de app knipt het pad zelf af.\n\n" +
+    "Leeg laten om Word-bijlagen op je computer te openen.", huidig);
+  if (antwoord === null) return;
+  let v = antwoord.trim();
+  const i = v.search(/\/Bijlagen\//i);
+  if (i > 0) v = v.slice(0, i);
+  v = v.replace(/[?#].*$/, "").replace(/\/+$/, "");
+  if (v){
+    if (!/^https:\/\//i.test(v)){ alert("Het adres moet met https:// beginnen."); return; }
+    try{ v = encodeURI(decodeURI(v)); }catch(_){ /* laat zoals het is */ }
+  }
+  state.wordOnlineBasis = v;
+  markDirty();
+  if (typeof renderMain === "function") renderMain();
+}
 function isWordBijlage(at){ return /\.docx$/i.test((at && at.filename) || ""); }   // Markdown Studio leest alleen .docx
 function bijlageToolUrl(tool){
   if (location.protocol !== "https:" && location.protocol !== "http:") return null;
@@ -19618,7 +19681,7 @@ function pdfToolActiviteit(s){
 // Let op: synchroon het venster openen (vóór de eerste await), anders blokkeert de browser de pop-up.
 function openInPdfTool(opts){ return openInBijlageTool("pdf", opts); }
 function openInMarkdownStudio(opts){ return openInBijlageTool("md", opts); }
-function openInBijlageTool(tool, { afdNaam, p, filenames, onDone }){
+function openInBijlageTool(tool, { afdNaam, p, filenames, onDone, modus }){
   const cfg = BIJLAGE_TOOLS[tool];
   const url = bijlageToolUrl(tool);
   if (!url){
@@ -19627,13 +19690,14 @@ function openInBijlageTool(tool, { afdNaam, p, filenames, onDone }){
   }
   const w = window.open(url + "#koppeling", "_blank");
   if (!w){ alert("De browser heeft het nieuwe tabblad tegengehouden. Sta pop-ups voor deze site toe en probeer het opnieuw."); return; }
-  const sessie = { id: uid(), tool, w, afdNaam, pId: p.id, p, label: p.titel || "deze activiteit", bron: filenames.length === 1 ? filenames[0] : null, verstuurd: false, onDone };
+  const sessie = { id: uid(), tool, w, afdNaam, pId: p.id, p, label: p.titel || "deze activiteit", bron: filenames.length === 1 ? filenames[0] : null, modus: modus === "bewerk" ? "bewerk" : "nieuw", mtime: null, verstuurd: false, onDone };
   sessie.bestanden = (async ()=>{
     const dir = await getActivityDir(afdNaam, activityFolderName(p));
     if (!dir) throw new Error("De gekoppelde map is niet beschikbaar.");
     const lijst = [];
     for (const fn of filenames){
       const f = await (await dir.getFileHandle(fn)).getFile();
+      sessie.mtime = f.lastModified;   // om bij terugschrijven te zien of het bestand intussen elders is gewijzigd
       lijst.push({ naam: fn, bytes: await f.arrayBuffer() });
     }
     return lijst;
@@ -19659,7 +19723,7 @@ window.addEventListener("message", async (ev)=>{
     let bestanden;
     try{ bestanden = await s.bestanden; }
     catch(e){ pdfToolSessies.delete(s.id); alert("Kon de bijlage niet lezen: " + e.message + "\n(Koppel de map opnieuw met de knop rechtsboven)"); return; }
-    ev.source.postMessage({ type: "im:open", versie: 1, sessie: s.id, label: s.label, bestanden },
+    ev.source.postMessage({ type: "im:open", versie: 1, sessie: s.id, label: s.label, modus: s.modus, bestanden },
       location.origin, bestanden.map(b => b.bytes));
   } else if (resultaatTool){
     const s = pdfToolSessies.get(d.sessie);
@@ -19667,6 +19731,22 @@ window.addEventListener("message", async (ev)=>{
     const cfg = BIJLAGE_TOOLS[s.tool];
     const antwoord = (extra)=> { try{ ev.source.postMessage(Object.assign({ type: "im:ontvangen", versie: 1, sessie: s.id }, extra), location.origin); }catch(_){} };
     if (!(d.bytes instanceof ArrayBuffer) || typeof d.naam !== "string"){ antwoord({ ok:false, fout:"Ongeldig bestand ontvangen." }); return; }
+    if (s.modus === "bewerk" && s.tool === "md" && s.bron){
+      // Bewerkt .md terugschrijven naar het originele bestand (de naam die de tool meestuurt telt niet mee)
+      try{
+        const act = pdfToolActiviteit(s);
+        const nieuweGrootte = await vervangBijlageInhoud(s.afdNaam, activityFolderName(act), s.bron, d.bytes, s);
+        const at = (act.attachments || []).find(a => a.filename === s.bron);
+        if (at){ at.size = nieuweGrootte; at.gewijzigdOp = new Date().toISOString(); }
+        act.gewijzigd = new Date().toISOString();
+        markDirty();
+        try{ if (s.onDone) s.onDone(at); }catch(_){}
+        antwoord({ ok:true, bestandsnaam: s.bron, vervangen:true });
+      }catch(e){
+        antwoord({ ok:false, fout: e.message || String(e) });
+      }
+      return;
+    }
     const naam = d.naam.toLowerCase().endsWith(cfg.ext) ? d.naam : d.naam + cfg.ext;
     try{
       const act = pdfToolActiviteit(s);
@@ -19685,6 +19765,25 @@ window.addEventListener("message", async (ev)=>{
     }
   }
 });
+// Schrijft nieuwe inhoud naar een bestaande bijlage. Is het bestand sinds het openen elders gewijzigd
+// (bijvoorbeeld door OneDrive), dan gebeurt er niets, zodat er nooit werk overschreven wordt.
+async function vervangBijlageInhoud(afdNaam, activityId, filename, bytes, sessie){
+  const dir = await getActivityDir(afdNaam, activityId);
+  if (!dir) throw new Error("De gekoppelde map is niet beschikbaar.");
+  let fh;
+  try{ fh = await dir.getFileHandle(filename); }
+  catch(e){ throw new Error("Het bestand staat niet meer in de map."); }
+  const huidig = await fh.getFile();
+  if (sessie.mtime && huidig.lastModified !== sessie.mtime){
+    throw new Error("Het bestand is in de tussentijd ergens anders gewijzigd. Er is niets overschreven.");
+  }
+  const w = await fh.createWritable();
+  await w.write(bytes);
+  await w.close();
+  const nu = await fh.getFile();
+  sessie.mtime = nu.lastModified;
+  return nu.size;
+}
 async function writeAttachmentFile(afdNaam, activityId, file){
   const dir = await getActivityDir(afdNaam, activityId, { create:true });
   if (!dir) throw new Error("Map niet beschikbaar");
