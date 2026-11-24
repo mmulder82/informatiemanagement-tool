@@ -30,6 +30,10 @@ Deze tool brengt alles samen op één plek, ingedeeld zoals een gemeente werkt: 
   - contactpersonen, links en bijlagen;
   - een logboek.
 - **PDF's ondertekenen en samenvoegen.** Open een PDF-bijlage met één klik in de [PDF-tool](https://mmulder82.github.io/pdf-tool/). Onderteken, vul in of voeg samen. Met **Terugzetten** komt het resultaat als nieuwe bijlage terug bij de activiteit. Alles blijft in je browser.
+- **Word omzetten naar Markdown.** Open een Word-bijlage (.docx) met één klik in [Markdown Studio](https://mmulder82.github.io/markdown-studio/). Met **Terugzetten** komt het .md-bestand als nieuwe bijlage terug, handig om een document aan een AI-chat te geven. Alles blijft in je browser.
+- **Rustige bijlagenlijst.** Bij meer dan drie bijlagen toont de kaart de laatste drie; een .md uit een Word-document staat als regeltje onder zijn bron.
+
+![De bestanden van een activiteit: de laatste bijlagen in beeld, met een Naar Markdown-knop bij Word-bijlagen en een teruggezet .md-bestand onder zijn bron](screenshots/bijlagen.png)
 - **Logboek en Snel vastleggen.** Leg notities en gespreksverslagen vast met eenvoudige opmaak (Markdown).
   - Plakken uit Outlook, Word, OneNote of Excel behoudt koppen, lijsten, links en tabellen.
   - Een doorgestuurde mail krijgt automatisch Van, Onderwerp en Datum bovenaan.
@@ -177,6 +181,7 @@ Installatie en uitleg vind je in [`contacten-sync/LEES-MIJ.md`](contacten-sync/L
 | Map koppelen, back-ups en bijlagen | ✓ | – |
 | Markdown-bestanden per activiteit | ✓ | – |
 | PDF-bijlagen openen in de PDF-tool | ✓ | – |
+| Word-bijlagen omzetten in Markdown Studio | ✓ | – |
 | Contacten synchroniseren met iPhone/Mac | ✓ | – |
 
 Map koppelen gebruikt de *File System Access API*, die alleen Chrome en Edge ondersteunen.
